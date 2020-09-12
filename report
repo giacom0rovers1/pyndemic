@@ -1,0 +1,42 @@
+Evolution of a pandemic in a small world network
+
+Watts stroglatz small world networks (rewired lattices with p probability)
+Params: p (probability of rewiring lattice edges into random links) 
+        k (level of clustering in terms of lattice connected neighbours)  
+        n (dimension of the network)
+
+Presentation of the typical characteristics of the small world graphs: recreate the plot with C (clustering) and L (min path distance) for a pool of differen graphs in function of p (test also k)
+
+One peculiarity: fast spreading of diseases (contagion), iportance of the rewired edges in sensibly lowering the distance between clusters
+
+Similarity with real cases:  high p and high k --> worst case?
+                             high p and low k  --> globalized but non village-like society or restrictions to aggregation
+                             low p and high k  --> international lockdown, return to small communities
+                             low p and low k   --> full lockdown
+                             low p and low k + synthomatic nodes are disconnected --> lockdown + quarantine
+
+Epidemic model:
+
+SEIR over a network, with R(DOTS) parameters
+    
+    (D) duration of the infection (around a week)
+    (O) opportunities during the infection (social behaviour) ~ 5 people per day
+
+    (T) transmission probability
+    (S) susceptibility of the target
+
+    R = D x O x T x S
+
+    Isolation of the infected (quarantine) --> D
+    Social distancing --> 0
+    Masks and other PPE (DPI) --> T
+    Vaccine? Good health/immune system --> S
+
+    Reproduction number can (does) change over time
+    
+
+Test of the evolution of the similar-to-real cases
+
+Framework: networkx and CoLab (pyTorch?)
+
+

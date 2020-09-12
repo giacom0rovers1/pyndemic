@@ -1,0 +1,60 @@
+COVID19 pandemic
+Adam Kucharski - The Math of Contagion - 23/07/2020
+https://www.youtube.com/watch?v=tdDs13-paDA
+(viewed 23/08/2020)
+
+Also:
+https://www.ted.com/talks/adam_kucharski_how_can_we_control_the_coronavirus_pandemic#t-205077
+and:
+https://www.ted.com/talks/the_ted_interview_adam_kucharski_on_what_should_and_shouldn_t_worry_us_about_the_coronavirus#t-702217
+
+
+
+reproduction number R ~ 2.2
+serial interval     T ~ 5 days
+
+(D) duration of the infection (around a week)
+(O) opportunities during the infection (social behaviour) ~ 5 people per day
+
+(T) transmission probability
+(S) susceptibility of the target
+
+R = D x O x T x S
+
+Isolation of the infected (quarantine) --> D
+Social distancing --> 0
+Masks and other PPE (DPI) --> T
+Vaccine? Good health/immune system --> S
+
+Reproduction number can (does) change over time
+
+
+Transmission chains of COVID19 (like viral tweets) come from specific events with many links more than long chains of the average reproduction rate (like Ice. Most tweets don't go anywhere.
+Sparks lead to super spreading, mass audience, mass amplification.
+
+Suggestions that 80% of transmission originates from 20% of the infections. 
+
+Dynamic: small initially expansion, explosive take off (transition)
+
+ 
+
+----
+
+Nicky Case -  What happens next
+https://ncase.me/covid-19/
+
+Also: Game theory and untrust epidemic at https://ncase.me/trust/
+
+SIR model
+SEIR model
+
+Intensive Care Unit for 1 in 20 (5%) infected
+ICU bed for 1 in 3400 people in USA (0.6 %)
+
+Infection Fatality Rate IFR ~ 0.5 % (1%) 
+while seasonal flu's IFR is aroud 0.1%
+
+44% of all transmissions are pre-symptomatic! 
+
+
+
