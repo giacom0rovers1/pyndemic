@@ -1,0 +1,219 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Short Sectioned Assignment
+% LaTeX Template
+% Version 1.1 (26/01/19)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Frits Wenneker (http://www.howtotex.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+% Modificato per l'italiano da:
+% Giacomo Roversi
+% Arianna Coppola
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[DIV=12, BCOR=0pt]{scrartcl}  % A4 paper and 11pt font size {scrartcl}
+% \usepackage{geometry}
+% \geometry{a4paper,top=1.5cm,bottom=2.5cm,left=2cm,right=2cm} %,heightrounded,bindingoffset=0mm}
+
+\usepackage[default]{cantarell}
+% \usepackage{fourier}        % Use the Adobe Utopia font for the document
+% \usepackage{lmodern}        % dimensioni compatibili con Cantarell
+% \usepackage{beton}          % problemi con maiuscoletto e grassetto
+% \usepackage{euler}
+% \usepackage{concmath}
+% \renewcommand*\familydefault{\sfdefault} 
+
+\usepackage[T1]{fontenc}      % Use 8-bit encoding that has 256 glyphs
+\usepackage{amsmath,amsfonts,amsthm, amssymb}    % Math packages
+\usepackage{mathrsfs} 
+\usepackage[italian]{babel}   % Adatta LaTeX alle convenzioni tipografiche italiane.
+\usepackage[utf8x]{inputenc}  % Consente l'uso caratteri accentati italiani
+\usepackage[dvips]{graphicx}  %per poter inserire le immagini
+
+\usepackage{tabu, tabularx}
+\usepackage{sectsty}          % Allows customizing section commands
+\allsectionsfont{\normalfont\scshape} % Make all sections the default font and small caps
+
+% \usepackage{fancyhdr}       % Custom headers and footers
+% \pagestyle{fancyplain}      % Makes all pages in the document conform to the custom headers and footers
+% \fancyhead{}                % No page header
+% \fancyfoot[L]{}             % Empty left footer
+% \fancyfoot[C]{}             % Empty center footer
+% \fancyfoot[R]{\thepage}     % Page numbering for right footer
+% \renewcommand{\headrulewidth}{0pt}    % Remove header underlines
+% \renewcommand{\footrulewidth}{0pt}    % Remove footer underlines
+% \setlength{\headheight}{13.6pt}       % Customize the height of the header
+% 
+\setlength\parindent{0pt}     % Controls indentation of the paragraphs (default=0)
+\linespread{1.1}
+
+% \usepackage{fixltx2e}       %per poter inserire apici e pedici
+\usepackage[font=small,format=hang,labelfont={sf,bf}]{caption} %per personalizzare le didascalie delle immagini
+% \usepackage{emptypage}      %eventuali pagine bianche senza né testa né piè di pagina
+\usepackage{float}            %per posizionare le immagini dove voglio io
+\usepackage{subfig}           %per inserire sottofigure
+\usepackage{rotating}         %per ruotare le immagini
+\usepackage{booktabs}         %per migliorare esteticamente le tabelle
+% \usepackage{bookmark}
+\usepackage[bookmarks]{hyperref}
+\usepackage{color,listings}
+\usepackage{multicol, makeidx}
+\bibliographystyle{harward}
+
+
+\usepackage{physics}
+\usepackage{tikz}
+
+% \usepackage{ragged2e}
+
+% Arianna
+% \usepackage{fullpage}
+\usepackage{enumerate}
+% \usepackage{wrapfig}
+% \usepackage{sidecap}
+\usepackage{siunitx}
+\usepackage{eurosym}
+\graphicspath{{immagini/}}
+
+% CUSTOM COMMANDS
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}}   % Creates horizontal rule command with 1 argument of height
+\newcommand*{\vimage}[1]{\vcenter{\hbox{\includegraphics[width=3.45cm]{#1}}}}
+
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\title{
+    \normalfont \small %\footnotesize
+    \scshape{Università di Bologna - Laurea Magistrale in Fisica del Sistema Terra - A. A. 2018/2019} \\ [7pt]   % Your university, school and/or department name(s)
+    \horrule{0.495pt} \\[0.3cm]  % Thin top horizontal rule
+    \Large IDROLOGIA E RISCHIO IDRAULICO\\
+    \huge Rapporto delle esercitazioni in R    % The assignment title
+    \horrule{0.495pt} \\         % Thick bottom horizontal rule
+}
+
+\author{
+	Giacomo Roversi\\ 						% Your name
+	\normalsize\itshape{giacomo.roversi2@studio.unibo.it}
+}
+\date{\large\today}  						% Today's date
+
+
+%----------------------------------------------------------------------------------------
+%	MAIN SECTION
+%----------------------------------------------------------------------------------------
+
+
+\begin{document}
+    \maketitle       % Prints the title
+    
+    \section{Introduzione}
+    
+    \subsection{Disdrometria e relazioni empiriche}
+    
+    \newpage
+    \section{Analisi dei dataset}
+    \subsection{Relazione tra velocità e diametro della goccia}
+
+    \newpage
+    \section{Conclusioni}
+
+\end{document}
+    
+% VADEMECUM
+
+% riferimento alla figura 
+% In Fig. \ref{fig:scatterplot}
+
+% formula in linea
+% \[V \left( D \right) \;\;=\;\; 9.65 - 10.3 \cdot e^{-0.6 \cdot D }\]
+% 
+% 
+%     \begin{figure}[!htb]
+%         \centering
+%         \fbox{\includegraphics[width=0.5\linewidth]{../Es01/immagini/tirante.png}}
+%         \caption{Grandezze di interesse nella sezione fluviale.}
+%         \label{fig:sezione}
+%         \end{figure}
+% 
+%         
+%     \begin{table}[!htb]
+%         \footnotesize 
+%         \centering
+%         \begin{tabu} to \textwidth {X[0.5,c]X[1,c]X[1,c]X[1,c]X[1,c]X[1,c]X[1,c]X[1,c]X[1,c]}
+%             \toprule
+%             &\multicolumn{2}{c}{Campagna 1} & \multicolumn{2}{c}{Campagna 2} & \multicolumn{2}{c}{Campagna 3} & \multicolumn{2}{c}{Campagna 4} \\
+%             \#&h & Q & h & Q & h & Q  & h  & Q  \\
+%             &\lbrack\si{\m}\rbrack & \lbrack\si{\m^3\per\second}\rbrack & \lbrack\si{\m}\rbrack & \lbrack\si{\m^3\per\second}\rbrack & \lbrack\si{\m}\rbrack & \lbrack
+%             \si{\m^3\per\second}\rbrack & \lbrack\si{\m}\rbrack & \lbrack\si{\m^3\per\second}\rbrack \\
+%             \midrule
+%             1&0.6104&25.800&0.5126&6.540&0.0365&0.083&0.1113&1.530 \\
+%             2&0.9856&58.100&0.8603&22.200&0.3395&7.800&0.1483&1.530 \\
+%             3&0.2066&2.890&0.0727&0.618&0.9601&31.100&0.9728&24.600 \\
+%             4&0.4983&19.300&0.0418&0.161&0.5941&13.100&0.0874&0.557 \\
+%             5&0.0088&0.0097&0.8269&35.800&0.8374&33.700&0.7173&36.900 \\
+%             6&&&&&0.3807&6.710&0.3896&4.700 \\
+%             7&&&&&0.3150&6.010&0.5195&17.200 \\
+%             8&&&&&0.8747&39.800&0.9033&33.200 \\
+%             9&&&&&0.0711&0.557&0.7220&31.100 \\
+%             10&&&&&0.8885&31.700&0.6156&26.200 \\
+%             11&&&&&0.9490&45.500&0.7807&43.800 \\
+%             12&&&&&0.4826&14.500&0.5660&12.800 \\
+%             13&&&&&0.2228&4.190&0.5000&13.600 \\
+%             14&&&&&0.5578&19.100&0.1918&3.570 \\
+%             15&&&&&0.6692&22.600&0.3077&5.590 \\
+%             \bottomrule
+%             \end{tabu}
+%         \caption{Misure di portata e dei relativi tiranti ricavate da quattro distinte campagne di misura.}
+%         \label{tab:misure.input}
+%         \end{table}
+
+% \begin{table}[!htb]
+% 		\centering
+% 		\begin{tabular}{lcc}
+% 			\textbf{Variabile}&\vline&\textbf{Varianza}\\ 
+% 			\hline
+% 			u&\vline&0.01\\
+% 			v&\vline&0.01\\
+% 			w&\vline&0.01\\
+% 			T&\vline&0.001\\
+% 		\end{tabular}
+% 		\caption{Varianza delle quattro variabili senza perturbazioni alla temperatura della stanza.}
+% 		\label{tab:var_1}
+% 	\end{table}	
+    
+% figure sovrapposte (2 per pagina)
+%     \begin{figure}[!htb]
+%         \centering
+%         \includegraphics[width=0.89\linewidth]{../Scatterplot_DV/strat.png}
+%         \includegraphics[width=0.89\linewidth]{../Scatterplot_DV/conv.png}
+%         \caption{Scatterplots tra velocità di caduta e diametro della goccia per un evento stratiforme (in alto) e uno convettivo (in basso). Dataset da disdrometro a imaging ottico 2DVD.}
+%         \label{fig:scatterplot}
+%     \end{figure}
+    
+% figure affiancate e sovrapposte (4 per pagina)
+% 	\begin{figure}[!htb]
+% 		\centering
+% 		\includegraphics[width=0.495\linewidth]{../Size_Distribution/strat1.png}
+% 		\includegraphics[width=0.495\linewidth]{../Size_Distribution/strat2.png}
+% 		\includegraphics[width=0.495\linewidth]{../Size_Distribution/strat3.png}
+% 		\includegraphics[width=0.495\linewidth]{../Size_Distribution/strat4.png}
+% 		\includegraphics[width=0.495\linewidth]{../Size_Distribution/strat5.png}
+% 		\includegraphics[width=0.495\linewidth]{../Size_Distribution/strat6.png}	
+% 		\caption{Distribuzioni dimensionali delle gocce durante una precipitazione stratiforme per istanti successivi a distanza di 4 minuti. In legenda i parametri delle dei fit.}
+% 		\label{fig:stratdistr}
+% 	\end{figure}
+
+    

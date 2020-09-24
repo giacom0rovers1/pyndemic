@@ -35,8 +35,42 @@ SEIR over a network, with R(DOTS) parameters
     Reproduction number can (does) change over time
     
 
+FORMULAZIONE CON DIFFUSION MATRIX?
+
+
 Test of the evolution of the similar-to-real cases
 
 Framework: networkx and CoLab (pyTorch?)
+
+
+
+
+Big social network sample: the Co-stardom network from IMDB data (updated 13/09/2020). Downloaded archive: https://datasets.imdbws.com/name.basics.tsv.gz
+
+
+
+From: https://en.wikipedia.org/wiki/Co-stardom_network
+
+In order to represent any network, it is necessary to characterize the properties of the corresponding graph of nodes and links. Studies on the collaboration network of movie actors have been described in literature such as the work done by (Watts and Strogatz, 1998), and Barabási and Albert in (1999) and (2000). The general characteristics are described below.[5][6][7][8][9]
+
+    According to Watts and Strogatz (1998), the movie/actor network indicated the following characteristics showing a small-world property of the underlying network:
+
+    Size: 225 226
+    Average degree: 61
+    Average path length: 3.65
+    Clustering coefficient: 0.79
+
+Compared to a random graph of the same size and average degree, the average path length is close in value. However, the clustering coefficient is much higher for the movie actor network.
+
+    The network characteristics and scaling exponents given by Barabási and Albert (1999), indicates the scale-free behavior:
+
+    Size: 212 250
+    Average degree: 28.78
+    Cutoff for power-law scaling: 900
+    Clustering coefficient: 0.79
+
+Therefore, the underlying network has the scale-free degree distribution p(k) ~ k−γactor, with an exponent γactor = 2.3 ± 0.1 (Barabási and Albert, 1999), (Albert and Barabási, 2000).
+
+    According to (Newman, Strogatz, and Watts, 2001), the movie actor network can be described by a bipartite graph. Nodes in this graph are of two types: movies and actors. And the edges only connect nodes of different types. So edges link the co-stars to the movie they appear in. Therefore, the collaboration graph of film actors can be constructed using a transformation matrix of the bipartite graph interaction matrix.
 
 
