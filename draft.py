@@ -14,10 +14,15 @@ import matplotlib.pyplot as plt
 # import collections
 # import pandas as pd
 # import seaborn as sns
-from scipy.stats import poisson, norm
+from scipy.stats import poisson, norm, probplot
 from scipy.linalg import eig
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import svds, eigs
+
+
+measurements = np.random.normal(loc = 20, scale = 5, size=100)   
+probplot(measurements, dist="norm", plot=plt)
+plt.show()
 
 
 N    = 1000
