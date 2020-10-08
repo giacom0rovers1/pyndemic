@@ -9,7 +9,7 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 from random import shuffle
-from scipy.stats import probplot  #poisson, norm, 
+from scipy.stats import probplot  #, norm  #poisson, 
 
 # G = nx.DiGraph()
 G = nx.Graph()
@@ -163,11 +163,14 @@ nx.diameter(G)
 
 
 # NOTABLE PLOTS
-
-plt.scatter(Cl.values(), BC.values()) #, cmap=plt.cm.Blues, c = degree_list)
+plt.figure()
+plt.scatter(Cl.values(), BC.values(), cmap = plt.cm.Blues, c = degree_list)
 plt.xlabel("Closeness")
 plt.ylabel("Betweenness")
+sm = plt.cm.ScalarMappable(cmap=plt.cm.Blues, norm=plt.Normalize(vmin = min(degree_list), vmax=max(degree_list)))
+plt.colorbar(sm)
 
+plt.figure()
 plt.scatter(degree_list, BC.values())
 plt.xlabel("Connectivity")
 plt.ylabel("Betweenness")
