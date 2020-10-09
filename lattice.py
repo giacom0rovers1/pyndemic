@@ -11,7 +11,9 @@ import networkx as nx
 # import matplotlib.pyplot as plt
 # from scipy.stats import probplot 
 
-G = nx.grid_graph([5, 5, 5])
+# G = nx.grid_graph([5, 5, 5])
+G = nx.grid_graph([10, 10, 10])
 
-jack.graph_plots(G)
+G = jack.graph_tools(G)
 
+jack.graph_plots(G, [2])
