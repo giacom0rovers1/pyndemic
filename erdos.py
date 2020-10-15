@@ -8,7 +8,7 @@ Created on Thu Oct  8 16:12:47 2020
 import jack
 import networkx as nx
 
-G = nx.erdos_renyi_graph(125, 0.1, seed = 1234)
+G = nx.erdos_renyi_graph(125, 0.1, seed=1234)
 
 G = jack.graph_tools(G)
 

@@ -15,11 +15,11 @@ from ndlib.viz.mpl.DiffusionTrend import DiffusionTrend
 # Dynamic Network topology
 dg = dn.DynGraph()
 
-# Naive synthetic dynamic graph 
+# Naive synthetic dynamic graph
 # At each timestep t a new graph having the same set of node ids is created
 for t in range(0, 30):
     # g = nx.erdos_renyi_graph(1000, 0.1)
-    g = nx.connected_watts_strogatz_graph(200,10,0.1)
+    g = nx.connected_watts_strogatz_graph(200, 10, 0.1)
     dg.add_interactions_from(g.edges(), t)
 
 # Model selection
@@ -27,9 +27,9 @@ model = dm.DynSIRModel(dg)
 
 # Model Configuration
 config = mc.Configuration()
-config.add_model_parameter('beta',  0.01) # infection rate
-config.add_model_parameter('gamma', 0.01) # recovery rate
-# config.add_model_parameter('lambda', 0.01) # recovery rate
+config.add_model_parameter('beta',  0.01)  # infection rate
+config.add_model_parameter('gamma', 0.01)  # recovery rate
+# config.add_model_parameter('lambda', 0.01)  # recovery rate
 config.add_model_parameter('alpha', 0.01)  # latent period (units?)
 config.add_model_parameter("percentage_infected", 0.1)
 

@@ -9,7 +9,7 @@ import jack
 import networkx as nx
 # import numpy as np
 # import matplotlib.pyplot as plt
-# from scipy.stats import probplot 
+# from scipy.stats import probplot
 
 # G = nx.grid_graph([5, 5, 5])
 G = nx.grid_graph([10, 10, 10])
