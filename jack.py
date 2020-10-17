@@ -23,7 +23,6 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
     return new_cmap
 
 
-# all in one call, refined
 def graph_tools(G):
     G.nn = len(list(G.nodes))
     G.nl = len(list(G.edges))
@@ -46,8 +45,8 @@ def graph_tools(G):
     G.eig_list = nx.adjacency_spectrum(G)
     # eig_sequence = sorted(eig_list, reverse=True)
 
-    G.A = nx.adj_matrix(G)
-    G.A = G.A.asfptype()
+    G.A = nx.adj_matrix(G)  # create a sparse adjacency matrix
+    G.A = G.A.asfptype()  # convert the sparse values from int to float
     # plt.spy(A)
     G.eig_val, G.eig_vec = sp.sparse.linalg.eigs(G.A)
 
