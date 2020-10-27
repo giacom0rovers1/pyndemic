@@ -12,7 +12,7 @@ Created on Mon Sep 28 19:26:21 2020
 # inside:
 # /home/giacomo/anaconda3/lib/python3.8/site-packages/
 
-import jack
+# import jack
 import numpy as np
 import pandas as pd
 
@@ -29,7 +29,7 @@ N = 1000
 p = 0.075  # 0.1
 
 G = nx.erdos_renyi_graph(N, p, seed=1234)
-nit = 800
+nit = 500
 
 # G = nx.connected_watts_strogatz_graph(N, 100, 0.1, seed=1234)
 # nit = 400

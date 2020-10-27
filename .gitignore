@@ -131,3 +131,12 @@ dmypy.json
 
 # PDF documentation
 bib/
+
+
+# Images and other binaries
+*.pdf
+*.png
+*.jpeg
+*.jpg
+*.kra
+*.kra~

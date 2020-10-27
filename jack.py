@@ -60,7 +60,7 @@ def graph_tools(G):
 
 
 def scale_free(x, a, b):
-    return a*x**-b
+    return a*(x)**-b
 
 
 def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
@@ -88,32 +88,33 @@ def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
         # Degree analysis
         fig2 = plt.figure(figsize=(11, 12))
         x = np.linspace(0, G.k_max, 100)
-        xi = np.arange(G.k_max+1)
+        xi = np.arange(G.k_min, G.k_max+1)
+        yi = G.k_histD[G.k_min:]
 
         G.gauss = norm.pdf(x, G.k_avg, G.k_std)
         G.poiss = poisson.pmf(xi, mu=G.k_avg)
         G.sf_pars, G.sf_cov = curve_fit(f=scale_free,
                                         xdata=xi,
-                                        ydata=G.k_histD,
+                                        ydata=yi,
                                         p0=[1, 1],
-                                        bounds=(-np.inf, np.inf))
+                                        bounds=(1e-10, np.inf))
 
         # Degree histogram
         fig2.add_subplot(221)
         # plt.hist(degree_list, density=True)
-        plt.scatter(xi, G.k_histD, alpha=0.75)
+        plt.scatter(xi, yi, alpha=0.75)
         plt.xlabel('k')
         plt.ylabel('p(k)')
         plt.title(r'$< k > =$' + str(np.round(G.k_avg, 2)))
         plt.plot(x, G.gauss, 'r--', label='Normal')
         plt.plot(xi, G.poiss, 'y--', label='Poisson')
         plt.plot(x, scale_free(x, *G.sf_pars), 'b--', label='Scale free')
-        plt.ylim([0, max(G.k_histD+0.1)])
+        plt.ylim([0, max(yi+0.1)])
         plt.legend(loc='best')
 
         fig2.add_subplot(222)
         # plt.hist(degree_list, density=True)
-        plt.loglog(xi, G.k_histD, '.', ms=12, alpha=0.75)
+        plt.loglog(xi, yi, '.', ms=12, alpha=0.75)
         plt.xlabel('k')
         plt.ylabel('p(k)')
 
