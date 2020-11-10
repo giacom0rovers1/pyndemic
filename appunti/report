@@ -51,7 +51,7 @@ Big social network sample: the Co-stardom network from IMDB data (updated 13/09/
 
 From: https://en.wikipedia.org/wiki/Co-stardom_network
 
-In order to represent any network, it is necessary to characterize the properties of the corresponding graph of nodes and links. Studies on the collaboration network of movie actors have been described in literature such as the work done by (Watts and Strogatz, 1998), and Barabási and Albert in (1999) and (2000). The general characteristics are described below.[5][6][7][8][9]
+In order to represent any network, it is necessary to characterize the properties of the corresponding graph of nodes and links. Studies on the collaboration network of movie actors have been described in literature such as the work done by (Watts and Strogatz, 1998), and Barabási and Albert in (1999) and (2000). The general characteristics are described below.
 
     According to Watts and Strogatz (1998), the movie/actor network indicated the following characteristics showing a small-world property of the underlying network:
 

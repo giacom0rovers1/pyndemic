@@ -1,0 +1,153 @@
+% Giacomo Roversi - Remote Sensing
+%\documentclass[DIV=14, paper=a4, fontsize=10pt]{scrartcl}
+\documentclass[DIV=12, BCOR=0pt]{scrartcl}  % A4 paper and 11pt font size {scrartcl}
+\usepackage[utf8x]{inputenc}
+\usepackage[english]{babel}
+%\usepackage[default]{raleway}
+\usepackage[default]{cantarell}
+\usepackage[cm]{sfmath}
+\usepackage{amsmath}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{hyperref}
+\usepackage[round]{natbib}
+\usepackage{tabu}
+\usepackage{booktabs} % \toprule \midrule \bottomrule
+\usepackage{physics}
+\usepackage{siunitx}
+\usepackage{eurosym}
+\usepackage{graphicx}
+
+
+\definecolor{linkcolour}{rgb}{0,0.2,0.6}
+\hypersetup{colorlinks,breaklinks,urlcolor=linkcolour,linkcolor=linkcolour}  
+
+
+\begin{document}
+%	
+%	\begin{flushright}
+%	% Author	
+%	{\large Giacomo Roversi} \\ 
+%	{\small \href{mailto:giacomo.roversi2@studio.unibo.it}{giacomo.roversi2@studio.unibo.it} }\\
+%	\vskip0.2in
+%  % Date
+%  {\large November 12, 2020}
+%	\end{flushright}
+%
+%	\begin{flushleft}
+%	\vskip0.2in
+%	% Title
+%	{\huge \textbf{Numerical simulations of influenza-like epidemic processes over complex networks}} 
+%	\vskip0.2in
+%	% Subtitle
+%	{\Large \color{gray}
+%	Reti complesse A.A. 2017-2018  \\
+%	Università di Bologna - Laurea Magistrale in Fisica del Sistema Terra}
+%	\end{flushleft}
+
+
+
+\begin{flushright}
+	% Author	
+	{\large Giacomo Roversi} \\ 
+	{\small \href{mailto:giacomo.roversi2@studio.unibo.it}{giacomo.roversi2@studio.unibo.it} }\\
+	\vskip0.15in
+	% Date
+	{\large November 12, 2020}
+\end{flushright}
+
+\begin{flushleft}
+	% 
+	{\Large \color{gray}
+		Reti complesse A.A. 2017-2018 - Prof. Daniel Remondini  \\
+		Università di Bologna - Laurea Magistrale in Fisica del Sistema Terra}
+
+
+	\vskip0.2in
+	% Title
+	{\huge\textbf{Numerical simulations of influenza-like epidemic processes over complex networks}} 
+	\vskip0.33in
+	
+\end{flushleft}
+%	\section*{Abstract}
+	
+	\section{Introduction}
+	\label{sec:intro}
+	This work is based on \citet{Pastor-Satorras} %  Pastor-Satorras et al. (2015) 
+	and aims to analyse numerically various scenarios of contagion, inspired to the current COVID-19 pandemic, exploiting NetworkX and NDlib python libraries.	
+ Firstly, theoretical fundamentals and deterministic predictions of the SEIR model are presented. These predictions are then compared with discrete-time numerical simulations over complex networks of increasing resemblance to the real world, in order to show different aspects of the contagion dynamics. Finally, some mitigation and immunization strategies are tested.
+  
+  \section{The SEIR epidemic model}
+  The model ... 
+  
+  Its basic implementation assumes homogeneous mixing of the population and consequent completely random interactions. Under this assumptions the transitions between compartments are regulated by a set of deterministic differential equations. 
+  
+  \begin{figure}[h]
+  	\centering
+  	\includegraphics[width=0.75\linewidth]{../SEIR_2.png}
+  	\caption{}
+  	\label{}
+  \end{figure}
+  
+  \section{Complex networks}
+  \textit{L'assunzione di omogeneita` e` sicuramente inadeguata per sistemi reali che presentano forte eterogeneita` di composizione e di rapporti relazionali. Si affronta la modellizzazione di questa eterogeneita` relazionale tramite reti complesse sulle quali riprodurre i modelli di contagio per step di interazione individuo-individuo discretizzati. In una rappresentazione discreta su network, i parametri del modello acquisiscono il valore di probabilita` di transizione (quindi su reti piccole si evidenzia l'effetto di fluttuazioni random, necessario approccio ensemble).  }
+  
+  \section{Immunization and mitigation strategies}
+  \subsection{Lockdown and quarantine}
+  \subsection{Vaccines}
+  \subsubsection{Random (failure)}
+	\subsubsection{Targeted (attack)}
+
+	\section{Conclusions}
+
+		
+%  \small
+  \footnotesize
+	\bibliographystyle{plainnat} %  % apalike
+	% Apalike non mostra i DOI, plainnat o abbrvnat mettono i nomi prima dei cognomi
+	\bibliography{networks}
+
+\end{document}
+
+
+
+%%% Vademecum %%%
+Bibliography:
+\bibliographystyle{plainnat} %  % apalike
+% Apalike non mostra i DOI, plainnat o abbrvnat mettono i nomi prima dei cognomi
+\bibliography{networks}
+
+Citations:
+\citep{bibid}
+\citet{bibid}
+
+Math expressions:
+\begin{align}
+	a = b
+\end{align}
+
+Tables:
+\begin{table}[h]
+	\centering
+	\begin{tabu} to \textwidth {X[1,l]X[1,c]X[1,c]X[1,c]} 
+		\toprule
+		Product & Reference  & Latency  & Spatial \\
+		&time step (min)  &  (min)  &   resolution (km) \\ 
+		\midrule
+		CML & 15 &20 & 5 \\
+		Radar raw & 5 & 15 & 1 \\
+		Radar adj. & 60 & 60 &  1 \\
+		Raingauges raw & 60 & 60 &  - \\
+		ERG5 & 60 & 1440 & 5 \\ 
+		\bottomrule
+	\end{tabu}
+	\caption{Latency and spatial and temporal sampling of the considered precipitation products.}
+	\label{tab:latency}
+\end{table}
+
+Figures:
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=0.75\linewidth]{../Es01/immagini/dati4.png}
+	\caption{Portate in funzione dei tiranti per le 4 campagne di misura, con incertezze al 25\%.}
+	\label{fig:dati}
+\end{figure}
