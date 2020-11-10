@@ -155,7 +155,6 @@ def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
 
         plt.legend(loc='best')
         plt.xlim([1, G.k_max+1])
-        # TODO plot distribuzioni di confronto (power law. gauss, poisson)
 
         # Dergee rank plot
         fig2.add_subplot(223)
@@ -233,7 +232,7 @@ def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
 # EPIDEMIC PROCESSES
 
 
-def SEIR(perc_inf, beta, tau, tar, days):
+def SEIR(perc_inf, beta, tau_i, tau_r, days):
     '''
     SEIR Epidemic Model
 
@@ -243,25 +242,25 @@ def SEIR(perc_inf, beta, tau, tar, days):
         Initially infected percentage of the population [0, 100].
     beta : float
         Probability of transmission in one day [0, 1].
-    tau : int
+    tau_i : int
         average incubation time [days].
-    tar : int
+    tau_r : int
         average recovery time [days].
     days : int
         Total number of simulated days.
 
     Returns
     -------
-    s, e, i, r: (floats)
+    s, e, i, r : floats
         Relative populations
-    t: (float)
+    t : float
         Time array
 
     '''
     # calculate constants
     frac_inf = perc_inf/100
-    gamma = 1/tau
-    mu = 1/tar
+    gamma = 1/tau_i
+    mu = 1/tau_r
     R0 = beta/mu
 
     y0 = np.array([(1-frac_inf), 0, frac_inf, 0])
@@ -288,18 +287,18 @@ def SEIR(perc_inf, beta, tau, tar, days):
     return s, e, i, r, t
 
 
-def growth_fit(Es, tar):
+def growth_fit(pos, tau_r):
     # Locates and analyses the first phase of an epidemic spreading
 
     # Growth flex
-    incr = np.gradient(np.gradient(Es))
+    incr = np.gradient(np.gradient(pos))
 
-    idx = tar
+    idx = tau_r
     while incr[idx] > 0:
         idx += 1
 
     # formulazione semplice: mi fermo al flesso
-    growth = Es[:idx]
+    growth = pos[:idx]
 
     xi = np.arange(0, len(growth))
     yi = growth
@@ -308,38 +307,84 @@ def growth_fit(Es, tar):
                           xdata=xi,
                           ydata=yi,
                           bounds=(-100, 100))
-    K = pars[1]
-    Td = np.log(2)/K
+    K0 = pars[1]
+    Td0 = np.log(2)/K0
 
     x = np.linspace(0, 1.3*len(growth), 100)
 
     plt.figure()
-    plt.plot(Es, label="Exposed")
+    plt.plot(pos, label="Positives (E+I)")
     plt.plot(x, exponential(x, *pars), 'g--', label="Exponential fit")
     plt.xlim([0, 2*len(growth)])
-    plt.ylim([0, 1.3*max(Es)])
+    plt.ylim([0, 1.3*max(pos)])
     plt.xlabel('Days')
     plt.ylabel('Individuals')
-    plt.text(1, max(Es),
-             r'$K$ =' + str(np.round(K, 2)) +
-             r'; $T_{d}$ =' + str(np.round(Td, 2)))
+    plt.text(1, max(pos),
+             r'$K$ =' + str(np.round(K0, 2)) +
+             r'; $T_{d}$ =' + str(np.round(Td0, 2)))
     plt.legend(loc='best')
 
-    return xi, pars
+    return xi, pars, K0, Td0
 
 
-def contagion_metrics(s, e, i, r, R0, tau, tar, N):
+def contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N):
+    '''
+    Calculates the reproduction number in time, the growth factor and the
+    doubling time. Produces two graphs: the intial exponential growth and the
+    variation of Rt throughout the epidemic evolution.
+
+    Parameters
+    ----------
+    s : float
+        Susceptible fraction.
+    e : float
+        Exposed fraction.
+    i : float
+        Infected (contagious) fraction.
+    r : float
+        Recovered/removed fraction.
+    R0 : float
+        Basic reproduction number.
+    tau_i : int
+        Incubation time scale.
+    tau_r : int
+        Recovery time scale.
+    N : int
+        Total number of individuals of the population.
+
+    Returns
+    -------
+    Td : np.array
+        Doubling time.
+    R : np.array
+        Reproduction number.
+    rt : np.array
+        DESCRIPTION.
+    rts : np.array
+        DESCRIPTION.
+    Rt : np.array
+        DESCRIPTION.
+    Ki : np.array
+        DESCRIPTION.
+    Ks : np.array
+        DESCRIPTION.
+
+    '''
+    # total positives (exposed + infected)
+    pos = N *(e+i)
+
+    # a priori Rt
     Rt = R0 * s
 
-    # actual reproduction number
-    rt = e[1:]/e[:-1]
+    # actual reproduction number (from increments of positives)
+    rt = pos[1:]/pos[:-1]
 
-    # growth rate
-    Ki = np.diff(np.log(e))
+    # actual growth rate
+    Ki = np.diff(np.log(pos))
 
-    # smoothing in funzione di tar per togliere il rumore stocastico
-    f = 0.5             # fraction of tar to use as smoothing window
-    D = int(f*(tar))    # time interval of the measurements in cycles units
+    # smoothing based on "tau_r"
+    f = 0.5               # fraction of tau_r to use as smoothing window
+    D = int(f*(tau_r))    # time interval of the measurements in cycles units
 
     rts = pd.Series(list(rt)).rolling(window=D,
                                       min_periods=D,
@@ -349,28 +394,32 @@ def contagion_metrics(s, e, i, r, R0, tau, tar, N):
                                      min_periods=D,
                                      center=True).mean().values
 
-    R = np.exp(Ks)  # *D)               # reproduction number from growth rate
-    Td = np.log(2)/Ks                  # doubling time
+    # Reproduction number from smoothed growing rate
+    R = np.exp(Ks)
+
+    # Doubling time from the smoothed growing rate
+    Td = np.log(2)/Ks
 
     # Es = pd.Series(list(N*e)).rolling(window=D,
     #                                   min_periods=1,
     #                                   center=True).mean().values
-    # xi, pars = growth_fit(Es, tar)
+    # xi, pars = growth_fit(Es, tau_r)
 
-    xi, pars = growth_fit(N*e, tar)
+    # Initial exponential growth
+    xi, pars, K0, Td0 = growth_fit(pos, tau_r)
 
-    plt.figure(figsize=(20, 11))
-    plt.plot([1 for i in range(500)], 'k--')
+    plt.figure()
+    plt.plot([1 for i in range(500)], 'k--', linewidth=0.7)
     plt.plot(Rt, 'b', label='Rt predicted')
     plt.plot(rt, 'orange', label='Rt from actual increments')
     plt.plot(rts, 'r', alpha=0.5, label='Rt moving average')
     plt.plot(R, 'grey', alpha=0.5, label='Rt derived from Ks')
     plt.plot(xi, np.ones(len(xi)) * np.exp(pars[1]), 'g--',
-             label='R0 form exponential growth')
+             label='R0 from the exponential fit')
 
     plt.legend(loc='best')
     plt.xlim([0, len(rts[rts > 0]) + 2*D])
     plt.ylim([0, int(R0+1)])
-    plt.grid()
+    # plt.grid()
 
-    return Td, R, rt, rts, Rt, Ki, Ks
+    return Td0, Td, R, rt, rts, Rt, K0, Ki, Ks
