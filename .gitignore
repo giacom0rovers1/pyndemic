@@ -141,6 +141,8 @@ bib/
 *.kra
 *.kra~
 
+*.pkl
+
 # Tex and Kate binaries
 *.kate-swp
 *.aux

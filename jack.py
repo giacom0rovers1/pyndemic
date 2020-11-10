@@ -5,6 +5,7 @@ Created on Thu Oct  8 12:44:38 2020
 
 @author: giacomo
 """
+import pickle
 import numpy as np
 import scipy as sp
 import pandas as pd
@@ -14,6 +15,11 @@ import matplotlib.colors as colors
 
 from scipy.stats import probplot, norm, poisson
 from scipy.optimize import curve_fit
+
+import ndlib.models.epidemics as ep
+import ndlib.models.ModelConfig as mc
+
+from ndlib.viz.mpl.DiffusionTrend import DiffusionTrend
 
 # SUPPORT to APPEARENCE
 
@@ -266,18 +272,18 @@ def SEIR(perc_inf, beta, tau_i, tau_r, days):
     y0 = np.array([(1-frac_inf), 0, frac_inf, 0])
     y = y0
 
-    def ddt(t, y):
+    def dydt(t, y):
         return np.array([-beta*y[0]*y[2],                   # ds/dt
                          beta*y[0]*y[2] - gamma*y[1],       # de/dt
                          gamma*y[1] - mu*y[2],              # di/dt
                          mu*y[2]])                          # dr/dt
 
-    y = sp.integrate.solve_ivp(fun=ddt, t_span=(0, days), y0=y0)
+    y = sp.integrate.solve_ivp(fun=dydt, t_span=(0, days), y0=y0)
 
     plt.figure()
     plt.plot(y.t, y.y.T)
     # plt.legend(["s", "e", "i", "r"])
-    plt.legend(["Susceptible", "Exposed", "Infected", "Recovered"])
+    plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
     plt.text(0.8*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
     plt.xlabel('Days')
     plt.ylabel('Relative population')
@@ -371,7 +377,7 @@ def contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N):
 
     '''
     # total positives (exposed + infected)
-    pos = N *(e+i)
+    pos = N * (e+i)
 
     # a priori Rt
     Rt = R0 * s
@@ -423,3 +429,90 @@ def contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N):
     # plt.grid()
 
     return Td0, Td, R, rt, rts, Rt, K0, Ki, Ks
+
+
+def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
+    # G = jk.graph_tools(G)
+
+    # Alternativa a grah_tools(G) per il solo degree
+    k = G.degree()
+    G.degree_list = [d for n, d in k]
+    G.k_avg = np.mean(G.degree_list)
+
+    print(G.k_avg)
+    # # GRAPH PLOTS
+    # jk.graph_plots(G, [1])
+    # jk.graph_plots(G, [2, 3])
+    # print(G.k_avg, G.k_min, G.sf_pars)
+
+    # EPIDEMIC MODEL
+    frac_inf = perc_inf/100
+    beta_n = beta/G.k_avg  # infection rate
+    gamma = 1/tau_i
+    mu = 1/tau_r
+
+    # Config:
+    model = ep.SEIRModel(G)
+
+    # print(model.parameters)
+    # print(model.available_statuses)
+
+    config = mc.Configuration()
+    config.add_model_parameter('alpha', gamma)
+    config.add_model_parameter('beta',  beta_n)
+    config.add_model_parameter('gamma', mu)
+    config.add_model_parameter("percentage_infected", frac_inf)
+
+    model.set_initial_status(config)
+
+    # Run:
+    iterations = model.iteration_bunch(days, node_status=True)
+    trends = model.build_trends(iterations)
+
+    # Recover status variables:
+    s = np.array([S for S, E, I, R in
+                  [list(it['node_count'].values()) for it in iterations]])/N
+    e = np.array([E for S, E, I, R in
+                  [list(it['node_count'].values()) for it in iterations]])/N
+    i = np.array([I for S, E, I, R in
+                  [list(it['node_count'].values()) for it in iterations]])/N
+    r = np.array([R for S, E, I, R in
+                  [list(it['node_count'].values()) for it in iterations]])/N
+
+    # resampling through t (variable spacing decided by the ODE solver)
+    s = np.interp(t, np.arange(0, len(s)), s)
+    e = np.interp(t, np.arange(0, len(e)), e)
+    i = np.interp(t, np.arange(0, len(i)), i)
+    r = np.interp(t, np.arange(0, len(r)), r)
+
+    # Plot:
+    viz = DiffusionTrend(model, trends)
+    viz.plot()
+    return s, e, i, r
+
+
+class RandNemic:
+
+    def __init__(self, name, graph, location):
+        self.name = name
+        self.G = graph
+        self.loc = location
+        self.N = self.G.number_of_nodes()
+
+    def save(self):
+        with open(self.loc, 'wb') as f:
+            pickle.dump(self, f)
+
+    def run(self, perc_inf, beta, tau_i, tau_r, days, t):
+
+        self.s, self.e, self.i, self.r = SEIR_network(self.G, self.N,
+                                                      perc_inf, beta,
+                                                      tau_i, tau_r,
+                                                      days, t)
+
+        # self.s, self.e, self.i, self.r = s, e, i, r
+
+        contagion_metrics(self.s, self.e,
+                          self.i, self.r,
+                          beta*tau_r, tau_i,
+                          tau_r, self.N)
