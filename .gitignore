@@ -140,3 +140,11 @@ bib/
 *.jpg
 *.kra
 *.kra~
+
+# Tex and Kate binaries
+*.kate-swp
+*.aux
+*.bbl
+*.blg
+*.out
+*.synctex.gz

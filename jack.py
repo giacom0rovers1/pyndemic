@@ -14,14 +14,48 @@ import matplotlib.colors as colors
 from scipy.stats import probplot, norm, poisson
 from scipy.optimize import curve_fit
 
+# SUPPORT to APPEARENCE
 
-# to avoid white dots on white bg
+
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
+    '''
+    To avoid white dots on white background
+
+
+    Parameters
+    ----------
+    cmap : TYPE
+        DESCRIPTION.
+    minval : TYPE, optional
+        DESCRIPTION. The default is 0.0.
+    maxval : TYPE, optional
+        DESCRIPTION. The default is 1.0.
+    n : TYPE, optional
+        DESCRIPTION. The default is 100.
+
+    Returns
+    -------
+    new_cmap : TYPE
+        DESCRIPTION.
+
+    '''
     new_cmap = colors.LinearSegmentedColormap.from_list(
         'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
+
+# BASIC FUNCTIONS
+
+def scale_free(x, a, b):
+    return a*(x)**-b
+
+
+def exponential(x, a, b, c):
+    return a*np.exp(b*(x+c))
+
+
+# COMPLEX NETWORKS ANALYSIS AND VISUALIZATION
 
 def graph_tools(G):
     G.nn = len(list(G.nodes))
@@ -57,10 +91,6 @@ def graph_tools(G):
     G.L = nx.average_shortest_path_length(G)
 
     return G
-
-
-def scale_free(x, a, b):
-    return a*(x)**-b
 
 
 def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
@@ -197,3 +227,107 @@ def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
     # TODO Laplacian matrix and spectrum
 
     return 0
+
+
+# EPIDEMIC PROCESSES
+
+
+def SEIR(perc_inf, beta, tau, tar, days):
+    '''
+    SEIR Epidemic Model
+
+    Parameters
+    ----------
+    perc_inf : float
+        Initially infected percentage of the population [0, 100].
+    beta : float
+        Probability of transmission in one day [0, 1].
+    tau : int
+        average incubation time [days].
+    tar : int
+        average recovery time [days].
+    days : int
+        Total number of simulated days.
+
+    Returns
+    -------
+    ivp.OdeResult
+        Result of the integration.
+
+    '''
+    # calculate constants
+    frac_inf = perc_inf/100
+    gamma = 1/tau
+    mu = 1/tar
+    R0 = beta/mu
+
+    y0 = np.array([(1-frac_inf), 0, frac_inf, 0])
+    y = y0
+
+    def ddt(t, y):
+        return np.array([-beta*y[0]*y[2],                   # ds/dt
+                         beta*y[0]*y[2] - gamma*y[1],       # de/dt
+                         gamma*y[1] - mu*y[2],              # di/dt
+                         mu*y[2]])                          # dr/dt
+
+    y = sp.integrate.solve_ivp(fun=ddt, t_span=(0, days), y0=y0)
+
+    plt.figure()
+    plt.plot(y.t, y.y.T)
+    # plt.legend(["s", "e", "i", "r"])
+    plt.legend(["Susceptible", "Exposed", "Infected", "Recovered"])
+    plt.text(0.8*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
+    plt.xlabel('Days')
+    plt.ylabel('Relative population')
+
+    return y
+
+
+def growth_fit(Is, n):
+    '''
+    Locates and analyses the first phase of an epidemic spreading
+
+    Returns
+    -------
+    None.
+
+    '''
+    # incr = np.diff(Is, n)
+    incr1 = np.gradient(Is)
+    incr2 = np.gradient(incr1)
+
+    idx1 = 5
+    while incr1[idx1] > 0:
+        idx1 += 1
+    print(idx1)
+
+    # a = 0
+    idx2 = 5
+    # while idx2 > 3/4*idx1:
+    # idx2 = 5
+
+    while incr2[idx2] > -2:
+        idx2 += 1
+        # a -= 1
+    # print(a)
+    print(idx2)
+
+    # formulazione semplice: mi fermo al calare della derivata di Ii
+    growth = Is[:idx2-10]
+
+    xi = np.arange(0, len(growth))
+    yi = growth
+
+    pars, cov = curve_fit(f=exponential,
+                          xdata=xi,
+                          ydata=yi,
+                          bounds=(-100, 100))
+    x = np.linspace(0, 1.3*len(growth), 100)
+
+    plt.figure()
+    plt.plot(Is)
+    plt.plot(x, exponential(x, *pars), 'g--')
+    plt.xlim([0, 2*len(growth)])
+    plt.ylim([0, 1.3*max(Is)])
+
+    return xi, pars

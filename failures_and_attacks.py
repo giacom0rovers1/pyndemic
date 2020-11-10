@@ -75,3 +75,26 @@ print('Network with  Scale-free Model broke after',
 print('Network with Scale-free Model broke after',
       attack(HK, nx.betweenness_centrality),
       'steps with Targeted Attacks.')
+
+
+'''
+NEXT:
+
+# **Definisco una soglia di ospedalizzazione massima.**
+#
+#
+# All'approssimarsi della soglia faccio intervenire meccanismi di mitigazione
+#   /contenimento del contagio.
+#
+# 1. beta si riduce (mascherine)
+# 2. la connettività media si abbassa (lockdown)
+#
+# come intervengo sui k?
+# * provo a tagliare la coda ad alti k
+# * riduco in modo random (una percentuale a tutte le scale)
+#
+# Salvare entrambi gli scenari (pandas dataset?) e fare un confronto per
+valutare la bontà delle misure (strategie di attacco)
+#
+# Valutare le percentuali finali di popolazione interessate dal contagio
+'''
