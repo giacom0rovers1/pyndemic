@@ -7,9 +7,11 @@ Created on Sun Nov  8 18:10:21 2020
 """
 
 import numpy as np
+import pandas as pd
+from jack import SEIR, growth_fit  # , exponential
 import matplotlib.pyplot as plt
 
-from scipy.integrate import solve_ivp
+# from scipy.integrate import solve_ivp
 
 N = 1e4
 perc_inf = 0.1
@@ -18,37 +20,7 @@ beta = 0.22
 tau = 20
 tar = 10
 
-
-def SEIR(perc_inf, beta, tau, tar, days):
-    # calculate constants
-    frac_inf = perc_inf/100
-    gamma = 1/tau
-    mu = 1/tar
-    R0 = beta/mu
-
-    y0 = np.array([(1-frac_inf), 0, frac_inf, 0])
-    y = y0
-
-    def ddt(t, y):
-        return np.array([-beta*y[0]*y[2],                   # ds/dt
-                         beta*y[0]*y[2] - gamma*y[1],       # de/dt
-                         gamma*y[1] - mu*y[2],              # di/dt
-                         mu*y[2]])                          # dr/dt
-
-    y = solve_ivp(fun=ddt, t_span=(0, days), y0=y0)
-
-    plt.figure()
-    plt.plot(y.t, y.y.T)
-    # plt.legend(["s", "e", "i", "r"])
-    plt.legend(["Susceptible", "Exposed", "Infected", "Recovered"])
-    plt.text(0.8*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
-    plt.xlabel('Days')
-    plt.ylabel('Relative population')
-
-    return y, R0
-
-
-y, R0 = SEIR(perc_inf, beta, tau, tar, days)
+y = SEIR(perc_inf, beta, tau, tar, days)
 
 g = 1-(1/R0)
 
@@ -75,3 +47,51 @@ g = 1-(1/R0)
 #          days=IntSlider(min=0, max=1200, step=100, value=900,
 #                         description='Number of days',
 #                         style=style, layout=slider_layout))
+
+
+# a priori reproduction number
+Rt = R0 * y.y[0, :]
+
+# actual reproduction number
+rt = y.y[2, 1:]/y.y[2, :-1]
+# rt = Ii[tau:]/Ii[:-tau]/(tau*0.5)        # perche` divido tau per due?
+# rt = np.append(np.ones(tau)*np.nan, rt)  # slittamento
+
+# growth rate
+Ki = np.gradient(np.log(y.y[2, :]))
+
+# smoothing in funzione di tau per togliere il rumore stocastico
+f = 1/np.exp(1)   # smoothing factor
+D = int(f*tau)    # time interval of the measurements in cycles units
+
+rts = pd.Series(list(rt)).rolling(window=D,
+                                  min_periods=1,
+                                  center=True).mean().values
+
+Ks = pd.Series(list(Ki)).rolling(window=D,
+                                 min_periods=1,
+                                 center=True).mean().values
+
+R = np.exp(Ks)  # *D)               # reproduction number from growth rate
+Td = np.log(2)/Ks                  # doubling time
+
+Is = pd.Series(list(N*y.y[2, :])).rolling(window=D,
+                                          min_periods=1,
+                                          center=True).mean().values
+
+xi, pars = growth_fit(Is, 1)
+
+
+figR = plt.figure(figsize=(20, 11))
+plt.plot([1 for i in range(500)], 'k--')
+plt.plot(Rt, 'b', label='R predicted')
+plt.plot(rt, 'orange', label='R from actual increments')
+plt.plot(rts, 'r', alpha=0.5, label='R moving average')
+plt.plot(R, 'grey', alpha=0.5, label='R derived from K')
+plt.plot(xi, np.ones(len(xi)) * np.exp(pars[1]), 'g--',
+         label='R form exponential growth')
+
+plt.legend(loc='best')
+plt.xlim([0, len(rts[rts > 0]) + 2*D])
+plt.ylim([0, int(R0+1)])
+plt.grid()

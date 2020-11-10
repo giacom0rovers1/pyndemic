@@ -7,6 +7,7 @@ Created on Thu Oct  8 12:44:38 2020
 """
 import numpy as np
 import scipy as sp
+import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -331,3 +332,52 @@ def growth_fit(Is, n):
     plt.ylim([0, 1.3*max(Is)])
 
     return xi, pars
+
+
+def contagion_metrics(y, R0, tau, N):
+    Rt = R0 * y.y[0, :]
+
+    # actual reproduction number
+    rt = y.y[2, 1:]/y.y[2, :-1]
+    # rt = Ii[tau:]/Ii[:-tau]/(tau*0.5)        # perche` divido tau per due?
+    # rt = np.append(np.ones(tau)*np.nan, rt)  # slittamento
+
+    # growth rate
+    Ki = np.gradient(np.log(y.y[2, :]))
+
+    # smoothing in funzione di tau per togliere il rumore stocastico
+    f = 1/np.exp(1)   # smoothing factor
+    D = int(f*tau)    # time interval of the measurements in cycles units
+
+    rts = pd.Series(list(rt)).rolling(window=D,
+                                      min_periods=1,
+                                      center=True).mean().values
+
+    Ks = pd.Series(list(Ki)).rolling(window=D,
+                                     min_periods=1,
+                                     center=True).mean().values
+
+    R = np.exp(Ks)  # *D)               # reproduction number from growth rate
+    Td = np.log(2)/Ks                  # doubling time
+
+    Is = pd.Series(list(N*y.y[2, :])).rolling(window=D,
+                                              min_periods=1,
+                                              center=True).mean().values
+
+    xi, pars = growth_fit(Is, 1)
+
+    plt.figure(figsize=(20, 11))
+    plt.plot([1 for i in range(500)], 'k--')
+    plt.plot(Rt, 'b', label='R predicted')
+    plt.plot(rt, 'orange', label='R from actual increments')
+    plt.plot(rts, 'r', alpha=0.5, label='R moving average')
+    plt.plot(R, 'grey', alpha=0.5, label='R derived from K')
+    plt.plot(xi, np.ones(len(xi)) * np.exp(pars[1]), 'g--',
+             label='R form exponential growth')
+
+    plt.legend(loc='best')
+    plt.xlim([0, len(rts[rts > 0]) + 2*D])
+    plt.ylim([0, int(R0+1)])
+    plt.grid()
+
+    return Td, R, rt, Rt
