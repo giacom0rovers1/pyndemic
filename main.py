@@ -34,7 +34,7 @@ contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N)
 
 
 # erdos = RandNemic('Erdos Renji',
-#                   nx.erdos_renyi_graph(int(N), 0.005, seed=1234),
+#                   nx.erdos_renyi_graph(int(N), 0.005, seed=1234), #0.0006
 #                   'erdos.pkl')
 # erdos.run(perc_inf, beta, tau_i, tau_r, days, t)
 # erdos.save()
@@ -42,21 +42,29 @@ contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N)
 
 # TODO lattice e erdos dagli equivalenti di small world
 
-watts = RandNemic('Watts Strogatz',
-                  nx.connected_watts_strogatz_graph(int(N), 5, 0.1, seed=1234),
-                  'watts.pkl')
+# watts = RandNemic('Watts Strogatz',
+#                   nx.connected_watts_strogatz_graph(int(N), 50,
+#                                                     0.1, seed=1234),
+#                  'watts.pkl')
+with open('watts.pkl', 'rb') as f:
+    watts = pickle.load(f)
+
 watts.run(perc_inf, beta, tau_i, tau_r, days, t)
 watts.save()
 
-rando = RandNemic('Random reference',
-                  nx.random_reference(watts.G),
-                  'rando_ref.pkl')
+# rando = RandNemic('Random reference',               # TAKES SOME TIME (!!)
+#                   nx.random_reference(watts.G),
+#                   'rando_ref.pkl')
+with open('rando_ref.pkl', 'rb') as f:
+    rando = pickle.load(f)
 rando.run(perc_inf, beta, tau_i, tau_r, days, t)
 rando.save()
 
-latti = RandNemic('Lattice reference',
-                  nx.lattice_reference(watts.G),
-                  'latti_ref.pkl')
+# latti = RandNemic('Lattice reference',
+#                   nx.lattice_reference(watts.G),
+#                   'latti_ref.pkl')
+with open('latti_ref.pkl', 'rb') as f:
+    latti = pickle.load(f)
 latti.run(perc_inf, beta, tau_i, tau_r, days, t)
 latti.save()
 
