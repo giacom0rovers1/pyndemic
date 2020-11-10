@@ -252,8 +252,10 @@ def SEIR(perc_inf, beta, tau, tar, days):
 
     Returns
     -------
-    ivp.OdeResult
-        Result of the integration.
+    s, e, i, r: (floats)
+        Relative populations
+    t: (float)
+        Time array
 
     '''
     # calculate constants
@@ -281,40 +283,23 @@ def SEIR(perc_inf, beta, tau, tar, days):
     plt.xlabel('Days')
     plt.ylabel('Relative population')
 
-    return y
+    s, e, i, r = [y.y[line, :] for line in range(4)]
+    t = y.t
+    return s, e, i, r, t
 
 
-def growth_fit(Is, n):
-    '''
-    Locates and analyses the first phase of an epidemic spreading
+def growth_fit(Es, tar):
+    # Locates and analyses the first phase of an epidemic spreading
 
-    Returns
-    -------
-    None.
+    # Growth flex
+    incr = np.gradient(np.gradient(Es))
 
-    '''
-    # incr = np.diff(Is, n)
-    incr1 = np.gradient(Is)
-    incr2 = np.gradient(incr1)
+    idx = tar
+    while incr[idx] > 0:
+        idx += 1
 
-    idx1 = 5
-    while incr1[idx1] > 0:
-        idx1 += 1
-    print(idx1)
-
-    # a = 0
-    idx2 = 5
-    # while idx2 > 3/4*idx1:
-    # idx2 = 5
-
-    while incr2[idx2] > -2:
-        idx2 += 1
-        # a -= 1
-    # print(a)
-    print(idx2)
-
-    # formulazione semplice: mi fermo al calare della derivata di Ii
-    growth = Is[:idx2-10]
+    # formulazione semplice: mi fermo al flesso
+    growth = Es[:idx]
 
     xi = np.arange(0, len(growth))
     yi = growth
@@ -323,61 +308,69 @@ def growth_fit(Is, n):
                           xdata=xi,
                           ydata=yi,
                           bounds=(-100, 100))
+    K = pars[1]
+    Td = np.log(2)/K
+
     x = np.linspace(0, 1.3*len(growth), 100)
 
     plt.figure()
-    plt.plot(Is)
-    plt.plot(x, exponential(x, *pars), 'g--')
+    plt.plot(Es, label="Exposed")
+    plt.plot(x, exponential(x, *pars), 'g--', label="Exponential fit")
     plt.xlim([0, 2*len(growth)])
-    plt.ylim([0, 1.3*max(Is)])
+    plt.ylim([0, 1.3*max(Es)])
+    plt.xlabel('Days')
+    plt.ylabel('Individuals')
+    plt.text(1, max(Es),
+             r'$K$ =' + str(np.round(K, 2)) +
+             r'; $T_{d}$ =' + str(np.round(Td, 2)))
+    plt.legend(loc='best')
 
     return xi, pars
 
 
-def contagion_metrics(y, R0, tau, N):
-    Rt = R0 * y.y[0, :]
+def contagion_metrics(s, e, i, r, R0, tau, tar, N):
+    Rt = R0 * s
 
     # actual reproduction number
-    rt = y.y[2, 1:]/y.y[2, :-1]
-    # rt = Ii[tau:]/Ii[:-tau]/(tau*0.5)        # perche` divido tau per due?
-    # rt = np.append(np.ones(tau)*np.nan, rt)  # slittamento
+    rt = e[1:]/e[:-1]
 
     # growth rate
-    Ki = np.gradient(np.log(y.y[2, :]))
+    Ki = np.diff(np.log(e))
 
-    # smoothing in funzione di tau per togliere il rumore stocastico
-    f = 1/np.exp(1)   # smoothing factor
-    D = int(f*tau)    # time interval of the measurements in cycles units
+    # smoothing in funzione di tar per togliere il rumore stocastico
+    f = 0.5             # fraction of tar to use as smoothing window
+    D = int(f*(tar))    # time interval of the measurements in cycles units
 
     rts = pd.Series(list(rt)).rolling(window=D,
-                                      min_periods=1,
+                                      min_periods=D,
                                       center=True).mean().values
 
     Ks = pd.Series(list(Ki)).rolling(window=D,
-                                     min_periods=1,
+                                     min_periods=D,
                                      center=True).mean().values
 
     R = np.exp(Ks)  # *D)               # reproduction number from growth rate
     Td = np.log(2)/Ks                  # doubling time
 
-    Is = pd.Series(list(N*y.y[2, :])).rolling(window=D,
-                                              min_periods=1,
-                                              center=True).mean().values
+    # Es = pd.Series(list(N*e)).rolling(window=D,
+    #                                   min_periods=1,
+    #                                   center=True).mean().values
+    # xi, pars = growth_fit(Es, tar)
 
-    xi, pars = growth_fit(Is, 1)
+    xi, pars = growth_fit(N*e, tar)
 
     plt.figure(figsize=(20, 11))
     plt.plot([1 for i in range(500)], 'k--')
-    plt.plot(Rt, 'b', label='R predicted')
-    plt.plot(rt, 'orange', label='R from actual increments')
-    plt.plot(rts, 'r', alpha=0.5, label='R moving average')
-    plt.plot(R, 'grey', alpha=0.5, label='R derived from K')
+    plt.plot(Rt, 'b', label='Rt predicted')
+    plt.plot(rt, 'orange', label='Rt from actual increments')
+    plt.plot(rts, 'r', alpha=0.5, label='Rt moving average')
+    plt.plot(R, 'grey', alpha=0.5, label='Rt derived from Ks')
     plt.plot(xi, np.ones(len(xi)) * np.exp(pars[1]), 'g--',
-             label='R form exponential growth')
+             label='R0 form exponential growth')
 
     plt.legend(loc='best')
     plt.xlim([0, len(rts[rts > 0]) + 2*D])
     plt.ylim([0, int(R0+1)])
     plt.grid()
 
-    return Td, R, rt, Rt
+    return Td, R, rt, rts, Rt, Ki, Ks
