@@ -8,7 +8,7 @@ Created on Tue Nov 10 12:24:05 2020
 import pickle
 import networkx as nx
 
-from jack import SEIR, contagion_metrics, RandNemic  # SEIR_network,
+from jack import SEIR, SIR, contagion_metrics, RandNemic  # SEIR_network,
 
 N = 1e4
 perc_inf = 0.1
@@ -22,8 +22,13 @@ R0 = beta * tau_r   # basic reproduction number
 # DETERMINISTIC well-mixed approach
 
 s, e, i, r, t = SEIR(perc_inf, beta, tau_i, tau_r, days)
+contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N)
 
-contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N)
+ss, ii, rr, tt = SIR(perc_inf, beta, tau_r, days)
+contagion_metrics(ss, 0, ii, rr, tt, R0, 0, tau_r, N)
+
+# ss, ii, rr, tt = SIR(perc_inf*0.1, beta/5, tau_r*5, days)
+# contagion_metrics(ss, 0, ii, rr, R0, 0, int(tau_r*0.5), N)
 
 
 # COMPLEX NETWORKS approach
@@ -40,8 +45,9 @@ contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N)
 # erdos.save()
 
 
-# TODO lattice e erdos dagli equivalenti di small world
-
+# ===================
+# SMALL-WORLD NETWORK
+# ===================
 # watts = RandNemic('Watts Strogatz',
 #                   nx.connected_watts_strogatz_graph(int(N), 50,
 #                                                     0.1, seed=1234),
@@ -51,26 +57,38 @@ with open('watts.pkl', 'rb') as f:
 
 watts.run(perc_inf, beta, tau_i, tau_r, days, t)
 watts.save()
+# ora lattice e erdos dagli equivalenti di small world
 
-# rando = RandNemic('Random reference',               # TAKES SOME TIME (!!)
-#                   nx.random_reference(watts.G),
-#                   'rando_ref.pkl')
-with open('rando_ref.pkl', 'rb') as f:
-    rando = pickle.load(f)
+
+# ==============
+# RANDOM NETWORK
+# ==============
+rando = RandNemic('Random reference',
+                  nx.connected_watts_strogatz_graph(int(N), 50,
+                                                    1, seed=1234),
+                  'rando.pkl')
+# with open('rando.pkl', 'rb') as f:
+#     rando = pickle.load(f)
 rando.run(perc_inf, beta, tau_i, tau_r, days, t)
 rando.save()
 
-# latti = RandNemic('Lattice reference',
-#                   nx.lattice_reference(watts.G),
-#                   'latti_ref.pkl')
-with open('latti_ref.pkl', 'rb') as f:
-    latti = pickle.load(f)
+
+# =======
+# LATTICE
+# =======
+latti = RandNemic('Lattice reference',
+                  nx.connected_watts_strogatz_graph(int(N), 50,
+                                                    0, seed=1234),
+                  'latti.pkl')
+# with open('latti.pkl', 'rb') as f:
+#     latti = pickle.load(f)
 latti.run(perc_inf, beta, tau_i, tau_r, days, t)
 latti.save()
 
 
-# Scale free senza e con clustering (ok entrambi)
-
+# ==================
+# SCALE-FREE NETWORK
+# ==================
 barab = RandNemic('Barabasi Albert',
                   nx.barabasi_albert_graph(int(N),  3, seed=1234),
                   'barabasi.pkl')
@@ -78,6 +96,9 @@ barab.run(perc_inf, beta, tau_i, tau_r, days, t)
 barab.save()
 
 
+# ==========================
+# SCALE-FREE WITH CLUSTERING
+# ==========================
 holme = RandNemic('Holme Kim',
                   nx.powerlaw_cluster_graph(int(N), 3, 0.1, seed=1234),
                   'holme.pkl')
@@ -91,21 +112,3 @@ with open('all_networks.pkl', 'wb') as f:
 
 
 # TODO impostare un processo di ensemble?
-
-
-# codice superato
-
-# s, e, i, r = SEIR_network(latti.G, N, perc_inf, beta, tau_i, tau_r, days, t)
-# contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N)
-
-# s, e, i, r = SEIR_network(erdos.G, N, perc_inf, beta, tau_i, tau_r, days, t)
-# contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N)
-
-# s, e, i, r = SEIR_network(watts.G, N, perc_inf, beta, tau_i, tau_r, days, t)
-# contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N)
-
-# s, e, i, r = SEIR_network(barab.G, N, perc_inf, beta, tau_i, tau_r, days, t)
-# contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N)
-
-# s, e, i, r = SEIR_network(holme.G, N, perc_inf, beta, tau_i, tau_r, days, t)
-# contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N)

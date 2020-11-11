@@ -58,6 +58,10 @@ def scale_free(x, a, b):
     return a*(x)**-b
 
 
+# def exponential(x, a, b):
+#     return a*np.exp(b*x)
+
+
 def exponential(x, a, b, c):
     return a*np.exp(b*(x+c))
 
@@ -293,21 +297,72 @@ def SEIR(perc_inf, beta, tau_i, tau_r, days):
     return s, e, i, r, t
 
 
-def growth_fit(pos, tau_r):
-    # Locates and analyses the first phase of an epidemic spreading
+def SIR(perc_inf, beta, tau_r, days):
+    '''
+    SIR Epidemic Model
+
+    Parameters
+    ----------
+    perc_inf : float
+        Initially infected percentage of the population [0, 100].
+    beta : float
+        Probability of transmission in one day [0, 1].
+    tau_r : int
+        average recovery time [days].
+    days : int
+        Total number of simulated days.
+
+    Returns
+    -------
+    s, i, r : floats
+        Relative populations
+    t : float
+        Time array
+
+    '''
+    # calculate constants
+    frac_inf = perc_inf/100
+    mu = 1/tau_r
+    R0 = beta/mu
+
+    y0 = np.array([(1-frac_inf), frac_inf, 0])
+    y = y0
+
+    def dydt(t, y):
+        return np.array([-beta*y[0]*y[1],                   # ds/dt
+                         beta*y[0]*y[1] - mu*y[1],          # di/dt
+                         mu*y[1]])                          # dr/dt
+
+    y = sp.integrate.solve_ivp(fun=dydt, t_span=(0, days), y0=y0)
+
+    plt.figure()
+    plt.plot(y.t, y.y.T)
+    # plt.legend(["s", "i", "r"])
+    plt.legend(["Susceptible", "Infected", "Removed"])
+    plt.text(0.8*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
+    plt.xlabel('Days')
+    plt.ylabel('Relative population')
+
+    s, i, r = [y.y[line, :] for line in range(3)]
+    t = y.t
+    return s, i, r, t
+
+
+def growth_fit(pos, t, tau_r):
+    # Locates and analyses the first phase of an epidemic spreading             # modifiche 11nov
 
     # Growth flex
-    incr = np.gradient(np.gradient(pos))
+    incr = np.gradient(np.gradient(np.gradient(pos))) # third derivative
+    # incr = np.gradient(np.gradient(pos))            # second derivative
 
-    idx = tau_r
-    while incr[idx] > 0:
+    idx = 0                                                                     # tau_r
+    while incr[idx] > -1: # 0: # to avoid noise
         idx += 1
 
     # formulazione semplice: mi fermo al flesso
-    growth = pos[:idx]
-
-    xi = np.arange(0, len(growth))
-    yi = growth
+    # growth = pos[:idx+1]                                                      # pos[:idx]
+    xi = t[:idx+1]
+    yi = pos[:idx+1]                                                            # growth
 
     pars, cov = curve_fit(f=exponential,
                           xdata=xi,
@@ -316,12 +371,13 @@ def growth_fit(pos, tau_r):
     K0 = pars[1]
     Td0 = np.log(2)/K0
 
-    x = np.linspace(0, 1.3*len(growth), 100)
+    x = np.linspace(0, 1.3*max(xi), 100)                                        # len(growth)
 
     plt.figure()
-    plt.plot(pos, label="Positives (E+I)")
+    plt.plot(t, pos, label="Positives (E+I)")
+    plt.plot(xi, yi, label="Initial growth")
     plt.plot(x, exponential(x, *pars), 'g--', label="Exponential fit")
-    plt.xlim([0, 2*len(growth)])
+    plt.xlim([0, 2*max(xi)])                                                  # len(growth)
     plt.ylim([0, 1.3*max(pos)])
     plt.xlabel('Days')
     plt.ylabel('Individuals')
@@ -333,7 +389,7 @@ def growth_fit(pos, tau_r):
     return xi, pars, K0, Td0
 
 
-def contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N):
+def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N):
     '''
     Calculates the reproduction number in time, the growth factor and the
     doubling time. Produces two graphs: the intial exponential growth and the
@@ -412,19 +468,19 @@ def contagion_metrics(s, e, i, r, R0, tau_i, tau_r, N):
     # xi, pars = growth_fit(Es, tau_r)
 
     # Initial exponential growth
-    xi, pars, K0, Td0 = growth_fit(pos, tau_r)
+    xi, pars, K0, Td0 = growth_fit(pos, t, tau_r)
 
     plt.figure()
     plt.plot([1 for i in range(500)], 'k--', linewidth=0.7)
-    plt.plot(Rt, 'b', label='Rt predicted')
-    plt.plot(rt, 'orange', label='Rt from actual increments')
-    plt.plot(rts, 'r', alpha=0.5, label='Rt moving average')
-    plt.plot(R, 'grey', alpha=0.5, label='Rt derived from Ks')
-    plt.plot(xi, np.ones(len(xi)) * np.exp(pars[1]), 'g--',
+    plt.plot(t, Rt, 'b', label='Rt predicted')
+    plt.plot(t[1:], rt, 'orange', label='Rt from actual increments')
+    plt.plot(t[1:], rts, 'r', alpha=0.5, label='Rt moving average')
+    plt.plot(t[1:], R, 'grey', alpha=0.5, label='Rt derived from Ks')
+    plt.plot(xi, np.ones(len(xi)) * np.exp(K0), 'g--',
              label='R0 from the exponential fit')
 
     plt.legend(loc='best')
-    plt.xlim([0, len(rts[rts > 0]) + 2*D])
+    # plt.xlim([0, len(rts[rts > 0]) + 2*D])
     plt.ylim([0, int(R0+1)])
     # plt.grid()
 
