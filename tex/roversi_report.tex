@@ -87,9 +87,49 @@
   	\caption{}
   	\label{}
   \end{figure}
+
+	Parameters are computed (R0, K, describe...)
+	
   
   \section{Complex networks}
-  \textit{L'assunzione di omogeneita` e` sicuramente inadeguata per sistemi reali che presentano forte eterogeneita` di composizione e di rapporti relazionali. Si affronta la modellizzazione di questa eterogeneita` relazionale tramite reti complesse sulle quali riprodurre i modelli di contagio per step di interazione individuo-individuo discretizzati. In una rappresentazione discreta su network, i parametri del modello acquisiscono il valore di probabilita` di transizione (quindi su reti piccole si evidenzia l'effetto di fluttuazioni random, necessario approccio ensemble).  }
+  Translate: \textit{L'assunzione di omogeneita` e` sicuramente inadeguata per sistemi reali che presentano forte eterogeneita` di composizione e di rapporti relazionali. Si affronta la modellizzazione di questa eterogeneita` relazionale tramite reti complesse sulle quali riprodurre i modelli di contagio per step di interazione individuo-individuo discretizzati. In una rappresentazione discreta su network, i parametri del modello acquisiscono il valore di probabilita` di transizione (quindi su reti piccole si evidenzia l'effetto di fluttuazioni random, necessario approccio ensemble).  }
+  
+  
+  Approach: recreate the same analysis work flow of the deterministic model
+  Nodes = individuals, links = way of interaction (contagion)
+  
+  \subsection{Random network}
+  Erdos Renyi
+  Contagion on random network evolves similarly to the deterministic ODE problem. 
+  
+  Smoothing of the positives (Exposed + Infected) curve is needed to avoid contamination from numerical and most importantly network noise. 
+  
+  Network noise is strictly linked to the random nature of the network, locally there are deviations from the average connectivity which make the epidemic evolve ad different speeds
+  
+  
+  \subsection{Lattice}
+  Ring
+  The contagion is strongly inhibited, starts exponentially slower than the rest, Rt(0) most similar to predicted R0,
+  then stops (no, oscillates around R=1, still going) with plenty of susceptible nodes still available but not reachable. Try with more days.
+  
+  
+  \subsection{Small-World}
+  Watts Strogatz
+  Starts similar to lattice, evolves similar to random. GOOD
+  
+  \subsection{Scale free}
+  Barabasi-Albert
+  Initial boost is the fastest, K=0.006 and Td is less than 12 days. Look at the degree structure..
+  
+  
+  \subsection{Scale free with clustering}
+  Holme-Kim
+  The initial growth is almost exponential and K is high but after that the pandemic slows down extremely fast
+  
+  
+  
+  
+  
   
   \section{Immunization and mitigation strategies}
   \subsection{Lockdown and quarantine}

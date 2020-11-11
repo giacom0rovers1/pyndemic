@@ -58,12 +58,12 @@ def scale_free(x, a, b):
     return a*(x)**-b
 
 
-def exponential(x, b):
-    return 10*np.exp(b*x)
+# def exponential(x, b):
+#     return 10*np.exp(b*x)
 
 
-# def exponential(x, a, b):
-#     return a*np.exp(b*x)
+def exponential(x, a, b):
+    return b*np.exp(a*x)
 
 
 # def exponential(x, a, b, c):
@@ -358,22 +358,22 @@ def SIR(perc_inf, beta, tau_r, days):
     return s, i, r, t
 
 
-def growth_fit(pos, t, tau_r):
-    # Locates and analyses the first phase of an epidemic spreading             # modifiche 11nov
+def growth_fit(pos, t, ts):
+    # Locates and analyses the first phase of an epidemic spread
 
     # Growth flex
     # incr = np.gradient(np.gradient(np.gradient(np.gradient(pos))))  # fourth
-    incr = np.gradient(np.gradient(np.gradient(pos))) # third derivative
-    # incr = np.gradient(np.gradient(pos))            # second derivative
+    # incr = np.gradient(np.gradient(np.gradient(pos)))  # third derivative
+    # incr = np.gradient(np.gradient(pos))             # second derivative
+    incr = np.gradient(pos)                            # first derivative
 
-    idx = tau_r
-    while incr[idx] > 0: # 0: # > -1 to avoid noise
+    idx = ts
+    while incr[idx] > 0:
         idx += 1
 
-    # formulazione semplice: mi fermo al flesso
-    # growth = pos[:idx+1]                                                      # pos[:idx]
-    xi = t[:(idx-tau_r)]
-    yi = pos[:(idx-tau_r)]                                                            # growth
+    # isolates the exponential-like growth
+    xi = t[int(ts/2):(int(idx*0.45))]
+    yi = pos[int(ts/2):(int(idx*0.45))]
 
     pars, cov = curve_fit(f=exponential,
                           xdata=xi,
@@ -383,17 +383,17 @@ def growth_fit(pos, t, tau_r):
     K0 = pars[0]
     Td0 = np.log(2)/K0
 
-    x = np.linspace(0, 2*max(xi), 100)    #  1.3*max(xi)                                    # len(growth)
+    x = np.linspace(0, 2*max(xi), 100)  # 1.3*max(xi)
 
     plt.figure()
-    plt.plot(t, pos, label="Positives (E+I)")
+    plt.plot(t, pos, label="Positives (moving avg.)")
     plt.plot(xi, yi, label="Initial growth")
     plt.plot(x, exponential(x, *pars), 'g--', label="Exponential fit")
-    plt.xlim([0, 3*max(xi)])                                                  # len(growth)
-    plt.ylim([0, 1.4*max(pos)])
+    plt.xlim([0, 3*max(xi)])
+    plt.ylim([0, 1.4*np.nanmax(pos)])
     plt.xlabel('Days')
     plt.ylabel('Individuals')
-    plt.text(1, max(pos),
+    plt.text(ts, np.nanmax(pos,),
              r'$K$ =' + str(np.round(K0, 2)) +
              r'; $T_{d}$ =' + str(np.round(Td0, 2)))
     plt.legend(loc='best')
@@ -428,52 +428,43 @@ def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N):
 
     Returns
     -------
-    Td : np.array
-        Doubling time.
-    R : np.array
-        Reproduction number.
-    rt : np.array
-        DESCRIPTION.
-    rts : np.array
-        DESCRIPTION.
-    Rt : np.array
-        DESCRIPTION.
-    Ki : np.array
-        DESCRIPTION.
-    Ks : np.array
-        DESCRIPTION.
+
 
     '''
-    # total positives (exposed + infected)
+    # Serial interval
+    ts = tau_r + tau_i
+
+    # Total positives (exposed + infected)
     pos = N * (e+i)
 
-    # a priori Rt
-    RT = R0 * s
+    # Rt from s(t)
+    Rt = R0 * s
 
-    # actual reproduction number (from increments of positives)
-    rt = (pos[1:]/pos[:-1])  # / np.diff(t)
-
-    # actual growth rate
+    # Actual growth rate
     Ki = np.gradient(np.log(pos)) / np.gradient(t)
 
-    # smoothing based on "tau_r"
-    f = 0.5               # fraction of tau_r to use as smoothing window
-    D = int(f*(tau_r))    # time interval of the measurements in cycles units
+    # Reproduction number from instantaneours growing rate
+    Rti = np.exp(Ki * (ts))
 
-    rts = pd.Series(list(rt)).rolling(window=D,
-                                      min_periods=D,
-                                      center=True).mean().values
+    # Doubling time from the instantaneous growing rate
+    Tdi = np.log(2)/Ki
 
-    Ks = pd.Series(list(Ki)).rolling(window=D,
-                                     min_periods=D,
-                                     center=True).mean().values
+    # Smoothing of positives based on the serial interval "tau_r + tau_i"
+    f = 1            # fraction of serial interval to use as smoothing window
+    D = int(f*(ts))  # time interval of the measurements in cycles units
+
+    pos_s = pd.Series(list(pos)).rolling(window=D,
+                                         min_periods=D,
+                                         center=True).mean().values
+
+    # Smoothed growth rate
+    Ks = np.gradient(np.log(pos_s)) / np.gradient(t)
 
     # Reproduction number from smoothed growing rate
-    Rt = np.exp(Ki * (tau_r + tau_i))
-    # R = np.exp(Ki * tau_r)
+    Rts = np.exp(Ks * (ts))
 
     # Doubling time from the smoothed growing rate
-    Td = np.log(2)/Ki
+    Tds = np.log(2)/Ks
 
     # Es = pd.Series(list(N*e)).rolling(window=D,
     #                                   min_periods=1,
@@ -481,26 +472,35 @@ def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N):
     # xi, pars = growth_fit(Es, tau_r)
 
     # Initial exponential growth
-    xi, pars, K0, Td0 = growth_fit(pos, t, tau_r)
+    xi, pars, K0, Td0 = growth_fit(pos_s, t, ts)
 
-    R0k = np.exp(K0 * (tau_r + tau_i))
-    print(R0, R0k)
+    # R0 from the initial exponential growth
+    R0_K = np.exp(K0 * (ts))
+
+    print('Different R0 estimates: (Pred., KO, Ks)')
+    print(R0, R0_K, Rts[0])
 
     plt.figure()
     plt.plot([1 for i in range(500)], 'k--', linewidth=0.7)
-    plt.plot(t, RT, 'b', label='Rt predicted')
-    plt.plot(t[1:], rt, 'orange', label='Rt from actual increments')
-    plt.plot(t[1:], rts, 'r', alpha=0.5, label='Rt moving average')
-    plt.plot(t, Rt, 'grey', alpha=0.5, label='Rt derived from Ks')
-    plt.plot(xi, np.ones(len(xi)) * R0k, 'g--',
-             label='R0 from the exponential fit')
+
+    plt.plot(t, Rt, alpha=0.8,
+             label='Rt as R0 times s(t)')
+
+    plt.plot(t, Rti, 'grey', alpha=0.4,
+             label='Rt from instant. growth rate')
+
+    plt.plot(t, Rts, 'orange', alpha=0.8,
+             label='Rt from smoothed growth rate')
+
+    plt.plot(xi, np.ones(len(xi)) * R0_K, 'g--',
+             label='R0 from exponential growth')
 
     plt.legend(loc='best')
     # plt.xlim([0, len(rts[rts > 0]) + 2*D])
     plt.ylim([0, int(R0+1.5)])
     # plt.grid()
 
-    return Td0, Td, Rt, rt, rts, RT, R0k, K0, Ki, Ks
+    return K0, Ki, Ks, R0_K, Rt, Rti, Rts, Td0, Tdi, Tds
 
 
 def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
@@ -510,8 +510,8 @@ def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
     k = G.degree()
     G.degree_list = [d for n, d in k]
     G.k_avg = np.mean(G.degree_list)
+    # print(G.k_avg)
 
-    print(G.k_avg)
     # # GRAPH PLOTS
     # jk.graph_plots(G, [1])
     # jk.graph_plots(G, [2, 3])
@@ -539,7 +539,7 @@ def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
 
     # Run:
     iterations = model.iteration_bunch(days, node_status=True)
-    trends = model.build_trends(iterations)
+    # trends = model.build_trends(iterations)
 
     # Recover status variables:
     s = np.array([S for S, E, I, R in
@@ -558,8 +558,8 @@ def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
     r = np.interp(t, np.arange(0, len(r)), r)
 
     # Plot:
-    viz = DiffusionTrend(model, trends)
-    viz.plot()
+    # viz = DiffusionTrend(model, trends)
+    # viz.plot()
     return s, e, i, r
 
 
@@ -577,14 +577,23 @@ class RandNemic:
 
     def run(self, perc_inf, beta, tau_i, tau_r, days, t):
 
-        self.s, self.e, self.i, self.r = SEIR_network(self.G, self.N,
-                                                      perc_inf, beta,
-                                                      tau_i, tau_r,
-                                                      days, t)
+        self.s, self.e, self.i, self.r = \
+            SEIR_network(self.G, self.N, perc_inf, beta, tau_i, tau_r, days, t)
 
-        # self.s, self.e, self.i, self.r = s, e, i, r
+    def plot(self, beta, tau_i, tau_r, days, t):
+        # parameters
+        R0 = beta*tau_r
+        y = np.array([self.s, self.e, self.i, self.r])
 
-        contagion_metrics(self.s, self.e,
-                          self.i, self.r, t,
-                          beta*tau_r, tau_i,
-                          tau_r, self.N)
+        # main plot
+        plt.figure()
+        plt.plot(t, y.T)
+        plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
+        plt.text(0.2*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
+        plt.xlabel('Days')
+        plt.ylabel('Relative population')
+
+        self.K0, self.Ki, self.Ks, self.R0_K, self.Rt, self.Rti, self.Rts, \
+            self.Td0, self.Tdi, self.Tds = \
+            contagion_metrics(self.s, self.e, self.i, self.r, t,
+                              beta*tau_r, tau_i, tau_r, self.N)
