@@ -22,7 +22,9 @@ R0 = beta * tau_r   # basic reproduction number
 # DETERMINISTIC well-mixed approach
 
 s, e, i, r, t = SEIR(perc_inf, beta, tau_i, tau_r, days)
-contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N)
+
+Td0, Td, Rt, rt, rts, RT, R0k, K0, Ki, Ks = \
+    contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N)
 
 ss, ii, rr, tt = SIR(perc_inf, beta, tau_r, days)
 contagion_metrics(ss, 0, ii, rr, tt, R0, 0, tau_r, N)
