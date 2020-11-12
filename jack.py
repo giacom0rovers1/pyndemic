@@ -115,9 +115,9 @@ def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
 
     if 1 in plots_to_print:
         # Network visualization
-        fig1 = plt.figure(figsize=(7, 5.5))
+        G.fig1 = plt.figure(figsize=(7, 5.5))
 
-        fig1.add_subplot(111)
+        G.fig1.add_subplot(111)
         nx.draw_networkx_edges(G, pos=nx.kamada_kawai_layout(G),
                                alpha=0.4)
         nx.draw_networkx_nodes(G, pos=nx.kamada_kawai_layout(G),
@@ -131,7 +131,7 @@ def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
 
     if 2 in plots_to_print:
         # Degree analysis
-        fig2 = plt.figure(figsize=(11, 12))
+        G.fig2 = plt.figure(figsize=(11, 12))
         x = np.linspace(0, G.k_max, 100)
         xi = np.arange(G.k_min, G.k_max+1)
         yi = G.k_histD[G.k_min:]
@@ -145,7 +145,7 @@ def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
                                         bounds=(1e-10, np.inf))
 
         # Degree histogram
-        fig2.add_subplot(221)
+        G.fig2.add_subplot(221)
         # plt.hist(degree_list, density=True)
         plt.scatter(xi, yi, alpha=0.75)
         plt.xlabel('k')
@@ -157,7 +157,7 @@ def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
         plt.ylim([0, max(yi+0.1)])
         plt.legend(loc='best')
 
-        fig2.add_subplot(222)
+        G.fig2.add_subplot(222)
         # plt.hist(degree_list, density=True)
         plt.loglog(xi, yi, '.', ms=12, alpha=0.75)
         plt.xlabel('k')
@@ -171,22 +171,22 @@ def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
         plt.xlim([1, G.k_max+1])
 
         # Dergee rank plot
-        fig2.add_subplot(223)
+        G.fig2.add_subplot(223)
         plt.loglog(G.degree_sequence, "b-", marker="o")
         plt.title("Degree rank plot")
         plt.ylabel("Degree")
         plt.xlabel("Rank")
 
         # Degree probability plot
-        fig2.add_subplot(224)
+        G.fig2.add_subplot(224)
         probplot(G.degree_list, dist="norm", plot=plt)
 
     if 3 in plots_to_print:
         # More insight
-        fig3 = plt.figure(figsize=(11, 5))
+        G.fig3 = plt.figure(figsize=(11, 5))
 
         # BC vs K
-        fig3.add_subplot(121)
+        G.fig3.add_subplot(121)
         plt.scatter(G.degree_list, G.BC_list, alpha=0.75)
         plt.title('Average Shortest-path length = ' + str(round(G.L, 2)))
         plt.xlabel("Connectivity degree k")
@@ -198,7 +198,7 @@ def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
         # plt.plot(x,y,'r')
 
         # Clustering
-        fig3.add_subplot(122)
+        G.fig3.add_subplot(122)
         plt.hist(G.C_list, density=True, alpha=0.75)
         plt.xlabel("Clustering coefficient")
         plt.ylabel("Density")
@@ -216,22 +216,22 @@ def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
 
     if 4 in plots_to_print:
         # Adjacency spectrum and base vectors
-        fig4 = plt.figure(figsize=(11, 9))
+        G.fig4 = plt.figure(figsize=(11, 9))
 
         # Spy plot
-        fig4.add_subplot(221)
+        G.fig4.add_subplot(221)
         plt.spy(G.A, markersize=3)
         plt.title('A')
 
         # Spectrum (eigenvalues histogram)
-        fig4.add_subplot(222)
+        G.fig4.add_subplot(222)
         plt.hist(G.eig_list, density=True, alpha=0.75)
         plt.xlabel(r"Eigenvalue $\lambda$")
         plt.ylabel("Density")
         plt.title("Adjacency spectrum")
 
         # Eigenvector functions
-        fig4.add_subplot(212)
+        G.fig4.add_subplot(212)
         for i in range(G.eig_val.size):
             lab = r'$\lambda =$' + str(np.round(G.eig_val.real, 2)[i])
             plt.plot(G.eig_vec[:, i], alpha=0.5,
@@ -240,13 +240,13 @@ def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
 
     # TODO Laplacian matrix and spectrum
 
-    return 0
+    return G
 
 
 # EPIDEMIC PROCESSES
 
 
-def SEIR(perc_inf, beta, tau_i, tau_r, days):
+def SEIR(perc_inf, beta, tau_i, tau_r, days, title):
     '''
     SEIR Epidemic Model
 
@@ -291,20 +291,25 @@ def SEIR(perc_inf, beta, tau_i, tau_r, days):
                                y0=y0,
                                t_eval=np.arange(0, days+1))
 
-    plt.figure()
+    fig02 = plt.figure()
     plt.plot(y.t, y.y.T)
     # plt.legend(["s", "e", "i", "r"])
     plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
     plt.text(0.8*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
     plt.xlabel('Days')
     plt.ylabel('Relative population')
+    plt.title(title)
+    plt.xlim([0, days])
+    plt.ylim([0, 1])
+    plt.grid(axis='y')
+    plt.tight_layout()
 
     s, e, i, r = [y.y[line, :] for line in range(4)]
     t = y.t
-    return s, e, i, r, t
+    return s, e, i, r, t, fig02
 
 
-def SIR(perc_inf, beta, tau_r, days):
+def SIR(perc_inf, beta, tau_r, days, title):
     '''
     SIR Epidemic Model
 
@@ -345,20 +350,25 @@ def SIR(perc_inf, beta, tau_r, days):
                                y0=y0,
                                t_eval=np.arange(0, days+1))
 
-    plt.figure()
+    fig02 = plt.figure()
     plt.plot(y.t, y.y.T)
     # plt.legend(["s", "i", "r"])
     plt.legend(["Susceptible", "Infected", "Removed"])
     plt.text(0.8*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
     plt.xlabel('Days')
     plt.ylabel('Relative population')
+    plt.title(title)
+    plt.xlim([0, days])
+    plt.ylim([0, 1])
+    plt.grid(axis='y')
+    plt.tight_layout()
 
     s, i, r = [y.y[line, :] for line in range(3)]
     t = y.t
-    return s, i, r, t
+    return s, i, r, t, fig02
 
 
-def growth_fit(pos, t, ts):
+def growth_fit(pos, t, ts, title):
     # Locates and analyses the first phase of an epidemic spread
 
     # Growth flex
@@ -385,7 +395,7 @@ def growth_fit(pos, t, ts):
 
     x = np.linspace(0, 2*max(xi), 100)  # 1.3*max(xi)
 
-    plt.figure()
+    fig03 = plt.figure()
     plt.plot(t, pos, label="Positives (moving avg.)")
     plt.plot(xi, yi, label="Initial growth")
     plt.plot(x, exponential(x, *pars), 'g--', label="Exponential fit")
@@ -397,11 +407,13 @@ def growth_fit(pos, t, ts):
              r'$K$ =' + str(np.round(K0, 2)) +
              r'; $T_{d}$ =' + str(np.round(Td0, 2)))
     plt.legend(loc='best')
+    plt.title(title)
+    plt.grid(axis='y')
 
-    return xi, pars, K0, Td0
+    return xi, pars, K0, Td0, fig03
 
 
-def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N):
+def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N, title):
     '''
     Calculates the reproduction number in time, the growth factor and the
     doubling time. Produces two graphs: the intial exponential growth and the
@@ -472,35 +484,39 @@ def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N):
     # xi, pars = growth_fit(Es, tau_r)
 
     # Initial exponential growth
-    xi, pars, K0, Td0 = growth_fit(pos_s, t, ts)
+    xi, pars, K0, Td0, fig03 = growth_fit(pos_s, t, ts, title)
 
     # R0 from the initial exponential growth
     R0_K = np.exp(K0 * (ts))
 
     print('Different R0 estimates: (Pred., KO, Ks)')
-    print(R0, R0_K, Rts[0])
+    print(np.round([R0, R0_K, Rts[np.min(np.where(np.isfinite(Rts)))]], 2))
 
-    plt.figure()
-    plt.plot([1 for i in range(500)], 'k--', linewidth=0.7)
+    fig04 = plt.figure()
+    plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
+             [1 for i in np.arange(1, len(t)+100)],
+             'r--', linewidth=2, alpha=0.4)
 
     plt.plot(t, Rt, alpha=0.8,
              label='Rt as R0 times s(t)')
 
-    plt.plot(t, Rti, 'grey', alpha=0.4,
+    plt.plot(t, Rti, 'grey', alpha=0.2,
              label='Rt from instant. growth rate')
 
-    plt.plot(t, Rts, 'orange', alpha=0.8,
+    plt.plot(t, Rts, 'orange',  # alpha=0.8,
              label='Rt from smoothed growth rate')
 
     plt.plot(xi, np.ones(len(xi)) * R0_K, 'g--',
              label='R0 from exponential growth')
 
     plt.legend(loc='best')
-    # plt.xlim([0, len(rts[rts > 0]) + 2*D])
-    plt.ylim([0, int(R0+1.5)])
-    # plt.grid()
+    plt.xlim([np.min(t), np.max(t)])
+    plt.ylim([0, max(R0, R0_K, Rts[0])+0.5])
+    plt.title(title)
+    plt.grid(axis='y')
+    plt.tight_layout()
 
-    return K0, Ki, Ks, R0_K, Rt, Rti, Rts, Td0, Tdi, Tds
+    return K0, Ki, Ks, R0_K, Rt, Rti, Rts, Td0, Tdi, Tds, fig03, fig04
 
 
 def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
@@ -565,35 +581,51 @@ def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
 
 class RandNemic:
 
-    def __init__(self, name, graph, location):
+    def __init__(self, name, nickname, graph):
         self.name = name
+        self.nick = nickname
         self.G = graph
-        self.loc = location
         self.N = self.G.number_of_nodes()
-
-    def save(self):
-        with open(self.loc, 'wb') as f:
-            pickle.dump(self, f)
 
     def run(self, perc_inf, beta, tau_i, tau_r, days, t):
 
         self.s, self.e, self.i, self.r = \
             SEIR_network(self.G, self.N, perc_inf, beta, tau_i, tau_r, days, t)
 
+        self.G = graph_tools(self.G)
+
     def plot(self, beta, tau_i, tau_r, days, t):
+
+        self.G = graph_plots(self.G)
+        self.fig01 = self.G.fig1
+
         # parameters
         R0 = beta*tau_r
         y = np.array([self.s, self.e, self.i, self.r])
 
         # main plot
-        plt.figure()
+        self.fig02 = plt.figure()
         plt.plot(t, y.T)
         plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
         plt.text(0.2*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
         plt.xlabel('Days')
         plt.ylabel('Relative population')
+        plt.title(self.name)
+        plt.xlim([0, days])
+        plt.ylim([0, 1])
+        plt.grid(axis='y')
+        plt.tight_layout()
 
         self.K0, self.Ki, self.Ks, self.R0_K, self.Rt, self.Rti, self.Rts, \
-            self.Td0, self.Tdi, self.Tds = \
+            self.Td0, self.Tdi, self.Tds, self.fig03, self.fig04 = \
             contagion_metrics(self.s, self.e, self.i, self.r, t,
-                              beta*tau_r, tau_i, tau_r, self.N)
+                              beta*tau_r, tau_i, tau_r, self.N, self.name)
+
+    def save(self):
+        self.fig01.savefig('immagini/' + self.nick + '_01.png')
+        self.fig02.savefig('immagini/' + self.nick + '_02.png')
+        self.fig03.savefig('immagini/' + self.nick + '_03.png')
+        self.fig04.savefig('immagini/' + self.nick + '_04.png')
+
+        with open(self.nick + '.pkl', 'wb') as f:
+            pickle.dump(self, f)
