@@ -19,7 +19,7 @@ from scipy.optimize import curve_fit
 import ndlib.models.epidemics as ep
 import ndlib.models.ModelConfig as mc
 
-from ndlib.viz.mpl.DiffusionTrend import DiffusionTrend
+# from ndlib.viz.mpl.DiffusionTrend import DiffusionTrend
 
 # SUPPORT to APPEARENCE
 
@@ -85,30 +85,30 @@ def graph_tools(G):
     G.k_min = G.degree_sequence[-1]
     G.k_histD = np.array(nx.degree_histogram(G))/G.nn
 
-    BC = nx.betweenness_centrality(G)  # , normalized = False)
-    G.BC_list = [bc for bc in BC.values()]
+    # BC = nx.betweenness_centrality(G)  # , normalized = False)
+    # G.BC_list = [bc for bc in BC.values()]
 
     # Cl = nx.closeness_centrality(G)
     # Cl_list = [cl for cl in Cl.values()]
 
-    G.eig_list = nx.adjacency_spectrum(G)
-    # eig_sequence = sorted(eig_list, reverse=True)
+    # G.eig_list = nx.adjacency_spectrum(G)
+    # # eig_sequence = sorted(eig_list, reverse=True)
 
-    G.A = nx.adj_matrix(G)  # create a sparse adjacency matrix
-    G.A = G.A.asfptype()  # convert the sparse values from int to float
-    # plt.spy(A)
-    G.eig_val, G.eig_vec = sp.sparse.linalg.eigs(G.A)
+    # G.A = nx.adj_matrix(G)  # create a sparse adjacency matrix
+    # G.A = G.A.asfptype()  # convert the sparse values from int to float
+    # # plt.spy(A)
+    # G.eig_val, G.eig_vec = sp.sparse.linalg.eigs(G.A)
 
     C = nx.clustering(G)
     G.C_list = [c for c in C.values()]
     G.C_avg = nx.average_clustering(G)
 
-    G.L = nx.average_shortest_path_length(G)
+    # G.L = nx.average_shortest_path_length(G)
 
     return G
 
 
-def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
+def graph_plots(G,  plots_to_print=[1, 2], cmap=plt.cm.Blues):  # , 3, 4
     ''' provide 'plots_to_print' as a list '''
     colormap = truncate_colormap(cmap, 0.2, 0.8)
     plots_to_print = list(plots_to_print)
@@ -246,7 +246,7 @@ def graph_plots(G,  plots_to_print=[1, 2, 3, 4], cmap=plt.cm.Blues):
 # EPIDEMIC PROCESSES
 
 
-def SEIR(perc_inf, beta, tau_i, tau_r, days, title):
+def SEIR_odet(perc_inf, beta, tau_i, tau_r, days, title):
     '''
     SEIR Epidemic Model
 
@@ -309,7 +309,7 @@ def SEIR(perc_inf, beta, tau_i, tau_r, days, title):
     return s, e, i, r, t, fig02
 
 
-def SIR(perc_inf, beta, tau_r, days, title):
+def SIR_odet(perc_inf, beta, tau_r, days, title):
     '''
     SIR Epidemic Model
 
@@ -579,12 +579,16 @@ def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
     return s, e, i, r
 
 
-class RandNemic:
+class pRandNeTmic:
+    '''
+    Random Networks for pandemic studies
+    '''
 
-    def __init__(self, name, nickname, graph):
+    def __init__(self, name, nickname, graph, graph_small):
         self.name = name
         self.nick = nickname
         self.G = graph
+        self.Gmini = graph_small
         self.N = self.G.number_of_nodes()
 
     def run(self, perc_inf, beta, tau_i, tau_r, days, t):
@@ -593,11 +597,12 @@ class RandNemic:
             SEIR_network(self.G, self.N, perc_inf, beta, tau_i, tau_r, days, t)
 
         self.G = graph_tools(self.G)
+        self.Gmini = graph_tools(self.Gmini)
 
     def plot(self, beta, tau_i, tau_r, days, t):
 
-        self.G = graph_plots(self.G)
-        self.fig01 = self.G.fig1
+        self.Gmini = graph_plots(self.Gmini)
+        self.fig01 = self.Gmini.fig1
 
         # parameters
         R0 = beta*tau_r
@@ -627,5 +632,5 @@ class RandNemic:
         self.fig03.savefig('immagini/' + self.nick + '_03.png')
         self.fig04.savefig('immagini/' + self.nick + '_04.png')
 
-        with open(self.nick + '.pkl', 'wb') as f:
+        with open('pickle/' + self.nick + '.pkl', 'wb') as f:
             pickle.dump(self, f)
