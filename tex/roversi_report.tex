@@ -17,6 +17,8 @@
 \usepackage{eurosym}
 \usepackage{graphicx}
 
+\usepackage{esdiff}
+\usepackage{xfrac}
 
 \definecolor{linkcolour}{rgb}{0,0.2,0.6}
 \hypersetup{colorlinks,breaklinks,urlcolor=linkcolour,linkcolor=linkcolour}  
@@ -52,7 +54,7 @@
 	{\small \href{mailto:giacomo.roversi2@studio.unibo.it}{giacomo.roversi2@studio.unibo.it} }\\
 	\vskip0.15in
 	% Date
-	{\large November 12, 2020}
+	{\large November 16, 2020}
 \end{flushright}
 
 \begin{flushleft}
@@ -73,30 +75,142 @@
 	\section{Introduction}
 	\label{sec:intro}
 	This work is based on \citet{Pastor-Satorras} %  Pastor-Satorras et al. (2015) 
-	and aims to analyse numerically various scenarios of contagion, inspired to the current COVID-19 pandemic, exploiting NetworkX and NDlib python libraries.	
- Firstly, theoretical fundamentals and deterministic predictions of the SEIR model are presented. These predictions are then compared with discrete-time numerical simulations over complex networks of increasing resemblance to the real world, in order to show different aspects of the contagion dynamics. Finally, some mitigation and immunization strategies are tested.
+	and aims to analyse numerically a contagion scenario inspired to the current COVID-19 pandemic over a complex network representing the social interaction patterns. 
+ 	Firstly, theoretical fundamentals and deterministic predictions of the SIR and SEIR models are presented. These predictions are then compared with discrete-time numerical simulations over complex networks, carried out in python exploiting the NetworkX and NDlib libraries. The networks are chosen to show different aspects of the contagion dynamics, going from a random network to the a clustered-scale-free one in progressive steps of resemblance to the real world. 
+ 	Finally, some mitigation and immunization strategies are tested.
   
-  \section{The SEIR epidemic model}
-  The model ... 
   
-  Its basic implementation assumes homogeneous mixing of the population and consequent completely random interactions. Under this assumptions the transitions between compartments are regulated by a set of deterministic differential equations. 
+  
+  
+  \section{The SIR epidemic model}
+  The SIR model divides the population into three compartments: susceptible (S), infected (I) and removed, meaning recovered and immune or dead (R). Its basic implementation assumes no vital dynamics (closed population, no births or deaths in the S compartment) and homogeneous mixing (completely random interactions). Under this assumptions the transitions between compartments are regulated by a set of deterministic differential equations following the mass-action law. Calling $s = \sfrac{S}{N}$, $i = \sfrac{I}{N}$ and $r = \sfrac{R}{N}$ the relative populations of the three compartments, the differential equations read:
+  \begin{align}
+  	\diff{s}{t} = - \beta s i \quad;  \qquad 	\diff{i}{t} = \beta s i - \mu r \quad; \qquad  \diff{r}{t} = \mu r
+  \end{align}
+  
+  The conservation of the total population is granted: $\quad s + i + r = 1 \ \ ; \quad \diff{N}{t} = 0$
+%  \begin{align}
+%  	s + i + r = 1 \quad; \qquad \diff{N}{t} = 0
+%  \end{align}
+  
+  The condition for an epidemic to develop is therefore that, given an initial small fraction of infected individuals ($i \approx 0.1 \%$), its time derivative needs to be above zero:
+  \begin{align}
+  	\diff{i}{t} = \beta s i - \mu r > 0 \qquad \mathrm{which \ requires:} \quad 		R_{0} = \frac{\beta}{\mu} > 1
+  \end{align}
+  
+  Thus the contagion is going to spread if $R_{0}$ is greater than one. $R_{0}$ is the basic reproduction number, which is the total number of secondary infections generated on average by one infected individual. Its value will be kept constant at 2.2 throughout the various simulations to allow direct comparisons between them.
+  The recovery rate $\mu$ is the inverse of the average time before recovery/death: $\ \tau_{r} = \sfrac{1}{\mu}$. The infection rate $\beta$ could be seen as the probability of the infection to happen in a single time interval. Thus $R_{0}$ is the product of the duration of the infection and the probability of one infected individual infecting one other (susceptible).
+  
+  % TODO dichiarare i parametri utilizzati (cfr. studi COVID19)
+  
+  \subsection{The exponential growth}
+  In the initial phase $s(t)$ could be approximated to one. % and the time before recovery to infinite ($\mu$ very small). 
+  Under this assumption the evolution of the infected population $i$ becomes purely exponential:
+  \begin{align}
+  	\diff{i}{t} \approx  \beta i \qquad;\quad 	i(t) \approx i(0) \cdot e^{K t} \qquad \mathrm{with} \qquad K = (\beta - \mu)
+  \end{align}
+	
+	The description could use the growth rate $K$, the doubling time $T_{d}$, in which case it becomes: $\ i(t) \approx i(0) \cdot 2^{\sfrac{t}{T_{d}}}$, or the basic reproduction number itself: $\ i(t) \approx i(0) \cdot R_{0}^{\sfrac{t}{\tau_{s}}}$.
+	
+%	 where $\tau_{s}$ is the serial interval, i.e. the average time of a complete iteration of the infection process .
+	
+	The serial interval $\tau_{s}$ is the average time elapsed during one complete iteration of the infection process (i.e. from a generation $A$ to the generation $B$ of secondary infections produced by $A$) and it is estimated from $R_{0}$ and $K$: 
+	\begin{align}
+		\tau_{s} = \frac{\ln(R_{0})}{K}
+	\end{align}
+	
+	
+%	 Knowing the serial interval, it is therefore possible to estimate $R_{0}$ form the growth rate or the doubling time:
+%	\begin{align}
+%		R_{0} = e^{K \tau_{s}} = 2^{\sfrac{\tau_{s}}{T_{d}}}
+%	\end{align}
   
   \begin{figure}[h]
   	\centering
-  	\includegraphics[width=0.75\linewidth]{../SEIR_2.png}
+  	\includegraphics[width=0.75\linewidth]{../immagini/SIR_03.png}
+  	\caption{Exponential growth in the initial phase of an epidemic. }
+  	\label{fig:SIRexp}
+  \end{figure}
+  
+  
+  
+  \subsection{The evolution of the epidemic}
+  As the epidemic grows, the depletion of susceptible individuals is no longer negligible and the reduction of the number of available candidates slows down the contagion. The number of simultaneously infected individuals reaches a peak and from there on it becomes exponentially smaller and eventually dies out.
+  
+  Evolution calculated with ODE solver from scipy library
+  
+  \begin{figure}[h]
+  	\centering
+  	\includegraphics[width=0.75\linewidth]{../immagini/SIR_02.png}
+  	\caption{Typical evoultion of a SIR model. }
+  	\label{fig:SIRtot}
+  \end{figure}
+%
+%  The duration of the infection (the average time passing from the symptoms to the recovery or death) is $\tau_{r} = \sfrac{1}{\mu}$, while the incubation period is $\tau_{i}=\sfrac{1}{\gamma}$.
+  
+  Here introduced metric / framework for following analysis with networks
+  
+  Initial numerical instability, then Rt follows the prediction, then numerical instability again
+  
+  (mettere dopo, a confronto con SEIR, in una figura 2x2)
+ 	
+ \begin{figure}[h]
+   \centering
+   \includegraphics[width=0.75\linewidth]{../immagini/SIR_04.png}
+   \caption{Exponential growth in the initial phase of an epidemic. }
+   \label{fig:SIRr0}
+ \end{figure}
+  
+  % TODO Metodi per calcolare R e K istante per istante
+  
+  % TODO Popolazione finale infettata
+  
+  
+  
+  
+  
+  
+  \section{The SEIR epidemic model}
+  For modelling the spread of an influenza-like epidemic like COVID-19 the SEIR model (Susceptible, Exposed, Infect(ive), Removed) is more suited (girare!), since it provides both immunization after the infective phase (as is currently believed for the corona virus) and an incubation phase. 
+  
+ $e = \sfrac{E}{N}$,  the differential equations read:
+  
+  \begin{align}
+  	\diff{s}{t} = - \beta s i \quad;  \qquad 	\diff{e}{t} = \beta s i - \gamma e \quad; \qquad \diff{i}{t} = \gamma e - \mu r \quad; \qquad \diff{r}{t} = \mu r
+  \end{align}
+  
+  while again the total population is conserved: $s + e + i + r = 1$.
+  
+ The incubation period is $\tau_{i}=\frac{1}{\gamma}$. The serial interval is given by the incubation time plus the time before recovery/removal 
+ 
+ R0 is 
+  
+
+  
+  Parameters are computed (R0, K, describe...)
+  
+  The exponential growth is evaluated for the total positives which means the combination of the Exposed and Infected classes together. The growth is slower due to the delay added by the incubation period.
+  
+  
+  \begin{figure}[h]
+  	\centering
+  	\includegraphics[width=0.75\linewidth]{../immagini/SEIR_02.png}
   	\caption{}
   	\label{}
   \end{figure}
-
-	Parameters are computed (R0, K, describe...)
-	
   
   \section{Complex networks}
   Translate: \textit{L'assunzione di omogeneita` e` sicuramente inadeguata per sistemi reali che presentano forte eterogeneita` di composizione e di rapporti relazionali. Si affronta la modellizzazione di questa eterogeneita` relazionale tramite reti complesse sulle quali riprodurre i modelli di contagio per step di interazione individuo-individuo discretizzati. In una rappresentazione discreta su network, i parametri del modello acquisiscono il valore di probabilita` di transizione (quindi su reti piccole si evidenzia l'effetto di fluttuazioni random, necessario approccio ensemble).  }
   
+  Homogeneous mixing hypothesis is certainly inadequate for modelling real systems, which show heterogeneity of composition and relationship spanning various scales. 
+  
   
   Approach: recreate the same analysis work flow of the deterministic model
   Nodes = individuals, links = way of interaction (contagion)
+  
+  The deterministic prediction works as mean field approximation?
+  
+  Here $\beta$ is the contagion probability for a single interaction ($\xi$) times the average number of interactions which is given by the average connectivity degree $<k>$ of the network. The $<k>$ and $\xi$ parameters are chosen in such a way that $\beta$, hence $R_{0}$, is kept constant and equal to the deterministic infection rate. This is done to allow cross-network intercomparison. Given that the average connectivity is considered, for heterogeneous networks there could locally be major fluctuations from the average behaviour.
   
   \subsection{Random network}
   Erdos Renyi
