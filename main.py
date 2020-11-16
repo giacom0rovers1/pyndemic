@@ -27,7 +27,7 @@ R0 = beta * tau_r   # basic reproduction number
 s, e, i, r, t, fig02 = SEIR_odet(perc_inf, beta, tau_i, tau_r, days,
                                  "SEIR deterministic model")
 
-K0, Ki, Ks, R0_K, Rt, Rti, Rts, Td0, Tdi, Tds, fig03, fig04 = \
+K0, Ki, Ks, ts, Rt, Rti, Rts, Td0, Tdi, Tds, fig03, fig04 = \
     contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N,
                       "SEIR deterministic model")
 fig02.savefig('immagini/SEIR_02.png')
@@ -40,7 +40,7 @@ fig04.savefig('immagini/SEIR_04.png')
 # =========
 ss, ii, rr, tt, ffig02 = SIR_odet(perc_inf, beta, tau_r, 250,
                                   "SIR deterministic model")
-KK0, KKi, KKs, RR0_K, RRt, RRti, RRts, TTd0, TTdi, TTds, ffig03, ffig04 = \
+KK0, KKi, KKs, tts, RRt, RRti, RRts, TTd0, TTdi, TTds, ffig03, ffig04 = \
     contagion_metrics(ss, 0, ii, rr, tt, R0, 0, tau_r, N,
                       "SIR deterministic model")
 ffig02.savefig('immagini/SIR_02.png')

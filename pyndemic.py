@@ -352,7 +352,6 @@ def SIR_odet(perc_inf, beta, tau_r, days, title):
 
     fig02 = plt.figure()
     plt.plot(y.t, y.y.T)
-    # plt.legend(["s", "i", "r"])
     plt.legend(["Susceptible", "Infected", "Removed"])
     plt.text(0.8*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
     plt.xlabel('Days')
@@ -368,7 +367,7 @@ def SIR_odet(perc_inf, beta, tau_r, days, title):
     return s, i, r, t, fig02
 
 
-def growth_fit(pos, t, ts, title):
+def growth_fit(pos, t, D, R0, title):
     # Locates and analyses the first phase of an epidemic spread
 
     # Growth flex
@@ -377,13 +376,13 @@ def growth_fit(pos, t, ts, title):
     # incr = np.gradient(np.gradient(pos))             # second derivative
     incr = np.gradient(pos)                            # first derivative
 
-    idx = ts
+    idx = D
     while incr[idx] > 0:
         idx += 1
 
     # isolates the exponential-like growth
-    xi = t[int(ts/2):(int(idx*0.45))]
-    yi = pos[int(ts/2):(int(idx*0.45))]
+    xi = t[int(D/2):(int(idx*0.45))]
+    yi = pos[int(D/2):(int(idx*0.45))]
 
     pars, cov = curve_fit(f=exponential,
                           xdata=xi,
@@ -392,6 +391,9 @@ def growth_fit(pos, t, ts, title):
     print(pars)
     K0 = pars[0]
     Td0 = np.log(2)/K0
+
+    # Serial interval
+    ts = np.log(R0)/K0
 
     x = np.linspace(0, 2*max(xi), 100)  # 1.3*max(xi)
 
@@ -403,14 +405,15 @@ def growth_fit(pos, t, ts, title):
     plt.ylim([0, 1.4*np.nanmax(pos)])
     plt.xlabel('Days')
     plt.ylabel('Individuals')
-    plt.text(ts, np.nanmax(pos,),
+    plt.text(D*0.5, np.nanmax(pos,)*0.75,
              r'$K$ =' + str(np.round(K0, 2)) +
-             r'; $T_{d}$ =' + str(np.round(Td0, 2)))
+             r'; $T_{d}$ =' + str(np.round(Td0, 2)) +
+             r'; $\tau_{s}$ =' + str(np.round(ts, 2)))
     plt.legend(loc='best')
     plt.title(title)
     plt.grid(axis='y')
 
-    return xi, pars, K0, Td0, fig03
+    return xi, pars, K0, Td0, ts, fig03
 
 
 def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N, title):
@@ -444,13 +447,23 @@ def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N, title):
 
     '''
     # Serial interval
-    ts = tau_r + tau_i
+    # ts = tau_r + tau_i  # ACTUALLY WRONG
 
     # Total positives (exposed + infected)
     pos = N * (e+i)
 
     # Rt from s(t)
     Rt = R0 * s
+
+    # Smoothing of positives based on the serial interval "tau_r + tau_i"
+    D = tau_r + tau_i  # time interval of the measurements in cycles units
+
+    pos_s = pd.Series(list(pos)).rolling(window=D,
+                                         min_periods=D,
+                                         center=True).mean().values
+
+    # Initial exponential growth
+    xi, pars, K0, Td0, ts, fig03 = growth_fit(pos_s, t, D, R0, title)
 
     # Actual growth rate
     Ki = np.gradient(np.log(pos)) / np.gradient(t)
@@ -460,14 +473,6 @@ def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N, title):
 
     # Doubling time from the instantaneous growing rate
     Tdi = np.log(2)/Ki
-
-    # Smoothing of positives based on the serial interval "tau_r + tau_i"
-    f = 1            # fraction of serial interval to use as smoothing window
-    D = int(f*(ts))  # time interval of the measurements in cycles units
-
-    pos_s = pd.Series(list(pos)).rolling(window=D,
-                                         min_periods=D,
-                                         center=True).mean().values
 
     # Smoothed growth rate
     Ks = np.gradient(np.log(pos_s)) / np.gradient(t)
@@ -483,14 +488,13 @@ def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N, title):
     #                                   center=True).mean().values
     # xi, pars = growth_fit(Es, tau_r)
 
-    # Initial exponential growth
-    xi, pars, K0, Td0, fig03 = growth_fit(pos_s, t, ts, title)
+    # # R0 from the initial exponential growth
+    # R0_K = np.exp(K0 * (ts))
 
-    # R0 from the initial exponential growth
-    R0_K = np.exp(K0 * (ts))
-
-    print('Different R0 estimates: (Pred., KO, Ks)')
-    print(np.round([R0, R0_K, Rts[np.min(np.where(np.isfinite(Rts)))]], 2))
+    print('Different R0 estimates: (Pred., Ki, Ks)')
+    print(np.round([R0,
+                    Rti[np.min(np.where(np.isfinite(Rti)))],
+                    Rts[np.min(np.where(np.isfinite(Rts)))]], 2))
 
     fig04 = plt.figure()
     plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
@@ -506,17 +510,17 @@ def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N, title):
     plt.plot(t, Rts, 'orange',  # alpha=0.8,
              label='Rt from smoothed growth rate')
 
-    plt.plot(xi, np.ones(len(xi)) * R0_K, 'g--',
-             label='R0 from exponential growth')
+    # plt.plot(xi, np.ones(len(xi)) * R0_K, 'g--',
+    #          label='R0 from exponential growth')
 
     plt.legend(loc='best')
     plt.xlim([np.min(t), np.max(t)])
-    plt.ylim([0, max(R0, R0_K, Rts[0])+0.5])
+    plt.ylim([0, max(R0, Rts[0])+0.5])
     plt.title(title)
     plt.grid(axis='y')
     plt.tight_layout()
 
-    return K0, Ki, Ks, R0_K, Rt, Rti, Rts, Td0, Tdi, Tds, fig03, fig04
+    return K0, Ki, Ks, ts, Rt, Rti, Rts, Td0, Tdi, Tds, fig03, fig04
 
 
 def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
@@ -612,7 +616,7 @@ class pRandNeTmic:
         self.fig02 = plt.figure()
         plt.plot(t, y.T)
         plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
-        plt.text(0.2*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
+        plt.text(0.3*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
         plt.xlabel('Days')
         plt.ylabel('Relative population')
         plt.title(self.name)
@@ -621,7 +625,7 @@ class pRandNeTmic:
         plt.grid(axis='y')
         plt.tight_layout()
 
-        self.K0, self.Ki, self.Ks, self.R0_K, self.Rt, self.Rti, self.Rts, \
+        self.K0, self.Ki, self.Ks, self.ts, self.Rt, self.Rti, self.Rts, \
             self.Td0, self.Tdi, self.Tds, self.fig03, self.fig04 = \
             contagion_metrics(self.s, self.e, self.i, self.r, t,
                               beta*tau_r, tau_i, tau_r, self.N, self.name)
