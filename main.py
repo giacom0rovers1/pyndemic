@@ -73,9 +73,9 @@ ffig04.savefig('immagini/SIR_04.png')
 print("\nSEIR over random network:")
 rando = pRandNeTmic('Erdos-Renyi',
                     'random',
-                    nx.connected_watts_strogatz_graph(int(N), 50,
+                    nx.connected_watts_strogatz_graph(int(N), 25,
                                                       1, seed=1234),
-                    nx.connected_watts_strogatz_graph(int(N/100), 50,
+                    nx.connected_watts_strogatz_graph(int(N/100), 25,
                                                       1, seed=1234))
 rando.run(perc_inf, beta, tau_i, tau_r, days, t)
 
@@ -97,9 +97,9 @@ s, e, i, r, t, fig02 = SEIR_odet(perc_inf, beta, tau_i, tau_r, days,
 
 latti = pRandNeTmic('Ring lattice',
                     'lattice',
-                    nx.connected_watts_strogatz_graph(int(N), 50,
+                    nx.connected_watts_strogatz_graph(int(N), 25,
                                                       0, seed=1234),
-                    nx.connected_watts_strogatz_graph(int(N/100), 50,
+                    nx.connected_watts_strogatz_graph(int(N/100), 25,
                                                       0, seed=1234))
 latti.run(perc_inf, beta, tau_i, tau_r, days, t)
 
@@ -119,9 +119,9 @@ s, e, i, r, t, fig02 = SEIR_odet(perc_inf, beta, tau_i, tau_r, days,
 print("\nSEIR over small-world network:")
 watts = pRandNeTmic('Watts-Strogatz',
                     'smallw',
-                    nx.connected_watts_strogatz_graph(int(N), 50,
+                    nx.connected_watts_strogatz_graph(int(N), 25,
                                                       0.1, seed=1234),
-                    nx.connected_watts_strogatz_graph(int(N/100), 50,
+                    nx.connected_watts_strogatz_graph(int(N/100), 25,
                                                       0.1, seed=1234))
 watts.run(perc_inf, beta, tau_i, tau_r, days, t)
 
@@ -137,8 +137,8 @@ watts.save()
 print("\nSEIR over scale-free network:")
 barab = pRandNeTmic('Barabasi-Albert',
                     'scalefree',
-                    nx.barabasi_albert_graph(int(N),  3, seed=1234),
-                    nx.barabasi_albert_graph(int(N/100),  3, seed=1234))
+                    nx.barabasi_albert_graph(int(N),  6, seed=1234),
+                    nx.barabasi_albert_graph(int(N/100),  6, seed=1234))
 barab.run(perc_inf, beta, tau_i, tau_r, days, t)
 
 # with open('pickle/scalefree.pkl', 'rb') as f:
@@ -153,8 +153,8 @@ barab.save()
 print("\nSEIR over clustered scale-free network:")
 holme = pRandNeTmic('Holme-Kim',
                     'realw',
-                    nx.powerlaw_cluster_graph(int(N), 3, 0.1, seed=1234),
-                    nx.powerlaw_cluster_graph(int(N/100), 3, 0.1, seed=1234))
+                    nx.powerlaw_cluster_graph(int(N), 6, 0.1, seed=1234),
+                    nx.powerlaw_cluster_graph(int(N/100), 6, 0.1, seed=1234))
 holme.run(perc_inf, beta, tau_i, tau_r, days, t)
 
 # with open('pickle/realw.pkl', 'rb') as f:
@@ -173,3 +173,12 @@ with open('pickle/all_networks.pkl', 'wb') as f:
 
 Toc = time.perf_counter()
 print("All done. [Elapsed: " + str(round(Toc-Tic, 0)) + " seconds]")
+
+
+for net in [watts, rando, latti, barab, holme]:
+    print([net.name,
+           net.G.size(),
+           net.G.number_of_edges(),
+           net.G.number_of_nodes(),
+           net.G.k_avg,
+           net.G.C_avg])
