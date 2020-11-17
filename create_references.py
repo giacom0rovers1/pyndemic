@@ -19,7 +19,7 @@ with open('watts.pkl', 'rb') as f:
 
 print('Small world graph loaded')
 
-rando = RandNemic('Random reference',    # TAKES SOME TIME (!!)
+rando = RandNemic('Random reference',    # TAKES SOME TIME (> 150 h !!)
                   nx.random_reference(watts.G),
                   'rando_ref.pkl')
 
@@ -38,3 +38,9 @@ rando.save()
 latti.save()
 
 print('Networks saved. All done.')
+
+
+# tic = time.perf_counter()
+# BC = nx.betweenness_centrality(watts.G)
+# toc = time.perf_counter()
+# print(f'Random reference found in {toc - tic:0.4f} seconds')

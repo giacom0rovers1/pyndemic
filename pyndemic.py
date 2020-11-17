@@ -5,6 +5,7 @@ Created on Thu Oct  8 12:44:38 2020
 
 @author: giacomo
 """
+import time
 import pickle
 import numpy as np
 import scipy as sp
@@ -73,6 +74,9 @@ def exponential(x, a, b):
 # COMPLEX NETWORKS ANALYSIS AND VISUALIZATION
 
 def graph_tools(G):
+    tic = time.perf_counter()
+    print("Graph analysis started...")
+
     G.nn = len(list(G.nodes))
     G.nl = len(list(G.edges))
 
@@ -84,9 +88,11 @@ def graph_tools(G):
     G.k_max = G.degree_sequence[0]
     G.k_min = G.degree_sequence[-1]
     G.k_histD = np.array(nx.degree_histogram(G))/G.nn
+    print("Connectivity degree histogram completed.")
 
-    # BC = nx.betweenness_centrality(G)  # , normalized = False)
-    # G.BC_list = [bc for bc in BC.values()]
+    BC = nx.betweenness_centrality(G)  # , normalized = False)
+    G.BC_list = [bc for bc in BC.values()]
+    print("Betweenness centrality list completed.")
 
     # Cl = nx.closeness_centrality(G)
     # Cl_list = [cl for cl in Cl.values()]
@@ -102,20 +108,23 @@ def graph_tools(G):
     C = nx.clustering(G)
     G.C_list = [c for c in C.values()]
     G.C_avg = nx.average_clustering(G)
+    print("Clustering list completed.")
 
     # G.L = nx.average_shortest_path_length(G)
+    toc = time.perf_counter()
+    print(f'--> graph_tools() completed in {toc - tic:0.0f} seconds.\n')
 
     return G
 
 
-def graph_plots(G,  plots_to_print=[1, 2], cmap=plt.cm.Blues):  # , 3, 4
+def graph_plots(G,  plots_to_print=[0, 1], cmap=plt.cm.Blues):  # , 3, 4
     ''' provide 'plots_to_print' as a list '''
     colormap = truncate_colormap(cmap, 0.2, 0.8)
     plots_to_print = list(plots_to_print)
 
-    if 1 in plots_to_print:
+    if 0 in plots_to_print:
         # Network visualization
-        G.fig1 = plt.figure(figsize=(7, 5.5))
+        G.fig0 = plt.figure(figsize=(7, 5.5))
 
         G.fig1.add_subplot(111)
         nx.draw_networkx_edges(G, pos=nx.kamada_kawai_layout(G),
@@ -128,6 +137,41 @@ def graph_plots(G,  plots_to_print=[1, 2], cmap=plt.cm.Blues):  # , 3, 4
                                    norm=plt.Normalize(vmin=min(G.degree_list),
                                                       vmax=max(G.degree_list)))
         plt.colorbar(sm)
+
+    if 1 in plots_to_print:
+        # Degree and BC analysis
+        G.fig1 = plt.figure(figsize=(11, 5))
+        # Axes
+        x = np.linspace(0, G.k_max, 100)
+        xi = np.arange(G.k_min, G.k_max+1)
+        yi = G.k_histD[G.k_min:]
+        # Fits
+        G.gauss = norm.pdf(x, G.k_avg, G.k_std)
+        G.poiss = poisson.pmf(xi, mu=G.k_avg)
+        G.sf_pars, G.sf_cov = curve_fit(f=scale_free,
+                                        xdata=xi,
+                                        ydata=yi,
+                                        p0=[1, 1],
+                                        bounds=(1e-10, np.inf))
+        # Degree histogram
+        G.fig1.add_subplot(121)
+        plt.scatter(xi, yi, alpha=0.75)
+        plt.xlabel('k')
+        plt.ylabel('p(k)')
+        plt.title('Average connectivity degree =' + str(np.round(G.k_avg, 2)))
+        plt.plot(x, G.gauss, 'r--', label='Normal')
+        plt.plot(xi, G.poiss, 'y--', label='Poisson')
+        plt.plot(x, scale_free(x, *G.sf_pars), 'b--', label='Scale free')
+        plt.ylim([0, max(yi+0.1)])
+        plt.legend(loc='best')
+
+        # BC vs K
+        G.fig1.add_subplot(122)
+        plt.scatter(G.degree_list, G.BC_list, alpha=0.75)
+        plt.title('Average clustering coeff. =' + str(np.round(G.C_avg, 2)))
+        plt.xlabel("Connectivity degree k")
+        plt.ylabel("Betweenness centrality BC")
+        plt.xlim(0.5, G.k_max+0.5)
 
     if 2 in plots_to_print:
         # Degree analysis
@@ -367,7 +411,7 @@ def SIR_odet(perc_inf, beta, tau_r, days, title):
     return s, i, r, t, fig02
 
 
-def growth_fit(pos, t, D, R0, title):
+def growth_fit(pos, t, tsDet, parsDet, D, R0, title):
     # Locates and analyses the first phase of an epidemic spread
 
     # Growth flex
@@ -380,15 +424,27 @@ def growth_fit(pos, t, D, R0, title):
     while incr[idx] > 0:
         idx += 1
 
-    # isolates the exponential-like growth
-    xi = t[int(D/2):(int(idx*0.45))]
-    yi = pos[int(D/2):(int(idx*0.45))]
+    # # isolates the exponential-like growth
+    # xi = t[int(D/2):(int(idx*0.45))]
+    # yi = pos[int(D/2):(int(idx*0.45))]
+    start = np.min(np.where(np.isfinite(pos)))
+    # end = int(idx*0.55)
+    f = 0.16
+    end = np.min(np.where(pos > f * np.nanmax(pos)))
+
+    while end - start < 5:
+        f += 0.01
+        end = np.min(np.where(pos > f * np.nanmax(pos)))
+    print("Initial growth parameters: " + str([start, end, f]))
+
+    xi = t[start:end]
+    yi = pos[start:end]
 
     pars, cov = curve_fit(f=exponential,
                           xdata=xi,
                           ydata=yi,
                           bounds=(-100, 100))
-    print(pars)
+    print("Exponential fit parameters: " + str(pars))
     K0 = pars[0]
     Td0 = np.log(2)/K0
 
@@ -399,8 +455,15 @@ def growth_fit(pos, t, D, R0, title):
 
     fig03 = plt.figure()
     plt.plot(t, pos, label="Positives (moving avg.)")
-    plt.plot(xi, yi, label="Initial growth")
-    plt.plot(x, exponential(x, *pars), 'g--', label="Exponential fit")
+
+    if tsDet != 0:
+        plt.plot(x, exponential(x, *parsDet), 'r--', alpha=0.4,
+                 label="Deterministic exp. growth")
+
+    plt.plot(xi, yi, label="Initial growth", linewidth=2)
+    plt.plot(x, exponential(x, *pars), 'k--',
+             label="Exponential fit", alpha=0.8)
+
     plt.xlim([0, 3*max(xi)])
     plt.ylim([0, 1.4*np.nanmax(pos)])
     plt.xlabel('Days')
@@ -416,7 +479,9 @@ def growth_fit(pos, t, D, R0, title):
     return xi, pars, K0, Td0, ts, fig03
 
 
-def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N, title):
+def contagion_metrics(s, e, i, r, t,
+                      K, ts, parsDet,
+                      R0, tau_i, tau_r, N, title):
     '''
     Calculates the reproduction number in time, the growth factor and the
     doubling time. Produces two graphs: the intial exponential growth and the
@@ -463,7 +528,14 @@ def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N, title):
                                          center=True).mean().values
 
     # Initial exponential growth
-    xi, pars, K0, Td0, ts, fig03 = growth_fit(pos_s, t, D, R0, title)
+    xi, pars, K0, Td0, ts0, fig03 = growth_fit(pos_s, t,
+                                               ts, parsDet,
+                                               D, R0, title)
+
+    if ts == 0:
+        ts = ts0
+    if K == 0:
+        K = K0
 
     # Actual growth rate
     Ki = np.gradient(np.log(pos)) / np.gradient(t)
@@ -491,10 +563,10 @@ def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N, title):
     # # R0 from the initial exponential growth
     # R0_K = np.exp(K0 * (ts))
 
-    print('Different R0 estimates: (Pred., Ki, Ks)')
-    print(np.round([R0,
-                    Rti[np.min(np.where(np.isfinite(Rti)))],
-                    Rts[np.min(np.where(np.isfinite(Rts)))]], 2))
+    print("R0 [predicted, estimated]: " +
+          str(np.round([R0, Rts[np.min(np.where(np.isfinite(Rts)))]], 2)))
+    print("Serial [predicted, estimated]: " +
+          str(np.round([ts0, ts], 2)))
 
     fig04 = plt.figure()
     plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
@@ -512,7 +584,8 @@ def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N, title):
 
     # plt.plot(xi, np.ones(len(xi)) * R0_K, 'g--',
     #          label='R0 from exponential growth')
-
+    plt.xlabel('Days')
+    plt.ylabel(r'R_{t}')
     plt.legend(loc='best')
     plt.xlim([np.min(t), np.max(t)])
     plt.ylim([0, max(R0, Rts[0])+0.5])
@@ -520,7 +593,7 @@ def contagion_metrics(s, e, i, r, t, R0, tau_i, tau_r, N, title):
     plt.grid(axis='y')
     plt.tight_layout()
 
-    return K0, Ki, Ks, ts, Rt, Rti, Rts, Td0, Tdi, Tds, fig03, fig04
+    return K0, Ki, Ks, ts0, pars, Rt, Rti, Rts, Td0, Tdi, Tds, fig03, fig04
 
 
 def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
@@ -603,10 +676,13 @@ class pRandNeTmic:
         self.G = graph_tools(self.G)
         self.Gmini = graph_tools(self.Gmini)
 
-    def plot(self, beta, tau_i, tau_r, days, t):
+    def plot(self, beta, tau_i, tau_r, days, t, K, ts, pars):
 
-        self.Gmini = graph_plots(self.Gmini)
-        self.fig01 = self.Gmini.fig1
+        self.Gmini = graph_plots(self.Gmini, [0])
+        self.fig00 = self.Gmini.fig0
+
+        self.G = graph_plots(self.G, [1])
+        self.fig01 = self.G.fig1
 
         # parameters
         R0 = beta*tau_r
@@ -625,12 +701,13 @@ class pRandNeTmic:
         plt.grid(axis='y')
         plt.tight_layout()
 
-        self.K0, self.Ki, self.Ks, self.ts, self.Rt, self.Rti, self.Rts, \
-            self.Td0, self.Tdi, self.Tds, self.fig03, self.fig04 = \
-            contagion_metrics(self.s, self.e, self.i, self.r, t,
+        self.K0, self.Ki, self.Ks, self.ts, self.pars, self.Rt, self.Rti, \
+            self.Rts, self.Td0, self.Tdi, self.Tds, self.fig03, self.fig04 = \
+            contagion_metrics(self.s, self.e, self.i, self.r, t, K, ts, pars,
                               beta*tau_r, tau_i, tau_r, self.N, self.name)
 
     def save(self):
+        self.fig00.savefig('immagini/' + self.nick + '_00.png')
         self.fig01.savefig('immagini/' + self.nick + '_01.png')
         self.fig02.savefig('immagini/' + self.nick + '_02.png')
         self.fig03.savefig('immagini/' + self.nick + '_03.png')
