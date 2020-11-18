@@ -73,9 +73,9 @@ ffig04.savefig('immagini/SIR_04.png')
 print("\nSEIR over random network:")
 rando = pRandNeTmic('Erdos-Renyi',
                     'random',
-                    nx.connected_watts_strogatz_graph(int(N), 25,
+                    nx.connected_watts_strogatz_graph(int(N), 12,
                                                       1, seed=1234),
-                    nx.connected_watts_strogatz_graph(int(N/100), 25,
+                    nx.connected_watts_strogatz_graph(int(N/100), 12,
                                                       1, seed=1234))
 rando.run(perc_inf, beta, tau_i, tau_r, days, t)
 
@@ -90,16 +90,16 @@ rando.save()
 # =======
 print("\nSEIR over lattice network:")
 
-# special time interval for slow epidemic propagation on lattice network
-days = 4 * 600
-s, e, i, r, t, fig02 = SEIR_odet(perc_inf, beta, tau_i, tau_r, days,
-                                 "SEIR deterministic model")
+# # special time interval for slow epidemic propagation on lattice network
+# days = 4 * 600
+# s, e, i, r, t, fig02 = SEIR_odet(perc_inf, beta, tau_i, tau_r, days,
+#                                  "SEIR deterministic model")
 
 latti = pRandNeTmic('Ring lattice',
                     'lattice',
-                    nx.connected_watts_strogatz_graph(int(N), 25,
+                    nx.connected_watts_strogatz_graph(int(N), 12,
                                                       0, seed=1234),
-                    nx.connected_watts_strogatz_graph(int(N/100), 25,
+                    nx.connected_watts_strogatz_graph(int(N/100), 12,
                                                       0, seed=1234))
 latti.run(perc_inf, beta, tau_i, tau_r, days, t)
 
@@ -108,10 +108,10 @@ latti.run(perc_inf, beta, tau_i, tau_r, days, t)
 latti.plot(beta, tau_i, tau_r, days, t, K, ts, pars)
 latti.save()
 
-# Back to normal
-days = 600
-s, e, i, r, t, fig02 = SEIR_odet(perc_inf, beta, tau_i, tau_r, days,
-                                 "SEIR deterministic model")
+# # Back to normal
+# days = 600
+# s, e, i, r, t, fig02 = SEIR_odet(perc_inf, beta, tau_i, tau_r, days,
+#                                  "SEIR deterministic model")
 
 # ===================
 # SMALL-WORLD NETWORK
@@ -119,9 +119,9 @@ s, e, i, r, t, fig02 = SEIR_odet(perc_inf, beta, tau_i, tau_r, days,
 print("\nSEIR over small-world network:")
 watts = pRandNeTmic('Watts-Strogatz',
                     'smallw',
-                    nx.connected_watts_strogatz_graph(int(N), 25,
+                    nx.connected_watts_strogatz_graph(int(N), 12,
                                                       0.1, seed=1234),
-                    nx.connected_watts_strogatz_graph(int(N/100), 25,
+                    nx.connected_watts_strogatz_graph(int(N/100), 12,
                                                       0.1, seed=1234))
 watts.run(perc_inf, beta, tau_i, tau_r, days, t)
 

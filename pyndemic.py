@@ -117,7 +117,7 @@ def graph_tools(G):
     return G
 
 
-def graph_plots(G,  plots_to_print=[0, 1], cmap=plt.cm.Blues):  # , 3, 4
+def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
     ''' provide 'plots_to_print' as a list '''
     colormap = truncate_colormap(cmap, 0.2, 0.8)
     plots_to_print = list(plots_to_print)
@@ -126,7 +126,7 @@ def graph_plots(G,  plots_to_print=[0, 1], cmap=plt.cm.Blues):  # , 3, 4
         # Network visualization
         G.fig0 = plt.figure(figsize=(7, 5.5))
 
-        G.fig1.add_subplot(111)
+        G.fig0.add_subplot(111)
         nx.draw_networkx_edges(G, pos=nx.kamada_kawai_layout(G),
                                alpha=0.4)
         nx.draw_networkx_nodes(G, pos=nx.kamada_kawai_layout(G),
@@ -136,7 +136,10 @@ def graph_plots(G,  plots_to_print=[0, 1], cmap=plt.cm.Blues):  # , 3, 4
         sm = plt.cm.ScalarMappable(cmap=colormap,
                                    norm=plt.Normalize(vmin=min(G.degree_list),
                                                       vmax=max(G.degree_list)))
-        plt.colorbar(sm)
+        cbar = plt.colorbar(sm)
+        cbar.ax.get_yaxis().labelpad = 15
+        cbar.ax.set_ylabel("Node connectivity degree", rotation=270, )
+        plt.title(net_name)
 
     if 1 in plots_to_print:
         # Degree and BC analysis
@@ -158,17 +161,17 @@ def graph_plots(G,  plots_to_print=[0, 1], cmap=plt.cm.Blues):  # , 3, 4
         plt.scatter(xi, yi, alpha=0.75)
         plt.xlabel('k')
         plt.ylabel('p(k)')
-        plt.title('Average connectivity degree =' + str(np.round(G.k_avg, 2)))
-        plt.plot(x, G.gauss, 'r--', label='Normal')
-        plt.plot(xi, G.poiss, 'y--', label='Poisson')
-        plt.plot(x, scale_free(x, *G.sf_pars), 'b--', label='Scale free')
+        plt.title('Average connectivity degree = ' + str(np.round(G.k_avg, 1)))
+        plt.plot(x, G.gauss, 'r--', label='Normal distr.')
+        # plt.plot(xi, G.poiss, 'y--', label='Poisson')
+        plt.plot(x, scale_free(x, *G.sf_pars), 'b--', label='Power law')
         plt.ylim([0, max(yi+0.1)])
         plt.legend(loc='best')
 
         # BC vs K
         G.fig1.add_subplot(122)
         plt.scatter(G.degree_list, G.BC_list, alpha=0.75)
-        plt.title('Average clustering coeff. =' + str(np.round(G.C_avg, 2)))
+        plt.title('Average clustering coeff. = ' + str(np.round(G.C_avg, 3)))
         plt.xlabel("Connectivity degree k")
         plt.ylabel("Betweenness centrality BC")
         plt.xlim(0.5, G.k_max+0.5)
@@ -246,7 +249,7 @@ def graph_plots(G,  plots_to_print=[0, 1], cmap=plt.cm.Blues):  # , 3, 4
         plt.hist(G.C_list, density=True, alpha=0.75)
         plt.xlabel("Clustering coefficient")
         plt.ylabel("Density")
-        plt.title('Average clustering coeff =' + str(np.round(G.C_avg, 2)))
+        plt.title('Average clustering coeff = ' + str(np.round(G.C_avg, 2)))
 
         # Closeness
 
@@ -473,7 +476,7 @@ def growth_fit(pos, t, tsDet, parsDet, D, R0, title):
              r'; $T_{d}$ =' + str(np.round(Td0, 2)) +
              r'; $\tau_{s}$ =' + str(np.round(ts, 2)))
     plt.legend(loc='best')
-    plt.title(title)
+    plt.title(title + " - initial phase of the epidemic")
     plt.grid(axis='y')
 
     return xi, pars, K0, Td0, ts, fig03
@@ -589,7 +592,7 @@ def contagion_metrics(s, e, i, r, t,
     plt.legend(loc='best')
     plt.xlim([np.min(t), np.max(t)])
     plt.ylim([0, max(R0, Rts[0])+0.5])
-    plt.title(title)
+    plt.title(title + " - evolution of the reproduction number")
     plt.grid(axis='y')
     plt.tight_layout()
 
@@ -678,10 +681,10 @@ class pRandNeTmic:
 
     def plot(self, beta, tau_i, tau_r, days, t, K, ts, pars):
 
-        self.Gmini = graph_plots(self.Gmini, [0])
+        self.Gmini = graph_plots(self.Gmini, self.name, [0])
         self.fig00 = self.Gmini.fig0
 
-        self.G = graph_plots(self.G, [1])
+        self.G = graph_plots(self.G, self.name, [1])
         self.fig01 = self.G.fig1
 
         # parameters
@@ -695,7 +698,7 @@ class pRandNeTmic:
         plt.text(0.3*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
         plt.xlabel('Days')
         plt.ylabel('Relative population')
-        plt.title(self.name)
+        plt.title(self.name + " - SEIR time evolution")
         plt.xlim([0, days])
         plt.ylim([0, 1])
         plt.grid(axis='y')
