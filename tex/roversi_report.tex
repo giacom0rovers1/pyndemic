@@ -11,7 +11,7 @@
 \usepackage{hyperref}
 \usepackage[round]{natbib}
 \usepackage{tabu}
-\usepackage{booktabs} % \toprule \midrule \bottomrule
+\usepackage{booktabs} % for \toprule \midrule \bottomrule
 \usepackage{physics}
 \usepackage{siunitx}
 \usepackage{eurosym}
@@ -151,7 +151,7 @@
   As the epidemic grows, the depletion of susceptible individuals is no longer negligible and the reduction of the number of available candidates slows down the contagion. The number of simultaneously infected individuals reaches a peak and, from there on, becomes exponentially smaller and eventually dies out.
   
   The evolution shown in Fig. \ref{fig:SIRtot} %, left panel, 
-  is obtained integrating the differential equations of the model with the \textit{SciPy} python library, starting from an initially infected population of $0.1 \%$ (10 individuals). The infectious peak is near $2000$ individuals simultaneously infected ($20 \%$ of the total population), and after $200 \ d$ the total population interested by the infection surpasses $80 \%$. The infected population after $200 \ d$ is almost zero. \\
+  is obtained integrating the differential equations of the model with the \textit{SciPy} python library, starting from an initially infected population of $0.1 \%$ (10 individuals). The infectious peak is near $2000$ individuals simultaneously infected ($19 \%$ of the total population), and after $200 \ d$ the total population interested by the infection reaches $85 \%$. The infected population after $200 \ d$ is zero, the epidemic has ended. \\
 	%  The duration of the infection (the average time passing from the symptoms to the recovery or death) is $\tau_{r} = \sfrac{1}{\mu}$, while the incubation period is $\tau_{i}=\sfrac{1}{\gamma}$.
   
   %Here introduced metric / framework for following analysis with networks
@@ -171,8 +171,10 @@
   
   % TODO Popolazione finale infettata
   
+  \input{networks.tex}
   
-  
+  \input{results.tex}
+
   
   
   
