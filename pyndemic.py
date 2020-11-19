@@ -569,7 +569,7 @@ def contagion_metrics(s, e, i, r, t,
     print("R0 [predicted, estimated]: " +
           str(np.round([R0, Rts[np.min(np.where(np.isfinite(Rts)))]], 2)))
     print("Serial [predicted, estimated]: " +
-          str(np.round([ts0, ts], 2)))
+          str(np.round([ts, ts0], 2)))
 
     fig04 = plt.figure()
     plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1

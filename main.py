@@ -36,6 +36,8 @@ K, Ki, Ks, ts, pars, Rt, Rti, Rts, Td0, Tdi, Tds, fig03, fig04 = \
 fig02.savefig('immagini/SEIR_02.png')
 fig03.savefig('immagini/SEIR_03.png')
 fig04.savefig('immagini/SEIR_04.png')
+with open('pickle/SEIR.pkl', 'wb') as f:
+    pickle.dump([s, e, i, r, t, K, ts, pars, fig02, fig03, fig04], f)
 
 # =========
 # SIR MODEL
@@ -49,7 +51,8 @@ KK, KKi, KKs, tts, ppars, RRt, RRti, RRts, TTd0, TTdi, TTds, ffig03, ffig04 = \
 ffig02.savefig('immagini/SIR_02.png')
 ffig03.savefig('immagini/SIR_03.png')
 ffig04.savefig('immagini/SIR_04.png')
-
+with open('pickle/SIR.pkl', 'wb') as f:
+    pickle.dump([ss, ii, rr, tt, KK, tts, ppars, ffig02, ffig03, ffig04], f)
 # ss, ii, rr, tt = SIR(perc_inf*0.1, beta/5, tau_r*5, days)
 # contagion_metrics(ss, 0, ii, rr, R0, 0, int(tau_r*0.5), N)
 
