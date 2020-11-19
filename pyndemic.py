@@ -457,7 +457,7 @@ def growth_fit(pos, t, tsDet, parsDet, D, R0, title):
     x = np.linspace(0, 2*max(xi), 100)  # 1.3*max(xi)
 
     fig03 = plt.figure()
-    plt.plot(t, pos, label="Positives (moving avg.)")
+    plt.plot(t, pos, label="Positives")
 
     if tsDet != 0:
         plt.plot(x, exponential(x, *parsDet), 'r--', alpha=0.4,
@@ -526,12 +526,12 @@ def contagion_metrics(s, e, i, r, t,
     # Smoothing of positives based on the serial interval "tau_r + tau_i"
     D = tau_r + tau_i  # time interval of the measurements in cycles units
 
-    pos_s = pd.Series(list(pos)).rolling(window=D,
-                                         min_periods=D,
-                                         center=True).mean().values
+    #pos_s = pd.Series(list(pos)).rolling(window=D,
+    #                                     min_periods=D,
+    #                                     center=True).mean().values
 
     # Initial exponential growth
-    xi, pars, K0, Td0, ts0, fig03 = growth_fit(pos_s, t,
+    xi, pars, K0, Td0, ts0, fig03 = growth_fit(pos, t,
                                                ts, parsDet,
                                                D, R0, title)
 
@@ -550,13 +550,19 @@ def contagion_metrics(s, e, i, r, t,
     Tdi = np.log(2)/Ki
 
     # Smoothed growth rate
-    Ks = np.gradient(np.log(pos_s)) / np.gradient(t)
+    #Ks = np.gradient(np.log(pos_s)) / np.gradient(t)
 
     # Reproduction number from smoothed growing rate
-    Rts = np.exp(Ks * (ts))
-
+    #Rts = np.exp(Ks * (ts))
+    Rts = pd.Series(list(Rti)).rolling(window=D,
+                                       min_periods=D,
+                                       center=True).mean().values
+    
     # Doubling time from the smoothed growing rate
-    Tds = np.log(2)/Ks
+    #Tds = np.log(2)/Ks
+    Tds = pd.Series(list(Tdi)).rolling(window=D,
+                                       min_periods=D,
+                                       center=True).mean().values
 
     # Es = pd.Series(list(N*e)).rolling(window=D,
     #                                   min_periods=1,
@@ -583,7 +589,7 @@ def contagion_metrics(s, e, i, r, t,
              label='Rt from instant. growth rate')
 
     plt.plot(t, Rts, 'orange',  # alpha=0.8,
-             label='Rt from smoothed growth rate')
+             label='Moving avg. of Rt from growth rate')
 
     # plt.plot(xi, np.ones(len(xi)) * R0_K, 'g--',
     #          label='R0 from exponential growth')
@@ -596,7 +602,7 @@ def contagion_metrics(s, e, i, r, t,
     plt.grid(axis='y')
     plt.tight_layout()
 
-    return K0, Ki, Ks, ts0, pars, Rt, Rti, Rts, Td0, Tdi, Tds, fig03, fig04
+    return K0, Ki, ts0, pars, Rt, Rti, Rts, Td0, Tdi, Tds, fig03, fig04
 
 
 def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
@@ -704,7 +710,7 @@ class pRandNeTmic:
         plt.grid(axis='y')
         plt.tight_layout()
 
-        self.K0, self.Ki, self.Ks, self.ts, self.pars, self.Rt, self.Rti, \
+        self.K0, self.Ki, self.ts, self.pars, self.Rt, self.Rti, \
             self.Rts, self.Td0, self.Tdi, self.Tds, self.fig03, self.fig04 = \
             contagion_metrics(self.s, self.e, self.i, self.r, t, K, ts, pars,
                               beta*tau_r, tau_i, tau_r, self.N, self.name)
