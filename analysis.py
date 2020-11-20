@@ -55,10 +55,10 @@ print(networks.round(3))
 
 
 # outputs data
-pos = e + i
+p = e + i
 
 results = pd.DataFrame(columns=["Model", "K0", "ts", "Final_i",
-                                "Final_r", "peak", "t_peak"])
+                                "Final_r", "peak", "t_peak", "t_final"])
 
 results = results.append({"Model": "Det. SIR",
                           "K0": KK,
@@ -66,7 +66,8 @@ results = results.append({"Model": "Det. SIR",
                           "Final_i": ii[250],
                           "Final_r":  rr[250],
                           "peak":  np.nanmax(ii)*100,
-                          "t_peak": np.min(np.where(ii == np.nanmax(ii)))},
+                          "t_peak": np.min(np.where(ii == np.nanmax(ii))),
+                          "t_final": np.min(np.where(ii < 1/N))},
                          ignore_index=True)
 
 results = results.append({"Model": "Det. SEIR",
@@ -74,20 +75,22 @@ results = results.append({"Model": "Det. SEIR",
                           "ts": ts,
                           "Final_i": i[days],
                           "Final_r": r[days],
-                          "peak": np.nanmax(pos)*100,
-                          "t_peak": np.min(np.where(pos == np.nanmax(pos)))},
+                          "peak": np.nanmax(p)*100,
+                          "t_peak": np.min(np.where(p == np.nanmax(p))),
+                          "t_final": np.min(np.where(p < 1/N))},
                          ignore_index=True)
 
 
 for net in [rando, latti, watts_long, barab, holme]:
-    net.pos = net.i + net.e
+    net.p = net.i + net.e
     newline = {"Model": net.name,
                "K0": net.K0,
                "ts": net.ts,
                "Final_i": net.i[days],
                "Final_r": net.r[days],
-               "peak": np.nanmax(net.pos)*100,
-               "t_peak": np.min(np.where(net.pos == np.nanmax(net.pos)))}
+               "peak": np.nanmax(net.p)*100,
+               "t_peak": np.min(np.where(net.p == np.nanmax(net.p))),
+               "t_final": np.min(np.where(net.p == 0))}
     results = results.append(newline, ignore_index=True)
 
 print(results.round(2))
@@ -97,8 +100,28 @@ print(results.round(2))
 #                  label="tab:results",
 #                  escape=False,
 #                  header=["Model", "$K_{0}$", "$\tau_{s}$", "$i_{final}$",
-#                          "$r_{final}$", "Peak $\%$", "on day"],
+#                          "$r_{final}$", "Peak $\%$", "peak day", "end day"],
 #                  float_format="%.2f")
 
+gamma = 1/tau_i
+mu = 1/tau_r
+presentation = pd.DataFrame(columns=(["N", "perc_inf", "beta",
+                                      "gamma", "mu", "R0"]))
+presentation = presentation.append({"N": N,
+                                    "perc_inf": perc_inf,
+                                    "beta": beta,
+                                    "gamma": gamma,
+                                    "mu": mu,
+                                    "R0": R0},
+                                   ignore_index=True)
+print(presentation)
+# presentation.to_latex(buf="tex/params.tex",
+#                       index=False,
+#                       caption="Model parameters.",
+#                       label="tab:params",
+#                       escape=False,
+#                       header=["Total population", "$i_{start}$ $\%$", "$\beta$",
+#                               "$\gamma$", "$\mu$", "$R_{0}$"],
+#                       float_format="%.2f")
 
 # fine
