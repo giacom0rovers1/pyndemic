@@ -11,7 +11,7 @@
 \usepackage{hyperref}
 \usepackage[round]{natbib}
 \usepackage{tabu}
-\usepackage{booktabs} % \toprule \midrule \bottomrule
+\usepackage{booktabs} % for \toprule \midrule \bottomrule
 \usepackage{physics}
 \usepackage{siunitx}
 \usepackage{eurosym}
@@ -108,6 +108,9 @@
   
   % TODO dichiarare i parametri utilizzati (cfr. studi COVID19)
   
+  
+  
+  
   \subsection{The exponential growth}
   
   \begin{figure}[h!]
@@ -137,22 +140,31 @@
 
 	The initial growth rate $K_{0}$ could be estimated through the exponential fit of the positives curve $i(t)$ in the initial phase of the epidemic, as shown in Fig. \ref{fig:SIRexp}. The initial part is arbitrarily selected to end at $\sfrac{1}{6}$ of the curve's maximum (epidemic peak), or to include at least 5 readings. From the fit results a growth rate $K_{0}$ of $0.11 \ d^{-1}$, which corresponds to a doubling time $T_{d}$ of $6.07 \ d$ and, given a reproduction number of $2.2$, to a serial interval $\tau_{s}$ of $6.9 \ d$.
 
+
+
   \subsection{The evolution of the epidemic}
   
   \begin{figure}[h!]
   	\centering
-  	\includegraphics[width=0.7\linewidth]{../immagini/SIR_02.png}
-%  	\includegraphics[width=0.49\linewidth]{../immagini/SIR_02.png}
-%  	\includegraphics[width=0.49\linewidth]{../immagini/SIR_04.png}
+%  	\includegraphics[width=0.7\linewidth]{../immagini/SIR_02.png}
+  	\includegraphics[width=0.49\linewidth]{../immagini/SIR_02.png}
+  	\includegraphics[width=0.49\linewidth]{../immagini/SIR_04.png}
   	\caption{Typical evolution of a SIR model. }
   	\label{fig:SIRtot}
   \end{figure}
 
-  As the epidemic grows, the depletion of susceptible individuals is no longer negligible and the reduction of the number of available candidates slows down the contagion. The number of simultaneously infected individuals reaches a peak and, from there on, becomes exponentially smaller and eventually dies out.
+  As the epidemic grows, the depletion of susceptible individuals is no longer negligible and the reduction of the number of available candidates slows down the contagion.
+  The actual reproduction number follows the evolution of the susceptible population and represents the remaining strength of the contagion:
+  \begin{align}
+		R_{t} = R_{0} \cdot s(t) 
+		\label{eq:Rt}
+  \end{align}
+  As its value reaches $1$, the number of simultaneously infected individuals reaches a peak and, from there on, becomes exponentially smaller and eventually dies out.
   
-  The evolution shown in Fig. \ref{fig:SIRtot} %, left panel, 
-  is obtained integrating the differential equations of the model with the \textit{SciPy} python library, starting from an initially infected population of $0.1 \%$ (10 individuals). The infectious peak is near $2000$ individuals simultaneously infected ($20 \%$ of the total population), and after $200 \ d$ the total population interested by the infection surpasses $80 \%$. The infected population after $200 \ d$ is almost zero. \\
-	%  The duration of the infection (the average time passing from the symptoms to the recovery or death) is $\tau_{r} = \sfrac{1}{\mu}$, while the incubation period is $\tau_{i}=\sfrac{1}{\gamma}$.
+  The evolution shown in Fig. \ref{fig:SIRtot}, left panel, is obtained integrating the differential equations of the model with the \textit{SciPy} python library, starting from an initially infected population of $0.1 \%$ (10 individuals). The infectious peak is near $1900$ individuals simultaneously infected ($18.8 \%$ of the total population) and is reached on day 59. After $188 \ d$ the total population interested by the infection $r_{final}$ reaches $85 \%$ and the infected population $i_{final}$ is zero: the epidemic has ended. 
+  
+  In the right panel, blue line, the $R_{t}$ predicted from Eq. \ref{eq:Rt} is shown. The grey and orange lines are instead the values of $R_{t}$ obtained by ....
+
   
   %Here introduced metric / framework for following analysis with networks
   
@@ -169,47 +181,43 @@
 %  
   % TODO Metodi per calcolare R e K istante per istante
   
-  % TODO Popolazione finale infettata
-  
-  
-  
-  
-  
   
   \section{The SEIR epidemic model}
-  For modelling the spread of an influenza-like epidemic like COVID-19 the SEIR model (Susceptible, Exposed, Infect(ive), Removed) is more suited (girare!), since it provides both immunization after the infective phase (as is currently believed for the corona virus) and an incubation phase. 
-  
- $e = \sfrac{E}{N}$,  the differential equations read:
+  The SEIR mode introduces the exposed (E) compartment, where individuals that have already been infected but are not yet contagious belong. The presence of this incubation phase makes it more suitable for modelling the spread of an influenza-like epidemic as the COVID-19 one. Calling the new compartment's relative population $e = \sfrac{E}{N}$, the differential equations of the model read:
   
   \begin{align}
   	\diff{s}{t} = - \beta s i \quad;  \qquad 	\diff{e}{t} = \beta s i - \gamma e \quad; \qquad \diff{i}{t} = \gamma e - \mu r \quad; \qquad \diff{r}{t} = \mu r
   \end{align}
   
-  while again the total population is conserved: $s + e + i + r = 1$.
-  
- The incubation period is $\tau_{i}=\frac{1}{\gamma}$. The serial interval is given by the incubation time plus the time before recovery/removal 
- 
- R0 is 
-  
-
-  
-  Parameters are computed (R0, $K_{0}$, describe...)
-  
-  The exponential growth is evaluated for the total positives which means the combination of the Exposed and Infected classes together. The growth is slower due to the delay added by the incubation period.
-  
+  where $\gamma = 0.05 \ d^{-1}$ is the transition rate between exposed and infective compartments. The total population is again conserved: $ s + e + i + r = 1$. For the SEIR model, the exponential growth is evaluated from the total positives, defined as the sum of the exposed and the infected populations: $p(t) = e(t) + i(t)$. The growth is slower due to the delay added by the incubation period $\tau_{i}=\sfrac{1}{\gamma}$. The serial interval associated to the basic reproduction number is therefore bigger: $25 d$ instead of just $7 d$. Here $r_{final}$ and the peak intensity are practically the same as in the SIR model ($84 \% \ \mathrm{vs} \ 85 \%$ and $18.75 \% \ \mathrm{vs} \ 18.79 \% \ $ respectively), but the peak is reached 137 days later (on day 195), the end of the SEIR epidemic 337 days after the SIR has ended (on day 525). %This is the reference framework to which the following simulations are compared.
   
   \begin{figure}[h]
   	\centering
-  	\includegraphics[width=0.75\linewidth]{../immagini/SEIR_02.png}
+  	\includegraphics[width=0.477\linewidth]{../immagini/SEIR_02.png}
+  	\includegraphics[width=0.503\linewidth]{../immagini/SEIR_03.png}
   	\caption{}
   	\label{}
   \end{figure}
+
+  
+  \input{params.tex}
+  
+  %To gauge the strength of the epidemic process, the reproduction number is followed through the evolution of the contagion. 
+  
+  %Parameters are computed (R0, $K_{0}$, describe...)
+  
+  
+  
+  
+  
   
   \section{Complex networks}
   Translate: \textit{L'assunzione di omogeneita` e` sicuramente inadeguata per sistemi reali che presentano forte eterogeneita` di composizione e di rapporti relazionali. Si affronta la modellizzazione di questa eterogeneita` relazionale tramite reti complesse sulle quali riprodurre i modelli di contagio per step di interazione individuo-individuo discretizzati. In una rappresentazione discreta su network, i parametri del modello acquisiscono il valore di probabilita` di transizione (quindi su reti piccole si evidenzia l'effetto di fluttuazioni random, necessario approccio ensemble).  }
   
   Homogeneous mixing hypothesis is certainly inadequate for modelling real systems, which show heterogeneity of composition and relationship spanning various scales. 
   
+  
+  \input{networks.tex}
   
   Approach: recreate the same analysis work flow of the deterministic model
   Nodes = individuals, links = way of interaction (contagion)
@@ -251,7 +259,7 @@
   
   
   
-  
+  \input{results.tex}
   
   
   \section{Immunization and mitigation strategies}
