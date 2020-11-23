@@ -526,7 +526,7 @@ def contagion_metrics(s, e, i, r, t,
     # Smoothing of positives based on the serial interval "tau_r + tau_i"
     D = tau_r + tau_i  # time interval of the measurements in cycles units
 
-    #pos_s = pd.Series(list(pos)).rolling(window=D,
+    # pos_s = pd.Series(list(pos)).rolling(window=D,
     #                                     min_periods=D,
     #                                     center=True).mean().values
 
@@ -550,16 +550,16 @@ def contagion_metrics(s, e, i, r, t,
     Tdi = np.log(2)/Ki
 
     # Smoothed growth rate
-    #Ks = np.gradient(np.log(pos_s)) / np.gradient(t)
+    # Ks = np.gradient(np.log(pos_s)) / np.gradient(t)
 
     # Reproduction number from smoothed growing rate
-    #Rts = np.exp(Ks * (ts))
+    # Rts = np.exp(Ks * (ts))
     Rts = pd.Series(list(Rti)).rolling(window=D,
                                        min_periods=D,
                                        center=True).mean().values
-    
+
     # Doubling time from the smoothed growing rate
-    #Tds = np.log(2)/Ks
+    # Tds = np.log(2)/Ks
     Tds = pd.Series(list(Tdi)).rolling(window=D,
                                        min_periods=D,
                                        center=True).mean().values
