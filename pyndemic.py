@@ -324,7 +324,7 @@ def SEIR_odet(perc_inf, beta, tau_i, tau_r, days, title):
     mu = 1/tau_r
     R0 = beta/mu
 
-    y0 = np.array([(1-frac_inf), 0, frac_inf, 0])
+    y0 = np.array([(1-frac_inf), frac_inf*(1-beta), frac_inf*beta, 0])
     y = y0
 
     def dydt(t, y):

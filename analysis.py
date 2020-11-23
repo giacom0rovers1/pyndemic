@@ -8,7 +8,7 @@ Created on Thu Nov 19 16:14:44 2020
 import pickle
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 N = 1e4
 perc_inf = 0.1
@@ -120,8 +120,14 @@ print(presentation)
 #                       caption="Model parameters.",
 #                       label="tab:params",
 #                       escape=False,
-#                       header=["Total population", "$i_{start}$ $\%$", "$\beta$",
+#                       header=["Total population", "$i_{start}$ $\%$",
+#                               "$\beta$",
 #                               "$\gamma$", "$\mu$", "$R_{0}$"],
 #                       float_format="%.2f")
 
 # fine
+
+A = np.array([[-gamma, beta*s[0]], [gamma, -mu]])
+eigval, eigvec = np.linalg.eig(A)
+print(np.round([eigval[0], K], 4))
+print(np.round([beta*s[0]-mu, KK], 4))

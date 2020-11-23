@@ -7,6 +7,7 @@ Created on Tue Nov 10 12:24:05 2020
 """
 import time
 import pickle
+import numpy as np
 import networkx as nx
 
 from pyndemic import SEIR_odet, SIR_odet, contagion_metrics, pRandNeTmic
@@ -18,7 +19,6 @@ days = 600
 beta = 0.22         # infection probability
 tau_i = 20          # incubation time
 tau_r = 10          # recovery time
-R0 = beta * tau_r   # basic reproduction number
 
 
 # DETERMINISTIC well-mixed approach
@@ -29,10 +29,21 @@ R0 = beta * tau_r   # basic reproduction number
 print("\nSEIR deterministic model:")
 s, e, i, r, t, fig02 = SEIR_odet(perc_inf, beta, tau_i, tau_r, days,
                                  "SEIR deterministic model")
+p = e + i
+mu = 1/tau_r
+gamma = 1/tau_i
+A = np.array([[-gamma, beta*s[0]], [gamma, -mu]])
+eigval, eigvec = np.linalg.eig(A)
+K0 = eigval[0]
+R0 = beta*s[0] * tau_r   # basic reproduction number
+ts0 = np.log(R0)/K0
+pars0 = [K0, p[0]*N]
 
 K, Ki, ts, pars, Rt, Rti, Rts, Td0, Tdi, Tds, fig03, fig04 = \
-    contagion_metrics(s, e, i, r, t, 0, 0, [0, 0], R0, tau_i, tau_r, N,
+    contagion_metrics(s, e, i, r, t, K0, ts0, pars0,
+                      R0, tau_i, tau_r, N,
                       "SEIR deterministic model")
+
 fig02.savefig('immagini/SEIR_02.png')
 fig03.savefig('immagini/SEIR_03.png')
 fig04.savefig('immagini/SEIR_04.png')
@@ -45,9 +56,17 @@ with open('pickle/SEIR.pkl', 'wb') as f:
 print("\nSIR deterministic model:")
 ss, ii, rr, tt, ffig02 = SIR_odet(perc_inf, beta, tau_r, 250,
                                   "SIR deterministic model")
+mu = 1/tau_r
+KK0 = beta*ss[0]-mu
+R0 = beta*s[0] * tau_r   # basic reproduction number
+tts0 = np.log(R0)/KK0
+ppars0 = [KK0, ii[0]*N]
+
 KK, KKi, tts, ppars, RRt, RRti, RRts, TTd0, TTdi, TTds, ffig03, ffig04 = \
-    contagion_metrics(ss, 0, ii, rr, tt, 0, 0, [0, 0], R0, 0, tau_r, N,
+    contagion_metrics(ss, 0, ii, rr, tt, KK0, tts0, ppars0,
+                      R0, 0, tau_r, N,
                       "SIR deterministic model")
+
 ffig02.savefig('immagini/SIR_02.png')
 ffig03.savefig('immagini/SIR_03.png')
 ffig04.savefig('immagini/SIR_04.png')
@@ -85,7 +104,7 @@ rando.run(perc_inf, beta, tau_i, tau_r, days, t)
 
 # with open('pickle/random.pkl', 'rb') as f:
 #     rando = pickle.load(f)
-rando.plot(beta, tau_i, tau_r, days, t, K, ts, pars)
+rando.plot(beta, tau_i, tau_r, days, t, K0, ts0, pars0)
 rando.save()
 
 
@@ -109,7 +128,7 @@ latti.run(perc_inf, beta, tau_i, tau_r, days, t)
 
 # with open('pickle/lattice.pkl', 'rb') as f:
 #     latti = pickle.load(f)
-latti.plot(beta, tau_i, tau_r, days, t, K, ts, pars)
+latti.plot(beta, tau_i, tau_r, days, t, K0, ts0, pars0)
 latti.save()
 
 # # Back to normal
@@ -131,7 +150,7 @@ watts.run(perc_inf, beta, tau_i, tau_r, days, t)
 
 # with open('pickle/smallw.pkl', 'rb') as f:
 #     watts = pickle.load(f)
-watts.plot(beta, tau_i, tau_r, days, t, K, ts, pars)
+watts.plot(beta, tau_i, tau_r, days, t, K0, ts0, pars0)
 watts.save()
 
 
@@ -147,7 +166,7 @@ barab.run(perc_inf, beta, tau_i, tau_r, days, t)
 
 # with open('pickle/scalefree.pkl', 'rb') as f:
 #     barab = pickle.load(f)
-barab.plot(beta, tau_i, tau_r, days, t, K, ts, pars)
+barab.plot(beta, tau_i, tau_r, days, t, K0, ts0, pars0)
 barab.save()
 
 
@@ -163,7 +182,7 @@ holme.run(perc_inf, beta, tau_i, tau_r, days, t)
 
 # with open('pickle/realw.pkl', 'rb') as f:
 #     holme = pickle.load(f)
-holme.plot(beta, tau_i, tau_r, days, t, K, ts, pars)
+holme.plot(beta, tau_i, tau_r, days, t, K0, ts0, pars0)
 holme.save()
 
 
