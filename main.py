@@ -19,6 +19,7 @@ days = 600
 beta = 0.22         # infection probability
 tau_i = 20          # incubation time
 tau_r = 10          # recovery time
+R0 = beta * tau_r   # basic reproduction number
 
 
 # DETERMINISTIC well-mixed approach
@@ -35,7 +36,6 @@ gamma = 1/tau_i
 A = np.array([[-gamma, beta*s[0]], [gamma, -mu]])
 eigval, eigvec = np.linalg.eig(A)
 K0 = eigval[0]
-R0 = beta*s[0] * tau_r   # basic reproduction number
 ts0 = np.log(R0)/K0
 pars0 = [K0, p[0]*N]
 
@@ -48,7 +48,9 @@ fig02.savefig('immagini/SEIR_02.png')
 fig03.savefig('immagini/SEIR_03.png')
 fig04.savefig('immagini/SEIR_04.png')
 with open('pickle/SEIR.pkl', 'wb') as f:
-    pickle.dump([s, e, i, r, t, K, ts, pars, fig02, fig03, fig04], f)
+    pickle.dump([s, e, i, r, t, K, ts, pars,
+                 mu, gamma, R0, K0, ts0, pars0,
+                 fig02, fig03, fig04], f)
 
 # =========
 # SIR MODEL
@@ -58,7 +60,6 @@ ss, ii, rr, tt, ffig02 = SIR_odet(perc_inf, beta, tau_r, 250,
                                   "SIR deterministic model")
 mu = 1/tau_r
 KK0 = beta*ss[0]-mu
-R0 = beta*s[0] * tau_r   # basic reproduction number
 tts0 = np.log(R0)/KK0
 ppars0 = [KK0, ii[0]*N]
 
@@ -71,7 +72,9 @@ ffig02.savefig('immagini/SIR_02.png')
 ffig03.savefig('immagini/SIR_03.png')
 ffig04.savefig('immagini/SIR_04.png')
 with open('pickle/SIR.pkl', 'wb') as f:
-    pickle.dump([ss, ii, rr, tt, KK, tts, ppars, ffig02, ffig03, ffig04], f)
+    pickle.dump([ss, ii, rr, tt, KK, tts, ppars,
+                 mu, R0, KK0, tts0, ppars0,
+                 ffig02, ffig03, ffig04], f)
 
 # ss, ii, rr, tt = SIR(perc_inf*0.1, beta/5, tau_r*5, days)
 # contagion_metrics(ss, 0, ii, rr, R0, 0, int(tau_r*0.5), N)

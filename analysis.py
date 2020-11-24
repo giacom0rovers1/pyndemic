@@ -16,7 +16,6 @@ days = 600
 beta = 0.22         # infection probability
 tau_i = 20          # incubation time
 tau_r = 10          # recovery time
-R0 = beta * tau_r   # basic reproduction number
 
 # Getting back the objects:
 with open('pickle/all_networks.pkl', 'rb') as f:
@@ -26,10 +25,14 @@ with open('pickle/smallw_long.pkl', 'rb') as f:
     watts_long = pickle.load(f)
 
 with open('pickle/SEIR.pkl', 'rb') as f:
-    s, e, i, r, t, K, ts, pars, fig02, fig03, fig04 = pickle.load(f)
+    s, e, i, r, t, K, ts, pars, \
+        mu, gamma, R0, K0, ts0, pars0, \
+        fig02, fig03, fig04 = pickle.load(f)
 
 with open('pickle/SIR.pkl', 'rb') as f:
-    ss, ii, rr, tt, KK, tts, ppars, ffig02, ffig03, ffig04 = pickle.load(f)
+    ss, ii, rr, tt, KK, tts, ppars, \
+        mu, RR0, KK0, tts0, ppars0, \
+        ffig02, ffig03, ffig04 = pickle.load(f)
 
 # Networks data
 networks = pd.DataFrame(columns=["Net", "E", "N", "<k>", "<C>"])
@@ -103,8 +106,7 @@ print(results.round(2))
 #                          "$r_{final}$", "Peak $\%$", "peak day", "end day"],
 #                  float_format="%.2f")
 
-gamma = 1/tau_i
-mu = 1/tau_r
+
 presentation = pd.DataFrame(columns=(["N", "perc_inf", "beta",
                                       "gamma", "mu", "R0"]))
 presentation = presentation.append({"N": N,
@@ -112,7 +114,11 @@ presentation = presentation.append({"N": N,
                                     "beta": beta,
                                     "gamma": gamma,
                                     "mu": mu,
-                                    "R0": R0},
+                                    "R0": R0,
+                                    "KK0": KK0,
+                                    "tts0": tts0,
+                                    "K0": K0,
+                                    "ts0": ts0},
                                    ignore_index=True)
 print(presentation)
 # presentation.to_latex(buf="tex/params.tex",
@@ -122,7 +128,9 @@ print(presentation)
 #                       escape=False,
 #                       header=["Total population", "$i_{start}$ $\%$",
 #                               "$\beta$",
-#                               "$\gamma$", "$\mu$", "$R_{0}$"],
+#                               "$\gamma$", "$\mu$", "$R_0$"
+#                               "$K^{SIR}_0$", "$\tau^{SIR}_s$",
+#                               "$K^{SEIR}_0$", "$\tau^{SEIR}_s$" ],
 #                       float_format="%.2f")
 
 # fine

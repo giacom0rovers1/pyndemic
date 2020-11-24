@@ -136,18 +136,20 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
         sm = plt.cm.ScalarMappable(cmap=colormap,
                                    norm=plt.Normalize(vmin=min(G.degree_list),
                                                       vmax=max(G.degree_list)))
-        cbar = plt.colorbar(sm)
-        cbar.ax.get_yaxis().labelpad = 15
-        cbar.ax.set_ylabel("Node connectivity degree", rotation=270, )
-        plt.title(net_name)
+        # cbar = plt.colorbar(sm)
+        plt.colorbar(sm, label='Node connectivity degree k')
+        # cbar.ax.get_yaxis().labelpad = 15
+        # cbar.ax.set_ylabel("Node connectivity degree", rotation=270, )
+        plt.title(net_name + " - 1:100 scale model")
+        plt.tight_layout()
 
     if 1 in plots_to_print:
         # Degree and BC analysis
         G.fig1 = plt.figure(figsize=(11, 5))
         # Axes
         x = np.linspace(0, G.k_max, 100)
-        xi = np.arange(G.k_min, G.k_max+1)
-        yi = G.k_histD[G.k_min:]
+        xi = np.arange(G.k_min+1, G.k_max+1)
+        yi = G.k_histD[G.k_min+1:]
         # Fits
         G.gauss = norm.pdf(x, G.k_avg, G.k_std)
         G.poiss = poisson.pmf(xi, mu=G.k_avg)
@@ -159,12 +161,13 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
         # Degree histogram
         G.fig1.add_subplot(121)
         plt.scatter(xi, yi, alpha=0.75)
-        plt.xlabel('k')
-        plt.ylabel('p(k)')
+        plt.xlabel('Node connectivity degree k')
+        plt.ylabel('Degree distribution p(k)')
         plt.title('Average connectivity degree = ' + str(np.round(G.k_avg, 1)))
-        plt.plot(x, G.gauss, 'r--', label='Normal distr.')
+        plt.plot(x, G.gauss, 'r--', alpha=0.5, label='Normal distr.')
         # plt.plot(xi, G.poiss, 'y--', label='Poisson')
-        plt.plot(x, scale_free(x, *G.sf_pars), 'b--', label='Power law')
+        plt.plot(x, scale_free(x, *G.sf_pars), 'b--',
+                 alpha=0.5, label='Power law')
         plt.ylim([0, max(yi+0.1)])
         plt.legend(loc='best')
 
@@ -172,9 +175,10 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
         G.fig1.add_subplot(122)
         plt.scatter(G.degree_list, G.BC_list, alpha=0.75)
         plt.title('Average clustering coeff. = ' + str(np.round(G.C_avg, 3)))
-        plt.xlabel("Connectivity degree k")
-        plt.ylabel("Betweenness centrality BC")
+        plt.xlabel("Node connectivity degree k")
+        plt.ylabel("Node betweenness centrality BC")
         plt.xlim(0.5, G.k_max+0.5)
+        plt.tight_layout()
 
     if 2 in plots_to_print:
         # Degree analysis
@@ -227,6 +231,7 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
         # Degree probability plot
         G.fig2.add_subplot(224)
         probplot(G.degree_list, dist="norm", plot=plt)
+        plt.tight_layout()
 
     if 3 in plots_to_print:
         # More insight
@@ -250,7 +255,7 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
         plt.xlabel("Clustering coefficient")
         plt.ylabel("Density")
         plt.title('Average clustering coeff = ' + str(np.round(G.C_avg, 2)))
-
+        plt.tight_layout()
         # Closeness
 
         # plt.scatter(Cl_list, BC_list, cmap = colormap, c = degree_list)
@@ -284,6 +289,7 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
             plt.plot(G.eig_vec[:, i], alpha=0.5,
                      label=lab)
         plt.legend(loc='best')
+        plt.tight_layout()
 
     # TODO Laplacian matrix and spectrum
 
@@ -343,7 +349,7 @@ def SEIR_odet(perc_inf, beta, tau_i, tau_r, days, title):
     # plt.legend(["s", "e", "i", "r"])
     plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
     plt.text(0.8*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
-    plt.xlabel('Days')
+    plt.xlabel('t (days)')
     plt.ylabel('Relative population')
     plt.title(title)
     plt.xlim([0, days])
@@ -401,7 +407,7 @@ def SIR_odet(perc_inf, beta, tau_r, days, title):
     plt.plot(y.t, y.y.T)
     plt.legend(["Susceptible", "Infected", "Removed"])
     plt.text(0.8*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
-    plt.xlabel('Days')
+    plt.xlabel('t (days)')
     plt.ylabel('Relative population')
     plt.title(title)
     plt.xlim([0, days])
@@ -469,15 +475,16 @@ def growth_fit(pos, t, tsDet, parsDet, D, R0, title):
 
     plt.xlim([0, 3*max(xi)])
     plt.ylim([0, 1.4*np.nanmax(pos)])
-    plt.xlabel('Days')
+    plt.xlabel('t (days)')
     plt.ylabel('Individuals')
     plt.text(D*0.5, np.nanmax(pos,)*0.75,
              r'$K$ =' + str(np.round(K0, 2)) +
-             r'; $T_{d}$ =' + str(np.round(Td0, 2)) +
+             # r'; $T_{d}$ =' + str(np.round(Td0, 2)) +
              r'; $\tau_{s}$ =' + str(np.round(ts, 2)))
     plt.legend(loc='best')
     plt.title(title + " - initial phase of the epidemic")
     plt.grid(axis='y')
+    plt.tight_layout()
 
     return xi, pars, K0, Td0, ts, fig03
 
@@ -583,21 +590,21 @@ def contagion_metrics(s, e, i, r, t,
              'r--', linewidth=2, alpha=0.4)
 
     plt.plot(t, Rt, alpha=0.8,
-             label='Rt as R0 times s(t)')
+             label='R(t) as R0 times s(t)')
 
     plt.plot(t, Rti, 'grey', alpha=0.2,
-             label='Rt from instant. growth rate')
+             label='R(t) from instant. K(t)')
 
     plt.plot(t, Rts, 'orange',  # alpha=0.8,
-             label='Moving avg. of Rt from growth rate')
+             label='Moving avg. of R(t) from K(t)')
 
     # plt.plot(xi, np.ones(len(xi)) * R0_K, 'g--',
     #          label='R0 from exponential growth')
-    plt.xlabel('Days')
-    plt.ylabel(r'R_{t}')
+    plt.xlabel('t (days)')
+    plt.ylabel('R(t)')
     plt.legend(loc='best')
     plt.xlim([np.min(t), np.max(t)])
-    plt.ylim([0, max(R0, Rts[0])+0.5])
+    plt.ylim([0, np.nanmax([R0, *Rts])+0.5])
     plt.title(title + " - evolution of the reproduction number")
     plt.grid(axis='y')
     plt.tight_layout()
@@ -702,7 +709,7 @@ class pRandNeTmic:
         plt.plot(t, y.T)
         plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
         plt.text(0.3*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
-        plt.xlabel('Days')
+        plt.xlabel('t (days)')
         plt.ylabel('Relative population')
         plt.title(self.name + " - SEIR time evolution")
         plt.xlim([0, days])
