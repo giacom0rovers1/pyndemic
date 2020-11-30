@@ -85,8 +85,8 @@ def graph_tools(G):
     G.k_avg = np.mean(G.degree_list)
     G.k_std = np.std(G.degree_list)
     G.degree_sequence = sorted(G.degree_list, reverse=True)
-    G.k_max = G.degree_sequence[0]
-    G.k_min = G.degree_sequence[-1]
+    G.k_max = np.max(G.degree_list)  # G.degree_sequence[0]
+    G.k_min = np.min(G.degree_list)  # G.degree_sequence[-1]
     G.k_histD = np.array(nx.degree_histogram(G))/G.nn
     print("Connectivity degree histogram completed.")
 
@@ -148,16 +148,26 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
         G.fig1 = plt.figure(figsize=(11, 5))
         # Axes
         x = np.linspace(0, G.k_max, 100)
-        xi = np.arange(G.k_min+1, G.k_max+1)
-        yi = G.k_histD[G.k_min+1:]
+        if net_name == "Holme-Kim":
+            xi = np.arange((G.k_min+1), (G.k_max+1))
+            yi = G.k_histD[(G.k_min+1):]
+        else:
+            xi = np.arange((G.k_min), (G.k_max+1))
+            yi = G.k_histD[(G.k_min):]
+
         # Fits
         G.gauss = norm.pdf(x, G.k_avg, G.k_std)
         G.poiss = poisson.pmf(xi, mu=G.k_avg)
-        G.sf_pars, G.sf_cov = curve_fit(f=scale_free,
-                                        xdata=xi,
-                                        ydata=yi,
-                                        p0=[1, 1],
-                                        bounds=(1e-10, np.inf))
+
+        if len(yi) > 0:
+            G.sf_pars, G.sf_cov = curve_fit(f=scale_free,
+                                            xdata=xi,
+                                            ydata=yi,
+                                            p0=[1, 1],
+                                            bounds=(1e-10, np.inf))
+        else:
+            G.sf_pars = [0, -1]
+
         # Degree histogram
         G.fig1.add_subplot(121)
         plt.scatter(xi, yi, alpha=0.75)
@@ -427,11 +437,11 @@ def growth_fit(pos, t, tsDet, parsDet, D, R0, title):
     # incr = np.gradient(np.gradient(np.gradient(np.gradient(pos))))  # fourth
     # incr = np.gradient(np.gradient(np.gradient(pos)))  # third derivative
     # incr = np.gradient(np.gradient(pos))             # second derivative
-    incr = np.gradient(pos)                            # first derivative
+    # incr = np.gradient(pos)                            # first derivative
 
-    idx = D
-    while incr[idx] > 0:
-        idx += 1
+    # idx = D
+    # while incr[idx] > 0:
+    #     idx += 1
 
     # # isolates the exponential-like growth
     # xi = t[int(D/2):(int(idx*0.45))]
@@ -444,7 +454,7 @@ def growth_fit(pos, t, tsDet, parsDet, D, R0, title):
     while end - start < 5:
         f += 0.01
         end = np.min(np.where(pos > f * np.nanmax(pos)))
-    print("Initial growth parameters: " + str([start, end, f]))
+    print("Initial growth: [start, end, f(end)/max] " + str([start, end, f]))
 
     xi = t[start:end]
     yi = pos[start:end]
@@ -458,7 +468,7 @@ def growth_fit(pos, t, tsDet, parsDet, D, R0, title):
     Td0 = np.log(2)/K0
 
     # Serial interval
-    ts = np.log(R0)/K0
+    ts0 = np.log(R0)/K0
 
     x = np.linspace(0, 2*max(xi), 100)  # 1.3*max(xi)
 
@@ -479,18 +489,18 @@ def growth_fit(pos, t, tsDet, parsDet, D, R0, title):
     plt.ylabel('Individuals')
     plt.text(D*0.5, np.nanmax(pos,)*0.75,
              r'$K$ =' + str(np.round(K0, 2)) +
-             # r'; $T_{d}$ =' + str(np.round(Td0, 2)) +
-             r'; $\tau_{s}$ =' + str(np.round(ts, 2)))
+             r'; $T_{d}$ =' + str(np.round(Td0, 2)))  # +
+    # r'; $\tau_{s}$ =' + str(np.round(ts0, 2)))
     plt.legend(loc='best')
     plt.title(title + " - initial phase of the epidemic")
     plt.grid(axis='y')
     plt.tight_layout()
 
-    return xi, pars, K0, Td0, ts, fig03
+    return xi, pars, K0, Td0, ts0, fig03
 
 
 def contagion_metrics(s, e, i, r, t,
-                      K, ts, parsDet,
+                      KDet, tsDet, parsDet,
                       R0, tau_i, tau_r, N, title):
     '''
     Calculates the reproduction number in time, the growth factor and the
@@ -530,28 +540,27 @@ def contagion_metrics(s, e, i, r, t,
     # Rt from s(t)
     Rt = R0 * s
 
-    # Smoothing of positives based on the serial interval "tau_r + tau_i"
-    D = tau_r + tau_i  # time interval of the measurements in cycles units
-
+    # Smoothing of positives based on the average times "tau_r + tau_i"
+    D = int(tsDet)
     # pos_s = pd.Series(list(pos)).rolling(window=D,
     #                                     min_periods=D,
     #                                     center=True).mean().values
 
     # Initial exponential growth
     xi, pars, K0, Td0, ts0, fig03 = growth_fit(pos, t,
-                                               ts, parsDet,
+                                               tsDet, parsDet,
                                                D, R0, title)
 
-    if ts == 0:
-        ts = ts0
-    if K == 0:
-        K = K0
+    if tsDet == 0:
+        tsDet = ts0
+    if KDet == 0:
+        KDet = K0
 
     # Actual growth rate
     Ki = np.gradient(np.log(pos)) / np.gradient(t)
 
     # Reproduction number from instantaneours growing rate
-    Rti = np.exp(Ki * (ts))
+    Rti = np.exp(Ki * (tsDet))
 
     # Doubling time from the instantaneous growing rate
     Tdi = np.log(2)/Ki
@@ -582,7 +591,7 @@ def contagion_metrics(s, e, i, r, t,
     print("R0 [predicted, estimated]: " +
           str(np.round([R0, Rts[np.min(np.where(np.isfinite(Rts)))]], 2)))
     print("Serial [predicted, estimated]: " +
-          str(np.round([ts, ts0], 2)))
+          str(np.round([tsDet, ts0], 2)))
 
     fig04 = plt.figure()
     plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
@@ -604,7 +613,8 @@ def contagion_metrics(s, e, i, r, t,
     plt.ylabel('R(t)')
     plt.legend(loc='best')
     plt.xlim([np.min(t), np.max(t)])
-    plt.ylim([0, np.nanmax([R0, *Rts])+0.5])
+    # plt.ylim([0, np.nanmax([R0, *Rts])+0.5])
+    plt.ylim([0, R0+2])
     plt.title(title + " - evolution of the reproduction number")
     plt.grid(axis='y')
     plt.tight_layout()

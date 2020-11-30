@@ -139,22 +139,23 @@ latti.save()
 # s, e, i, r, t, fig02 = SEIR_odet(perc_inf, beta, tau_i, tau_r, days,
 #                                  "SEIR deterministic model")
 
-# ===================
-# SMALL-WORLD NETWORK
-# ===================
-print("\nSEIR over small-world network:")
-watts = pRandNeTmic('Watts-Strogatz',
-                    'smallw',
-                    nx.connected_watts_strogatz_graph(int(N), 12,
-                                                      0.1, seed=1234),
-                    nx.connected_watts_strogatz_graph(int(N/100), 12,
-                                                      0.1, seed=1234))
-watts.run(perc_inf, beta, tau_i, tau_r, days, t)
+# # ===================
+# # SMALL-WORLD NETWORK
+# # ===================
+# print("\nSEIR over small-world network:")
 
-# with open('pickle/smallw.pkl', 'rb') as f:
-#     watts = pickle.load(f)
-watts.plot(beta, tau_i, tau_r, days, t, K0, ts0, pars0)
-watts.save()
+# watts = pRandNeTmic('Watts-Strogatz',
+#                     'smallw',
+#                     nx.connected_watts_strogatz_graph(int(N), 12,
+#                                                       0.1, seed=1234),
+#                     nx.connected_watts_strogatz_graph(int(N/100), 12,
+#                                                       0.1, seed=1234))
+# watts.run(perc_inf, beta, tau_i, tau_r, days, t)
+
+# # with open('pickle/smallw.pkl', 'rb') as f:
+# #     watts = pickle.load(f)
+# watts.plot(beta, tau_i, tau_r, days, t, K0, ts0, pars0)
+# watts.save()
 
 
 # ==================
@@ -189,11 +190,6 @@ holme.plot(beta, tau_i, tau_r, days, t, K0, ts0, pars0)
 holme.save()
 
 
-# Save all networks together with pickle()
-with open('pickle/all_networks.pkl', 'wb') as f:
-    pickle.dump([watts, rando, latti, barab, holme], f)
-
-
 # TODO impostare un processo di ensemble?
 # Magari solo per Holme-Kim
 
@@ -201,10 +197,22 @@ Toc = time.perf_counter()
 print("All done. [Elapsed: " + str(round(Toc-Tic, 0)) + " seconds]")
 
 
-for net in [watts, rando, latti, barab, holme]:
+for net in [rando, latti, barab, holme]:
     print([net.name,
            net.G.size(),
            net.G.number_of_edges(),
            net.G.number_of_nodes(),
            net.G.k_avg,
            net.G.C_avg])
+
+
+# Load the last network (days=1600)
+with open('watts_long.py') as fd:
+    exec(fd.read())
+
+with open('pickle/smallw_long.pkl', 'rb') as f:
+    watts_long = pickle.load(f)
+
+# Save all networks together with pickle()
+with open('pickle/all_networks.pkl', 'wb') as f:
+    pickle.dump([watts_long, rando, latti, barab, holme], f)

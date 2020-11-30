@@ -47,7 +47,7 @@ for net in [rando, latti, watts, barab, holme]:
     networks = networks.append(newline, ignore_index=True)
 
 print(networks.round(3))
-# networks.to_latex(buf="tex/networks.tex",
+# networks.to_latex(  # buf="tex/networks.tex",
 #                   index=False,
 #                   caption="Networks properties.",
 #                   label="tab:networks",
@@ -59,15 +59,17 @@ print(networks.round(3))
 
 # outputs data
 p = e + i
+Td0 = np.log(2)/K0
+TTd0 = np.log(2)/KK0
 
-results = pd.DataFrame(columns=["Model", "K0", "ts", "Final_i",
+results = pd.DataFrame(columns=["Model", "K0", "Td0", "Final_i",
                                 "Final_r", "peak", "t_peak", "t_final"])
 
 results = results.append({"Model": "Det. SIR",
                           "K0": KK,
-                          "ts": tts,
-                          "Final_i": ii[250],
-                          "Final_r":  rr[250],
+                          "Td0": TTd0,
+                          "Final_i": ii[250]*100,
+                          "Final_r":  rr[250]*100,
                           "peak":  np.nanmax(ii)*100,
                           "t_peak": np.min(np.where(ii == np.nanmax(ii))),
                           "t_final": np.min(np.where(ii < 1/N))},
@@ -75,9 +77,9 @@ results = results.append({"Model": "Det. SIR",
 
 results = results.append({"Model": "Det. SEIR",
                           "K0": K,
-                          "ts": ts,
-                          "Final_i": i[days],
-                          "Final_r": r[days],
+                          "Td0": Td0,
+                          "Final_i": i[days]*100,
+                          "Final_r": r[days]*100,
                           "peak": np.nanmax(p)*100,
                           "t_peak": np.min(np.where(p == np.nanmax(p))),
                           "t_final": np.min(np.where(p < 1/N))},
@@ -88,9 +90,9 @@ for net in [rando, latti, watts_long, barab, holme]:
     net.p = net.i + net.e
     newline = {"Model": net.name,
                "K0": net.K0,
-               "ts": net.ts,
-               "Final_i": net.i[days],
-               "Final_r": net.r[days],
+               "Td0": net.Td0,
+               "Final_i": net.i[days]*100,
+               "Final_r": net.r[days]*100,
                "peak": np.nanmax(net.p)*100,
                "t_peak": np.min(np.where(net.p == np.nanmax(net.p))),
                "t_final": np.min(np.where(net.p == 0))}
@@ -102,13 +104,14 @@ print(results.round(2))
 #                  caption="Simulations summary.",
 #                  label="tab:results",
 #                  escape=False,
-#                  header=["Model", "$K_{0}$", "$\tau_{s}$", "$i_{final}$",
+#                  header=["Model", "$K_0$", "$T_d$", "$i_{final}$",
 #                          "$r_{final}$", "Peak $\%$", "peak day", "end day"],
 #                  float_format="%.2f")
 
 
 presentation = pd.DataFrame(columns=(["N", "perc_inf", "beta",
-                                      "gamma", "mu", "R0"]))
+                                      "gamma", "mu", "R0",
+                                      "KK0", "TTd0", "K0", "Td0"]))
 presentation = presentation.append({"N": N,
                                     "perc_inf": perc_inf,
                                     "beta": beta,
@@ -116,26 +119,21 @@ presentation = presentation.append({"N": N,
                                     "mu": mu,
                                     "R0": R0,
                                     "KK0": KK0,
-                                    "tts0": tts0,
+                                    "TTd0": TTd0,
                                     "K0": K0,
-                                    "ts0": ts0},
+                                    "Td0": Td0},
                                    ignore_index=True)
-print(presentation)
-# presentation.to_latex(buf="tex/params.tex",
+print(presentation.round(3))
+# presentation.to_latex(  # buf="tex/params.tex",
 #                       index=False,
 #                       caption="Model parameters.",
 #                       label="tab:params",
 #                       escape=False,
 #                       header=["Total population", "$i_{start}$ $\%$",
-#                               "$\beta$",
-#                               "$\gamma$", "$\mu$", "$R_0$"
-#                               "$K^{SIR}_0$", "$\tau^{SIR}_s$",
-#                               "$K^{SEIR}_0$", "$\tau^{SEIR}_s$" ],
+#                               "$beta$",
+#                               "$gamma$", "$mu$", "$R_0$",
+#                               "$K^{SIR}_0$", "$T^{SIR}_d$",
+#                               "$K^{SEIR}_0$", "$T^{SEIR}_d$"],
 #                       float_format="%.2f")
 
 # fine
-
-A = np.array([[-gamma, beta*s[0]], [gamma, -mu]])
-eigval, eigvec = np.linalg.eig(A)
-print(np.round([eigval[0], K], 4))
-print(np.round([beta*s[0]-mu, KK], 4))
