@@ -171,7 +171,7 @@ print("\nSEIR over random network:")
 # with open('pickle/network_random.pkl', 'rb') as f:
 #     Rando = pickle.load(f)
 #rando = pn.pRandNeTmic(Rando, perc_inf, beta, tau_i, tau_r, days)
-rando.run(100)
+rando.run(2)
 rando.plot()
 rando.save()
 
