@@ -19,6 +19,8 @@ N = 1e4
 n = N/100
 perc_inf = 0.1
 days = 100
+daysl = days*2
+daysll = days*3
 beta = 0.73         # infection probability
 tau_i = 3           # incubation time
 tau_r = 3           # recovery time
@@ -51,20 +53,16 @@ x, xi, yi, KFit, Ki, tsFit, parsFit, \
     pn.contagion_metrics(s, e, i, r, t, K0, ts0, pars0,
                          D, R0, tau_i, tau_r, N)
 
-print("\nSEIR deterministic model with longer time-span:")
-daysl = days*3
-sl, el, il, rl, tl = pn.SEIR_odet(perc_inf, beta, tau_i, tau_r, daysl)
-
-fig02, fig03, fig04 = pn.SEIR_plot(s, e, i, r, t, R0, 
-                                   "SEIR deterministic model", 
-                                   pos, ts0, pars0, x, xi, yi, 
+fig02, fig03, fig04 = pn.SEIR_plot(s, e, i, r, t, R0,
+                                   "SEIR deterministic model",
+                                   pos, ts0, pars0, x, xi, yi,
                                    parsFit, D, KFit, TdFit, Rt, Rti, Rts)
 
 fig02.savefig('immagini/SEIR_02.png')
 fig03.savefig('immagini/SEIR_03.png')
 fig04.savefig('immagini/SEIR_04.png')
 with open('pickle/SEIR.pkl', 'wb') as f:
-    pickle.dump([s, e, i, r, t, tl, KFit, tsFit, parsFit,
+    pickle.dump([s, e, i, r, t, days, daysl, KFit, tsFit, parsFit,
                  mu, gamma, R0, K0, ts0, pars0,
                  fig02, fig03, fig04], f)
 
@@ -85,34 +83,29 @@ xx, xxi, yyi, KKFit, KKi, ttsFit, pparsFit, \
     pn.contagion_metrics(ss, 0, ii, rr, tt, KK0, tts0, ppars0,
                          DD, R0, 0, tau_r, N)
 
-ffig02, ffig03, ffig04 = pn.SIR_plot(s, i, r, t, R0, 
-                                     "SIR deterministic model", 
-                                     pos, ts0, pars0, x, xi, yi, 
+ffig02, ffig03, ffig04 = pn.SIR_plot(s, i, r, t, R0,
+                                     "SIR deterministic model",
+                                     pos, ts0, pars0, x, xi, yi,
                                      parsFit, D, KFit, TdFit, Rt, Rti, Rts)
 
 ffig02.savefig('immagini/SIR_02.png')
 ffig03.savefig('immagini/SIR_03.png')
 ffig04.savefig('immagini/SIR_04.png')
 with open('pickle/SIR.pkl', 'wb') as f:
-    pickle.dump([ss, ii, rr, tt, KKFit, ttsFit, pparsFit,
+    pickle.dump([ss, ii, rr, days, KKFit, ttsFit, pparsFit,
                  mu, R0, KK0, tts0, ppars0,
                  ffig02, ffig03, ffig04], f)
-    
+
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 # COMPLEX NETWORKS approach
 
 if os.path.isfile('pickle/all_networks.pkl'):
     print("Loading existing networks...")
+    
     # Getting back the objects:
     with open('pickle/all_networks.pkl', 'rb') as f:
         Watts, Rando, Latti, Barab, Holme = pickle.load(f)
-
-    watts = pn.pRandNeTmic(Watts, perc_inf, beta, tau_i, tau_r, days)
-    rando = pn.pRandNeTmic(Rando, perc_inf, beta, tau_i, tau_r, days)
-    latti = pn.pRandNeTmic(Latti, perc_inf, beta, tau_i, tau_r, days)
-    barab = pn.pRandNeTmic(Barab, perc_inf, beta, tau_i, tau_r, days)
-    holme = pn.pRandNeTmic(Holme, perc_inf, beta, tau_i, tau_r, days)
 
 else:
     print("No networks found, generating...")
@@ -155,6 +148,22 @@ else:
         pickle.dump([Watts, Rando, Latti, Barab, Holme], f)
 
 
+if os.path.isfile('pickle/all_models.pkl'):
+        print("Loading existing models...")
+        # Getting back the objects:
+        with open('pickle/all_models.pkl', 'rb') as f:
+            watts, rando, latti, barab, holme = pickle.load(f)
+else:
+    watts = pn.pRandNeTmic(Watts, perc_inf, beta, tau_i, tau_r, daysll)
+    rando = pn.pRandNeTmic(Rando, perc_inf, beta, tau_i, tau_r, days)
+    latti = pn.pRandNeTmic(Latti, perc_inf, beta, tau_i, tau_r, daysl)
+    barab = pn.pRandNeTmic(Barab, perc_inf, beta, tau_i, tau_r, days)
+    holme = pn.pRandNeTmic(Holme, perc_inf, beta, tau_i, tau_r, days)
+
+    # Save again all models together with pickle()
+    with open('pickle/all_models.pkl', 'wb') as f:
+        pickle.dump([watts, rando, latti, barab, holme], f)
+# %%
 # ==============
 # RANDOM NETWORK
 # ==============
@@ -167,6 +176,7 @@ rando.plot()
 rando.save()
 
 
+# %%
 # =======
 # LATTICE
 # =======
@@ -178,6 +188,8 @@ latti.run(100)
 latti.plot()
 latti.save()
 
+
+# %%
 # # ===================
 # # SMALL-WORLD NETWORK
 # # ===================
@@ -189,7 +201,7 @@ watts.run(100)
 watts.plot()
 watts.save()
 
-
+# %%
 # ==================
 # SCALE-FREE NETWORK
 # ==================
@@ -202,6 +214,7 @@ barab.plot()
 barab.save()
 
 
+# %%
 # ==========================
 # SCALE-FREE WITH CLUSTERING
 # ==========================
@@ -218,6 +231,7 @@ Toc = time.perf_counter()
 print("All done. [Elapsed: " + str(round(Toc-Tic, 0)) + " seconds]")
 
 
+# %%
 for net in [watts, rando, latti, barab, holme]:
     print([net.name,
            net.G.size(),
@@ -229,3 +243,5 @@ for net in [watts, rando, latti, barab, holme]:
 # Save again all networks together with pickle()
 with open('pickle/all_simulations.pkl', 'wb') as f:
     pickle.dump([watts, rando, latti, barab, holme], f)
+
+# end

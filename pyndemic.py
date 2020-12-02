@@ -732,7 +732,17 @@ class randnet:
 
 class pRandNeTmic(randnet):
 
-    def __init__(self, perc_inf, beta, tau_i, tau_r, days):
+    def __init__(self, parent, perc_inf, beta, tau_i, tau_r, days):
+        self.name = parent.name
+        self.nick = parent.nick
+        self.G = parent.G
+        self.Gmini = parent.Gmini
+        self.N = parent.N
+        self.G = parent.G
+        self.Gmini = parent.Gmini
+        self.fig00 = parent.Gmini.fig0
+        self.fig01 = parent.G.fig1
+        
         self.R0 = beta*tau_r
         self.days = days
         self.perc_inf = perc_inf
@@ -741,11 +751,9 @@ class pRandNeTmic(randnet):
         self.tau_r = tau_r
 
         # run deterministic reference
-        s, e, i, r, t = SEIR_odet(perc_inf, beta, tau_i, tau_r, days,
-                                 "SEIR deterministic model")
+        s, e, i, r, t = SEIR_odet(perc_inf, beta, tau_i, tau_r, days)
         self.t = t
         p = e + i
-        self.pos = p*self.N
         self.mu = 1/tau_r
         self.gamma = 1/tau_i
         A = np.array([[-self.gamma, self.beta*s[0]], [self.gamma, -self.mu]])
@@ -753,6 +761,7 @@ class pRandNeTmic(randnet):
         self.K0 = eigval[0]
         self.ts0 = np.log(self.R0)/self.K0
         self.pars0 = [self.K0, p[0]*self.N] 
+        self.D = int(self.ts0)
             
     def run(self, n):
         # run n simulations
@@ -761,13 +770,13 @@ class pRandNeTmic(randnet):
                          self.tau_i, self.tau_r, self.days, self.t)
         # compartments array
         self.y = np.array([self.s, self.e, self.i, self.r])
-        
+        self.pos = (self.e + self.i) * self.N
         self.x, self.xi, self.yi, \
             self.KFit, self.Ki, self.tsFit, self.parsFit, \
             self.Rt, self.Rti,  self.Rts, self.TdFit, self.Tdi, self.Tds = \
             contagion_metrics(s=self.s, e=self.e, i=self.i, r=self.r, t=self.t,
                               K0=self.K0, ts0=self.ts0, pars0=self.pars0,
-                              D=int(self.ts0), R0=self.R0, tau_i=self.tau_i,
+                              D=self.D, R0=self.R0, tau_i=self.tau_i,
                               tau_r=self.tau_r, N=self.N)
 
     def plot(self):
@@ -775,7 +784,7 @@ class pRandNeTmic(randnet):
         self.fig02 = plt.figure()
         plt.plot(self.t, self.y.T)
         plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
-        plt.text(0.3*self.days, 0.9, r'$R_{0}$ ='+str(np.round(self.R0, 2)))
+        plt.text(self.D, 0.5, r'$R_{0}$ ='+str(np.round(self.R0, 2)))
         plt.xlabel('t (days)')
         plt.ylabel('Relative population')
         plt.title(self.name + " - SEIR time evolution")
