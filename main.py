@@ -24,6 +24,83 @@ tau_i = 3           # incubation time
 tau_r = 3           # recovery time
 R0 = beta * tau_r   # basic reproduction number
 
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# DETERMINISTIC well-mixed approach
+
+# ==========
+# SEIR MODEL
+# ==========
+print("\nSEIR deterministic model:")
+s, e, i, r, t = pn.SEIR_odet(perc_inf, beta, tau_i, tau_r, days)
+
+p = e + i
+pos = N * p
+
+mu = 1/tau_r
+gamma = 1/tau_i
+A = np.array([[-gamma, beta*s[0]], [gamma, -mu]])
+eigval, eigvec = np.linalg.eig(A)
+K0 = eigval[0]
+ts0 = np.log(R0)/K0
+pars0 = [K0, p[0]*N]
+D = int(ts0)
+
+x, xi, yi, KFit, Ki, tsFit, parsFit, \
+    Rt, Rti, Rts, TdFit, Tdi, Tds = \
+    pn.contagion_metrics(s, e, i, r, t, K0, ts0, pars0,
+                         D, R0, tau_i, tau_r, N)
+
+print("\nSEIR deterministic model with longer time-span:")
+daysl = days*3
+sl, el, il, rl, tl = pn.SEIR_odet(perc_inf, beta, tau_i, tau_r, daysl)
+
+fig02, fig03, fig04 = pn.SEIR_plot(s, e, i, r, t, R0, 
+                                   "SEIR deterministic model", 
+                                   pos, ts0, pars0, x, xi, yi, 
+                                   parsFit, D, KFit, TdFit, Rt, Rti, Rts)
+
+fig02.savefig('immagini/SEIR_02.png')
+fig03.savefig('immagini/SEIR_03.png')
+fig04.savefig('immagini/SEIR_04.png')
+with open('pickle/SEIR.pkl', 'wb') as f:
+    pickle.dump([s, e, i, r, t, tl, KFit, tsFit, parsFit,
+                 mu, gamma, R0, K0, ts0, pars0,
+                 fig02, fig03, fig04], f)
+
+
+# =========
+# SIR MODEL
+# =========
+print("\nSIR deterministic model:")
+ss, ii, rr, tt = pn.SIR_odet(perc_inf, beta, tau_r, int(days/2.3))
+
+KK0 = beta*ss[0]-mu
+tts0 = np.log(R0)/KK0
+ppars0 = [KK0, ii[0]*N]
+DD = int(2*tts0)
+
+xx, xxi, yyi, KKFit, KKi, ttsFit, pparsFit, \
+    RRt, RRti, RRts, TTdFit, TTdi, TTds = \
+    pn.contagion_metrics(ss, 0, ii, rr, tt, KK0, tts0, ppars0,
+                         DD, R0, 0, tau_r, N)
+
+ffig02, ffig03, ffig04 = pn.SIR_plot(s, i, r, t, R0, 
+                                     "SIR deterministic model", 
+                                     pos, ts0, pars0, x, xi, yi, 
+                                     parsFit, D, KFit, TdFit, Rt, Rti, Rts)
+
+ffig02.savefig('immagini/SIR_02.png')
+ffig03.savefig('immagini/SIR_03.png')
+ffig04.savefig('immagini/SIR_04.png')
+with open('pickle/SIR.pkl', 'wb') as f:
+    pickle.dump([ss, ii, rr, tt, KKFit, ttsFit, pparsFit,
+                 mu, R0, KK0, tts0, ppars0,
+                 ffig02, ffig03, ffig04], f)
+    
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# COMPLEX NETWORKS approach
 
 if os.path.isfile('pickle/all_networks.pkl'):
     print("Loading existing networks...")
@@ -77,77 +154,6 @@ else:
     with open('pickle/all_networks.pkl', 'wb') as f:
         pickle.dump([Watts, Rando, Latti, Barab, Holme], f)
 
-
-# DETERMINISTIC well-mixed approach
-
-# ==========
-# SEIR MODEL
-# ==========
-print("\nSEIR deterministic model:")
-s, e, i, r, t = pn.SEIR_odet(perc_inf, beta, tau_i, tau_r, days)
-
-p = e + i
-mu = 1/tau_r
-gamma = 1/tau_i
-A = np.array([[-gamma, beta*s[0]], [gamma, -mu]])
-eigval, eigvec = np.linalg.eig(A)
-K0 = eigval[0]
-ts0 = np.log(R0)/K0
-pars0 = [K0, p[0]*N]
-D = int(ts0)
-
-K, Ki, ts, pars, Rt, Rti, Rts, Td0, Tdi, Tds = \
-    pn.contagion_metrics(s, e, i, r, t, K0, ts0, pars0, D,
-                      R0, tau_i, tau_r, N,
-                      "SEIR deterministic model")
-
-print("\nSEIR deterministic model with longer time-span:")
-daysl = days*3
-sl, el, il, rl, tl, fig02l = pn.SEIR_odet(perc_inf, beta, tau_i, tau_r, daysl,
-                                       "SEIR deterministic model")
-
-fig02, fig03, fig04 = pn.SEIR_plot(s, e, i, r, t,
-                                   R0, "SEIR deterministic model")
-
-fig02.savefig('immagini/SEIR_02.png')
-fig03.savefig('immagini/SEIR_03.png')
-fig04.savefig('immagini/SEIR_04.png')
-with open('pickle/SEIR.pkl', 'wb') as f:
-    pickle.dump([s, e, i, r, t, tl, K, ts, pars,
-                 mu, gamma, R0, K0, ts0, pars0,
-                 fig02, fig03, fig04], f)
-
-
-# =========
-# SIR MODEL
-# =========
-print("\nSIR deterministic model:")
-ss, ii, rr, tt = pn.SIR_odet(perc_inf, beta, tau_r, int(days/2.3))
-
-mu = 1/tau_r
-KK0 = beta*ss[0]-mu
-tts0 = np.log(R0)/KK0
-ppars0 = [KK0, ii[0]*N]
-DD = int(2*tts0)
-
-KK, KKi, tts, ppars, RRt, RRti, RRts, TTd0, TTdi, TTds = \
-    pn.contagion_metrics(ss, 0, ii, rr, tt, KK0, tts0, ppars0, DD,
-                         R0, 0, tau_r, N,
-                         "SIR deterministic model")
-
-ffig02, ffig03, ffig04 = pn.SIR_plot(ss, ii, rr, tt,
-                                     R0, "SIR deterministic model")
-
-ffig02.savefig('immagini/SIR_02.png')
-ffig03.savefig('immagini/SIR_03.png')
-ffig04.savefig('immagini/SIR_04.png')
-with open('pickle/SIR.pkl', 'wb') as f:
-    pickle.dump([ss, ii, rr, tt, KK, tts, ppars,
-                 mu, R0, KK0, tts0, ppars0,
-                 ffig02, ffig03, ffig04], f)
-    
-
-# COMPLEX NETWORKS approach
 
 # ==============
 # RANDOM NETWORK

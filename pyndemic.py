@@ -309,7 +309,7 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
 # EPIDEMIC PROCESSES
 
 
-def SEIR_odet(perc_inf, beta, tau_i, tau_r, days, title):
+def SEIR_odet(perc_inf, beta, tau_i, tau_r, days):
     '''
     SEIR Epidemic Model
 
@@ -353,94 +353,82 @@ def SEIR_odet(perc_inf, beta, tau_i, tau_r, days, title):
                                y0=y0,
                                t_eval=np.arange(0, days+1))
 
-    # fig02 = plt.figure()
-    # plt.plot(y.t, y.y.T)
-    # # plt.legend(["s", "e", "i", "r"])
-    # plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
-    # plt.text(0.8*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
-    # plt.xlabel('t (days)')
-    # plt.ylabel('Relative population')
-    # plt.title(title)
-    # plt.xlim([0, days])
-    # plt.ylim([0, 1])
-    # plt.grid(axis='y')
-    # plt.tight_layout()
-
     s, e, i, r = [y.y[line, :] for line in range(4)]
     t = y.t
     return s, e, i, r, t
 
 
-# def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0):
-#     y = np.array([s, e, i, r])
+def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi, 
+              parsFit, D, KFit, TdFit, Rt, Rti, Rts):
+    y = np.array([s, e, i, r])
     
-#     fig02 = plt.figure()
-#     plt.plot(y.t, y.y.T)
-#     # plt.legend(["s", "e", "i", "r"])
-#     plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
-#     plt.text(0.8*(len(t)-1), 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
-#     plt.xlabel('t (days)')
-#     plt.ylabel('Relative population')
-#     plt.title(title)
-#     plt.xlim([0, (len(t)-1)])
-#     plt.ylim([0, 1])
-#     plt.grid(axis='y')
-#     plt.tight_layout()
+    fig02 = plt.figure()
+    plt.plot(t, y.T)
+    # plt.legend(["s", "e", "i", "r"])
+    plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
+    plt.text(0.8*(len(t)-1), 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
+    plt.xlabel('t (days)')
+    plt.ylabel('Relative population')
+    plt.title(title)
+    plt.xlim([0, (len(t)-1)])
+    plt.ylim([0, 1])
+    plt.grid(axis='y')
+    plt.tight_layout()
     
-#     fig03 = plt.figure()
-#     plt.plot(t, pos, label="Positives")
+    fig03 = plt.figure()
+    plt.plot(t, pos, label="Positives")
 
-#     if ts0 != 0:
-#         plt.plot(x, exponential(x, *pars0), 'r--', alpha=0.4,
-#                   label="Deterministic exp. growth")
+    if ts0 != 0:
+        plt.plot(x, exponential(x, *pars0), 'r--', alpha=0.4,
+                  label="Deterministic exp. growth")
 
-#     plt.plot(xi, yi, label="Initial growth", linewidth=2)
-#     plt.plot(x, exponential(x, *pars), 'k--',
-#               label="Exponential fit", alpha=0.8)
+    plt.plot(xi, yi, label="Initial growth", linewidth=2)
+    plt.plot(x, exponential(x, *parsFit), 'k--',
+              label="Exponential fit", alpha=0.8)
 
-#     plt.xlim([0, 3*max(xi)])
-#     plt.ylim([0, 1.4*np.nanmax(pos)])
-#     plt.xlabel('t (days)')
-#     plt.ylabel('Individuals')
-#     plt.text(D*0.5, np.nanmax(pos,)*0.75,
-#               r'$K$ =' + str(np.round(K0, 2)) +
-#               r'; $T_{d}$ =' + str(np.round(Td0, 2)))  # +
-#     # r'; $\tau_{s}$ =' + str(np.round(ts0, 2)))
-#     plt.legend(loc='best')
-#     plt.title(title + " - initial phase of the epidemic")
-#     plt.grid(axis='y')
-#     plt.tight_layout()
+    plt.xlim([0, 3*max(xi)])
+    plt.ylim([0, 1.4*np.nanmax(pos)])
+    plt.xlabel('t (days)')
+    plt.ylabel('Individuals')
+    plt.text(D*0.5, np.nanmax(pos,)*0.75,
+              r'$K$ =' + str(np.round(KFit, 2)) +
+              r'; $T_{d}$ =' + str(np.round(TdFit, 2)))  # +
+    # r'; $\tau_{s}$ =' + str(np.round(ts0, 2)))
+    plt.legend(loc='best')
+    plt.title(title + " - initial phase of the epidemic")
+    plt.grid(axis='y')
+    plt.tight_layout()
     
-#     fig04 = plt.figure()
-#     plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
-#               [1 for i in np.arange(1, len(t)+100)],
-#               'r--', linewidth=2, alpha=0.4)
+    fig04 = plt.figure()
+    plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
+              [1 for i in np.arange(1, len(t)+100)],
+              'r--', linewidth=2, alpha=0.4)
 
-#     plt.plot(t, Rt, alpha=0.8,
-#               label='R(t) as R0 times s(t)')
+    plt.plot(t, Rt, alpha=0.8,
+              label='R(t) as R0 times s(t)')
 
-#     plt.plot(t, Rti, 'grey', alpha=0.2,
-#               label='R(t) from instant. K(t)')
+    plt.plot(t, Rti, 'grey', alpha=0.2,
+              label='R(t) from instant. K(t)')
 
-#     plt.plot(t, Rts, 'orange',  # alpha=0.8,
-#               label='Moving avg. of R(t) from K(t)')
+    plt.plot(t, Rts, 'orange',  # alpha=0.8,
+              label='Moving avg. of R(t) from K(t)')
 
-#     # plt.plot(xi, np.ones(len(xi)) * R0_K, 'g--',
-#     #          label='R0 from exponential growth')
-#     plt.xlabel('t (days)')
-#     plt.ylabel('R(t)')
-#     plt.legend(loc='best')
-#     plt.xlim([np.min(t), np.max(t)])
-#     # plt.ylim([0, np.nanmax([R0, *Rts])+0.5])
-#     plt.ylim([0, R0+2])
-#     plt.title(title + " - evolution of the reproduction number")
-#     plt.grid(axis='y')
-#     plt.tight_layout()
+    # plt.plot(xi, np.ones(len(xi)) * R0_K, 'g--',
+    #          label='R0 from exponential growth')
+    plt.xlabel('t (days)')
+    plt.ylabel('R(t)')
+    plt.legend(loc='best')
+    plt.xlim([np.min(t), np.max(t)])
+    # plt.ylim([0, np.nanmax([R0, *Rts])+0.5])
+    plt.ylim([0, R0+2])
+    plt.title(title + " - evolution of the reproduction number")
+    plt.grid(axis='y')
+    plt.tight_layout()
     
-#     return fig02, fig03, fig04
+    return fig02, fig03, fig04
 
 
-def SIR_odet(perc_inf, beta, tau_r, days, title):
+def SIR_odet(perc_inf, beta, tau_r, days):
     '''
     SIR Epidemic Model
 
@@ -480,89 +468,78 @@ def SIR_odet(perc_inf, beta, tau_r, days, title):
                                y0=y0,
                                t_eval=np.arange(0, days+1))
 
-    # fig02 = plt.figure()
-    # plt.plot(y.t, y.y.T)
-    # plt.legend(["Susceptible", "Infected", "Removed"])
-    # plt.text(0.8*days, 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
-    # plt.xlabel('t (days)')
-    # plt.ylabel('Relative population')
-    # plt.title(title)
-    # plt.xlim([0, days])
-    # plt.ylim([0, 1])
-    # plt.grid(axis='y')
-    # plt.tight_layout()
-
     s, i, r = [y.y[line, :] for line in range(3)]
     t = y.t
     return s, i, r, t
 
 
-# def SIR_plot(s, i, r, t, R0, title):
-#     y = np.array([s, i, r])
-#     fig02 = plt.figure()
-#     plt.plot(t, y.T)
-#     plt.legend(["Susceptible", "Infected", "Removed"])
-#     plt.text(0.8*(len(t)-1), 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
-#     plt.xlabel('t (days)')
-#     plt.ylabel('Relative population')
-#     plt.title(title)
-#     plt.xlim([0, (len(t)-1)])
-#     plt.ylim([0, 1])
-#     plt.grid(axis='y')
-#     plt.tight_layout()
+def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi, 
+              parsFit, D, KFit, TdFit, Rt, Rti, Rts):
+    y = np.array([s, i, r])
+    fig02 = plt.figure()
+    plt.plot(t, y.T)
+    plt.legend(["Susceptible", "Infected", "Removed"])
+    plt.text(0.8*(len(t)-1), 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
+    plt.xlabel('t (days)')
+    plt.ylabel('Relative population')
+    plt.title(title)
+    plt.xlim([0, (len(t)-1)])
+    plt.ylim([0, 1])
+    plt.grid(axis='y')
+    plt.tight_layout()
     
-#     # fig03 = plt.figure()
-#     # plt.plot(t, pos, label="Positives")
+    fig03 = plt.figure()
+    plt.plot(t, pos, label="Positives")
 
-#     # if tsDet != 0:
-#     #     plt.plot(x, exponential(x, *parsDet), 'r--', alpha=0.4,
-#     #              label="Deterministic exp. growth")
+    if ts0 != 0:
+        plt.plot(x, exponential(x, *pars0), 'r--', alpha=0.4,
+                  label="Deterministic exp. growth")
 
-#     # plt.plot(xi, yi, label="Initial growth", linewidth=2)
-#     # plt.plot(x, exponential(x, *pars), 'k--',
-#     #          label="Exponential fit", alpha=0.8)
+    plt.plot(xi, yi, label="Initial growth", linewidth=2)
+    plt.plot(x, exponential(x, *parsFit), 'k--',
+              label="Exponential fit", alpha=0.8)
 
-#     # plt.xlim([0, 3*max(xi)])
-#     # plt.ylim([0, 1.4*np.nanmax(pos)])
-#     # plt.xlabel('t (days)')
-#     # plt.ylabel('Individuals')
-#     # plt.text(D*0.5, np.nanmax(pos,)*0.75,
-#     #          r'$K$ =' + str(np.round(K0, 2)) +
-#     #          r'; $T_{d}$ =' + str(np.round(Td0, 2)))  # +
-#     # # r'; $\tau_{s}$ =' + str(np.round(ts0, 2)))
-#     # plt.legend(loc='best')
-#     # plt.title(title + " - initial phase of the epidemic")
-#     # plt.grid(axis='y')
-#     # plt.tight_layout()
+    plt.xlim([0, 3*max(xi)])
+    plt.ylim([0, 1.4*np.nanmax(pos)])
+    plt.xlabel('t (days)')
+    plt.ylabel('Individuals')
+    plt.text(D*0.5, np.nanmax(pos,)*0.75,
+              r'$K$ =' + str(np.round(KFit, 2)) +
+              r'; $T_{d}$ =' + str(np.round(TdFit, 2)))  # +
+    # r'; $\tau_{s}$ =' + str(np.round(ts0, 2)))
+    plt.legend(loc='best')
+    plt.title(title + " - initial phase of the epidemic")
+    plt.grid(axis='y')
+    plt.tight_layout()
     
     
-#     # fig04 = plt.figure()
-#     # plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
-#     #          [1 for i in np.arange(1, len(t)+100)],
-#     #          'r--', linewidth=2, alpha=0.4)
+    fig04 = plt.figure()
+    plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
+              [1 for i in np.arange(1, len(t)+100)],
+              'r--', linewidth=2, alpha=0.4)
 
-#     # plt.plot(t, Rt, alpha=0.8,
-#     #          label='R(t) as R0 times s(t)')
+    plt.plot(t, Rt, alpha=0.8,
+              label='R(t) as R0 times s(t)')
 
-#     # plt.plot(t, Rti, 'grey', alpha=0.2,
-#     #          label='R(t) from instant. K(t)')
+    plt.plot(t, Rti, 'grey', alpha=0.2,
+              label='R(t) from instant. K(t)')
 
-#     # plt.plot(t, Rts, 'orange',  # alpha=0.8,
-#     #          label='Moving avg. of R(t) from K(t)')
+    plt.plot(t, Rts, 'orange',  # alpha=0.8,
+              label='Moving avg. of R(t) from K(t)')
 
-#     # # plt.plot(xi, np.ones(len(xi)) * R0_K, 'g--',
-#     # #          label='R0 from exponential growth')
-#     # plt.xlabel('t (days)')
-#     # plt.ylabel('R(t)')
-#     # plt.legend(loc='best')
-#     # plt.xlim([np.min(t), np.max(t)])
-#     # # plt.ylim([0, np.nanmax([R0, *Rts])+0.5])
-#     # plt.ylim([0, R0+2])
-#     # plt.title(title + " - evolution of the reproduction number")
-#     # plt.grid(axis='y')
-#     # plt.tight_layout()
+    # plt.plot(xi, np.ones(len(xi)) * R0_K, 'g--',
+    #          label='R0 from exponential growth')
+    plt.xlabel('t (days)')
+    plt.ylabel('R(t)')
+    plt.legend(loc='best')
+    plt.xlim([np.min(t), np.max(t)])
+    # plt.ylim([0, np.nanmax([R0, *Rts])+0.5])
+    plt.ylim([0, R0+2])
+    plt.title(title + " - evolution of the reproduction number")
+    plt.grid(axis='y')
+    plt.tight_layout()
     
-#     return fig02, fig03, fig04
+    return fig02, fig03, fig04
 
 
 def growth_fit(pos, t, ts0, pars0, D, R0):
