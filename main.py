@@ -20,8 +20,8 @@ n = N/100
 perc_inf = 0.1
 days = 100
 beta = 0.73         # infection probability
-tau_i = 3          # incubation time
-tau_r = 3          # recovery time
+tau_i = 3           # incubation time
+tau_r = 3           # recovery time
 R0 = beta * tau_r   # basic reproduction number
 
 
@@ -31,11 +31,11 @@ if os.path.isfile('pickle/all_networks.pkl'):
     with open('pickle/all_networks.pkl', 'rb') as f:
         Watts, Rando, Latti, Barab, Holme = pickle.load(f)
 
-    watts = pn.pRandNeTmic(Watts)
-    rando = pn.pRandNeTmic(Rando)
-    latti = pn.pRandNeTmic(Latti)
-    barab = pn.pRandNeTmic(Barab)
-    holme = pn.pRandNeTmic(Holme)
+    watts = pn.pRandNeTmic(Watts, perc_inf, beta, tau_i, tau_r, days)
+    rando = pn.pRandNeTmic(Rando, perc_inf, beta, tau_i, tau_r, days)
+    latti = pn.pRandNeTmic(Latti, perc_inf, beta, tau_i, tau_r, days)
+    barab = pn.pRandNeTmic(Barab, perc_inf, beta, tau_i, tau_r, days)
+    holme = pn.pRandNeTmic(Holme, perc_inf, beta, tau_i, tau_r, days)
 
 else:
     print("No networks found, generating...")
@@ -75,12 +75,10 @@ else:
     # Save all networks together with pickle()
     print('Saving networks...')
     with open('pickle/all_networks.pkl', 'wb') as f:
-        pickle.dump([watts, rando, latti, barab, holme], f)
+        pickle.dump([Watts, Rando, Latti, Barab, Holme], f)
 
-exit()
 
 # DETERMINISTIC well-mixed approach
-
 
 # ==========
 # SEIR MODEL
@@ -147,33 +145,19 @@ with open('pickle/SIR.pkl', 'wb') as f:
     pickle.dump([ss, ii, rr, tt, KK, tts, ppars,
                  mu, R0, KK0, tts0, ppars0,
                  ffig02, ffig03, ffig04], f)
-
-# ss, ii, rr, tt = SIR(perc_inf*0.1, beta/5, tau_r*5, days)
-# contagion_metrics(ss, 0, ii, rr, R0, 0, int(tau_r*0.5), N)
-
+    
 
 # COMPLEX NETWORKS approach
-
-# # # Getting back the objects:
-# with open('pickle/all_networks.pkl', 'rb') as f:
-#     watts, rando, latti, barab, holme = pickle.load(f)
-
-# erdos = pRandNeTmic('Erdos Renji',
-#                   nx.erdos_renyi_graph(int(N), 0.005, seed=1234), #0.0006
-#                   'erdos.pkl')
-# erdos.run(perc_inf, beta, tau_i, tau_r, days, t)
-# erdos.save()
-
 
 # ==============
 # RANDOM NETWORK
 # ==============
 print("\nSEIR over random network:")
-rando.run(perc_inf, beta, tau_i, tau_r, days, t)
-
-# with open('pickle/random.pkl', 'rb') as f:
-#     rando = pickle.load(f)
-rando.plot()  # beta, tau_i, tau_r, days, t, K0, ts0, pars0, D)
+# with open('pickle/network_random.pkl', 'rb') as f:
+#     Rando = pickle.load(f)
+#rando = pn.pRandNeTmic(Rando, perc_inf, beta, tau_i, tau_r, days)
+rando.run(100)
+rando.plot()
 rando.save()
 
 
@@ -181,22 +165,22 @@ rando.save()
 # LATTICE
 # =======
 print("\nSEIR over lattice network:")
-latti.run(perc_inf, beta, tau_i, tau_r, daysl, tl)
-
-# with open('pickle/lattice.pkl', 'rb') as f:
-#     latti = pickle.load(f)
-latti.plot(beta, tau_i, tau_r, daysl, tl, K0, ts0, pars0, D)
+# with open('pickle/network_lattice.pkl', 'rb') as f:
+#     Latti = pickle.load(f)
+#latti = pn.pRandNeTmic(Latti, perc_inf, beta, tau_i, tau_r, days)
+latti.run(100)
+latti.plot()
 latti.save()
 
 # # ===================
 # # SMALL-WORLD NETWORK
 # # ===================
 print("\nSEIR over small-world network:")
-watts.run(perc_inf, beta, tau_i, tau_r, daysl, tl)
-
-# with open('pickle/smallw.pkl', 'rb') as f:
-#     watts = pickle.load(f)
-watts.plot(beta, tau_i, tau_r, daysl, tl, K0, ts0, pars0, D)
+# with open('pickle/network_smallw.pkl', 'rb') as f:
+#     Watts = pickle.load(f)
+# watts = pn.pRandNeTmic(Watts, perc_inf, beta, tau_i, tau_r, days)
+watts.run(100)
+watts.plot()
 watts.save()
 
 
@@ -204,11 +188,11 @@ watts.save()
 # SCALE-FREE NETWORK
 # ==================
 print("\nSEIR over scale-free network:")
-barab.run(perc_inf, beta, tau_i, tau_r, days, t)
-
-# with open('pickle/scalefree.pkl', 'rb') as f:
-#     barab = pickle.load(f)
-barab.plot(beta, tau_i, tau_r, days, t, K0, ts0, pars0, D)
+# with open('pickle/network_scalefree.pkl', 'rb') as f:
+#     Barab = pickle.load(f)
+# barab = pn.pRandNeTmic(Barab, perc_inf, beta, tau_i, tau_r, days)
+barab.run(100)
+barab.plot()
 barab.save()
 
 
@@ -216,16 +200,13 @@ barab.save()
 # SCALE-FREE WITH CLUSTERING
 # ==========================
 print("\nSEIR over clustered scale-free network:")
-holme.run(perc_inf, beta, tau_i, tau_r, days, t)
-
-# with open('pickle/realw.pkl', 'rb') as f:
-#     holme = pickle.load(f)
-holme.plot(beta, tau_i, tau_r, days, t, K0, ts0, pars0, D)
+# with open('pickle/network_realw.pkl', 'rb') as f:
+#     Holme = pickle.load(f)
+# holme = pn.pRandNeTmic(Holme, perc_inf, beta, tau_i, tau_r, days)
+holme.run(100)
+holme.plot()
 holme.save()
 
-
-# TODO impostare un processo di simulations?
-# Magari solo per Holme-Kim
 
 Toc = time.perf_counter()
 print("All done. [Elapsed: " + str(round(Toc-Tic, 0)) + " seconds]")
@@ -238,14 +219,6 @@ for net in [watts, rando, latti, barab, holme]:
            net.G.number_of_nodes(),
            net.G.k_avg,
            net.G.C_avg])
-
-
-# # Load the last network (days=1600)
-# with open('watts_long.py') as fd:
-#     exec(fd.read())
-
-# with open('pickle/smallw_long.pkl', 'rb') as f:
-#     watts_long = pickle.load(f)
 
 # Save again all networks together with pickle()
 with open('pickle/all_simulations.pkl', 'wb') as f:
