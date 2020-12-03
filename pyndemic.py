@@ -792,6 +792,10 @@ class pRandNeTmic(randnet):
             self.rm = pd.Series(data=None)
             self.pm = pd.Series(data=None)
             
+            self.parsFitm0 = pd.Series(data=None)
+            self.parsFitm1 = pd.Series(data=None)
+            self.Rtim = pd.Series(data=None)
+            
             # run n simulations
             member = self.copy()
             for run in range(runs):
@@ -802,21 +806,27 @@ class pRandNeTmic(randnet):
                 ## compartments array
                 # member.y = np.array([member.s, member.e, member.i, member.r])
                 member.pos = (member.e + member.i) * self.N
-                #     member.x, member.xi, member.yi, \
-                #     member.KFit, member.Ki, member.tsFit, member.parsFit, \
-                #     member.Rt, member.Rti,  member.Rts, \
-                #     member.TdFit, member.Tdi, member.Tds = \
-                #     contagion_metrics(s=member.s, e=member.e, i=member.i,
-                #                       r=member.r, t=self.t,
-                #                       K0=self.K0, ts0=self.ts0,
-                #                       pars0=self.pars0,
-                #                       D=self.D, R0=self.R0, tau_i=self.tau_i,
-                #                       tau_r=self.tau_r, N=self.N)
+                member.x, member.xi, member.yi, \
+                    member.KFit, member.Ki, member.tsFit, member.parsFit, \
+                    member.Rt, member.Rti,  member.Rts, \
+                    member.TdFit, member.Tdi, member.Tds = \
+                    contagion_metrics(s=member.s, e=member.e, i=member.i,
+                                      r=member.r, t=self.t,
+                                      K0=self.K0, ts0=self.ts0,
+                                      pars0=self.pars0,
+                                      D=self.D, R0=self.R0, tau_i=self.tau_i,
+                                      tau_r=self.tau_r, N=self.N)
+                    
                 self.sm = self.sm.append(pd.Series(member.s))
                 self.em = self.em.append(pd.Series(member.e))
                 self.im = self.im.append(pd.Series(member.i))
                 self.rm = self.rm.append(pd.Series(member.r))
                 self.pm = self.pm.append(pd.Series(member.pos))
+                
+                self.parsFitm0 = self.parsFitm0.append(pd.Series(member.parsFit[0]))
+                self.parsFitm1 = self.parsFitm1.append(pd.Series(member.parsFit[1]))
+
+                self.Rtim = self.Rtim.append(pd.Series(member.Rti))
             
             self.s = np.array([self.sm[i].median() for i in self.t])
             self.e = np.array([self.em[i].median() for i in self.t])
@@ -836,6 +846,7 @@ class pRandNeTmic(randnet):
             self.r95 = np.array([self.rm[i].quantile(0.95) for i in self.t])
             self.p95 = np.array([self.pm[i].quantile(0.95) for i in self.t])
             
+            # Contagion metrics of the median scenario
             self.x, self.xi, self.yi, \
             self.KFit, self.Ki, self.tsFit, self.parsFit, \
             self.Rt, self.Rti,  self.Rts, \
@@ -847,31 +858,19 @@ class pRandNeTmic(randnet):
                               D=self.D, R0=self.R0, tau_i=self.tau_i,
                               tau_r=self.tau_r, N=self.N)
             
-            # per Rt non funziona la cosa dei quantili, bisogna lanciare contagion_metrics()
-            # a ogni member e ripetere la statistica su Rti e plottare mediana e quantili.
-            # A quel punto Rts non dovrebbe servire più.
+            self.Rt05 = self.R0 * self.s05
+            self.Rt95 = self.R0 * self.s95
             
-            self.x05, self.xi05, self.yi05, \
-            self.KFit05, self.Ki05, self.tsFit05, self.parsFit05, \
-            self.Rt05, self.Rti05,  self.Rts05, \
-            self.TdFit05, self.Tdi05, self.Tds05 = \
-            contagion_metrics(s=self.s05, e=self.e05, i=self.i05,
-                              r=self.r05, t=self.t,
-                              K0=self.K0, ts0=self.ts0,
-                              pars0=self.pars0,
-                              D=self.D, R0=self.R0, tau_i=self.tau_i,
-                              tau_r=self.tau_r, N=self.N)
+            self.parsFit50 = [self.parsFitm0.median(), self.parsFitm1.median()]
+            self.parsFit05 = [self.parsFitm0.quantile(0.05), self.parsFitm1.quantile(0.05)]
+            self.parsFit95 = [self.parsFitm0.quantile(0.95), self.parsFitm1.quantile(0.95)]
             
-            self.x95, self.xi95, self.yi95, \
-            self.KFit95, self.Ki95, self.tsFit95, self.parsFit95, \
-            self.Rt95, self.Rti95,  self.Rts95, \
-            self.TdFit95, self.Tdi95, self.Tds95 = \
-            contagion_metrics(s=self.s95, e=self.e95, i=self.i95,
-                              r=self.r95, t=self.t,
-                              K0=self.K0, ts0=self.ts0,
-                              pars0=self.pars0,
-                              D=self.D, R0=self.R0, tau_i=self.tau_i,
-                              tau_r=self.tau_r, N=self.N)
+            self.KFit50 = self.parsFit50[0]
+            self.TdFit50 = np.log(2)/self.KFit50
+            
+            self.Rti50 = np.array([self.Rtim[i].median() for i in self.t])
+            self.Rti05 = np.array([self.Rtim[i].quantile(0.05) for i in self.t]) 
+            self.Rti95 = np.array([self.Rtim[i].quantile(0.95) for i in self.t])
             
     def plot(self):
         if self.runs == 1:
@@ -968,11 +967,20 @@ class pRandNeTmic(randnet):
             plt.plot(self.t, self.pos, label="Positives")
         
             if self.ts0 != 0:
-                plt.plot(self.x, exponential(self.x, *self.pars0), 'r--', alpha=0.4,
+                plt.plot(self.x, exponential(self.x, *self.pars0), 'r--', alpha=0.8,
                          label="Deterministic exp. growth")
-        
+            
             plt.plot(self.xi, self.yi, label="Initial growth", linewidth=2)
-            plt.plot(self.x, exponential(self.x, *self.parsFit), 'k--',
+            
+            plt.fill_between(self.x,
+                              exponential(self.x, *self.parsFit05),
+                              exponential(self.x, *self.parsFit95),
+                              facecolor='grey', alpha=0.2)  # , edgecolor=None
+            # plt.plot(self.x, exponential(self.x, *self.parsFit05), color='grey',
+            #          linewidth=0.5, alpha=0.8)
+            # plt.plot(self.x, exponential(self.x, *self.parsFit95), color='grey',
+            #          linewidth=0.5, alpha=0.8)
+            plt.plot(self.x, exponential(self.x, *self.parsFit50), 'k--',
                      label="Exponential fit", alpha=0.8)
         
             plt.xlim([0, 3*max(self.xi)])
@@ -980,8 +988,8 @@ class pRandNeTmic(randnet):
             plt.xlabel('t (days)')
             plt.ylabel('Individuals')
             plt.text(self.D*0.5, np.nanmax(self.pos,)*0.75,
-                     r'$K$ =' + str(np.round(self.KFit, 2)) +
-                     r'; $T_{d}$ =' + str(np.round(self.TdFit, 2)))  # +
+                     r'$K$ =' + str(np.round(self.KFit50, 2)) +
+                     r'; $T_{d}$ =' + str(np.round(self.TdFit50, 2)))  # +
             plt.legend(loc='best')
             plt.title(self.name + " - initial phase of the epidemic")
             plt.grid(axis='y')
@@ -998,13 +1006,13 @@ class pRandNeTmic(randnet):
             plt.plot(self.t, self.Rt, alpha=0.8,
                      label='R(t) as R0 times s(t)')
         
-            plt.fill_between(self.t, self.Rti05, self.Rti95, color='grey', alpha=0.1)
-            plt.plot(self.t, self.Rti, 'grey', alpha=0.4,
+            plt.fill_between(self.t, self.Rti05, self.Rti95, facecolor='orange', alpha=0.3)
+            plt.plot(self.t, self.Rti50, 'orange',  # alpha=0.8,
                      label='R(t) from instant. K(t)')
         
-            plt.fill_between(self.t, self.Rts05, self.Rts95, color='orange', alpha=0.3)
-            plt.plot(self.t, self.Rts, 'orange',  # alpha=0.8,
-                     label='Moving avg. of R(t) from K(t)')
+            # plt.fill_between(self.t, self.Rts05, self.Rts95, color='orange', alpha=0.3)
+            # plt.plot(self.t, self.Rts, 'orange',  # alpha=0.8,
+            #          label='Moving avg. of R(t) from K(t)')
         
             plt.xlabel('t (days)')
             plt.ylabel('R(t)')
