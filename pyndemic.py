@@ -12,6 +12,7 @@ import numpy as np
 import scipy as sp
 import pandas as pd
 import networkx as nx
+import datetime as dt
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
@@ -533,15 +534,18 @@ def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
 
 def growth_fit(pos, t, ts0, pars0, D, R0):
     # Locates and analyses the first phase of an epidemic spread
-    start = np.min(np.where(np.isfinite(pos)))
+    start = np.nanmin(np.where(np.isfinite(pos)))
+
     f = 0.16
-    end = start+1
+    end = start + 1
     
-    while end - start < 5:
-        if len(np.where(pos > f * np.nanmax(pos))) == 0:
+    while (end - start) < 5:
+        a = np.where(pos > f * np.nanmax(pos))
+
+        if len(a) == 0:
             end = start + 6
         else:
-            end = np.min(np.where(pos > f * np.nanmax(pos)))
+            end = np.nanmin(a)
             f += 0.001
 
     print("\nInitial growth:\n[s  e] f    ")
@@ -603,14 +607,14 @@ def contagion_metrics(s, e, i, r, t,
     
     # Total positives (exposed + infected)
     pos = N * (e+i)
-
+    
     # Rt from s(t)
     Rt = R0 * s
 
     # Initial exponential growth
     x, xi, yi, parsFit, KFit, TdFit, tsFit = growth_fit(pos, t,
-                                                    ts0, pars0,
-                                                    D, R0)
+                                                        ts0, pars0,
+                                                        D, R0)
     if ts0 == 0:
         ts0 = tsFit
     if K0 == 0:
@@ -789,18 +793,51 @@ class pRandNeTmic(randnet):
                     SEIR_network(self.G, self.N, self.perc_inf, self.beta, 
                                  self.tau_i, self.tau_r, self.days, self.t)
 
-                member.pos = (member.e + member.i) * self.N
-                member.x, member.xi, member.yi, \
-                    member.KFit, member.Ki, member.tsFit, member.parsFit, \
-                    member.Rt, member.Rti, \
-                    member.TdFit, member.Tdi = \
-                    contagion_metrics(s=member.s, e=member.e, i=member.i,
-                                      r=member.r, t=self.t,
-                                      K0=self.K0, ts0=self.ts0,
-                                      pars0=self.pars0,
-                                      D=self.D, R0=self.R0, tau_i=self.tau_i,
-                                      tau_r=self.tau_r, N=self.N)
-                    
+                member.pos = np.array((member.e + member.i) * self.N)
+                # if len(np.where(np.isfinite(member.pos))) == 0:
+                #     print("\nWARNING: Empty positives array!!.")
+                #     now = dt.datetime.now()
+                #     print(now)
+                #     logname = 'pickle/avoid1_' + \
+                #         now.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl'
+                #     with open(logname, 'wb') as f:
+                #         pickle.dump([member, run, now], f)
+                #     run -= 1
+                #     continue
+                
+                # if np.nanmax(member.pos) < self.perc_inf/100*self.R0*self.N:
+                #     print("\nWARNING: Epidemic did not start.")
+                #     now = dt.datetime.now()
+                #     print(now)
+                #     logname = 'pickle/avoid2_' + \
+                #         now.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl'
+                #     with open(logname, 'wb') as f:
+                #         pickle.dump([member, run, now], f)
+                #     run -= 1
+                #     continue
+                
+                try:
+                    member.x, member.xi, member.yi, \
+                        member.KFit, member.Ki, member.tsFit, member.parsFit, \
+                        member.Rt, member.Rti, \
+                        member.TdFit, member.Tdi = \
+                        contagion_metrics(s=member.s, e=member.e, i=member.i,
+                                          r=member.r, t=self.t,
+                                          K0=self.K0, ts0=self.ts0,
+                                          pars0=self.pars0,
+                                          D=self.D, R0=self.R0, tau_i=self.tau_i,
+                                          tau_r=self.tau_r, N=self.N)
+                except:
+                    now = dt.datetime.now()
+                    print("\nAN ERROR OCCURRED in contagion_metrics()")
+                    print(now)
+                    logname = 'pickle/error_' + \
+                        now.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl'
+                    with open(logname, 'wb') as f:
+                        pickle.dump([member, run, now], f)
+                    run -= 1
+                    continue
+                
                 self.sm = self.sm.append(pd.Series(member.s))
                 self.em = self.em.append(pd.Series(member.e))
                 self.im = self.im.append(pd.Series(member.i))
