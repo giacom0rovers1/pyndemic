@@ -49,14 +49,14 @@ pars0 = [K0, p[0]*N]
 D = int(ts0)
 
 x, xi, yi, KFit, Ki, tsFit, parsFit, \
-    Rt, Rti, Rts, TdFit, Tdi, Tds = \
+    Rt, Rti, TdFit, Tdi = \
     pn.contagion_metrics(s, e, i, r, t, K0, ts0, pars0,
                          D, R0, tau_i, tau_r, N)
 
 fig02, fig03, fig04 = pn.SEIR_plot(s, e, i, r, t, R0,
                                    "SEIR deterministic model",
                                    pos, ts0, pars0, x, xi, yi,
-                                   parsFit, D, KFit, TdFit, Rt, Rti, Rts)
+                                   parsFit, D, KFit, TdFit, Rt, Rti)
 
 fig02.savefig('immagini/SEIR_02.png')
 fig03.savefig('immagini/SEIR_03.png')
@@ -77,16 +77,17 @@ KK0 = beta*ss[0]-mu
 tts0 = np.log(R0)/KK0
 ppars0 = [KK0, ii[0]*N]
 DD = int(2*tts0)
+ppos = N * ii
 
 xx, xxi, yyi, KKFit, KKi, ttsFit, pparsFit, \
-    RRt, RRti, RRts, TTdFit, TTdi, TTds = \
+    RRt, RRti, TTdFit, TTdi = \
     pn.contagion_metrics(ss, 0, ii, rr, tt, KK0, tts0, ppars0,
                          DD, R0, 0, tau_r, N)
 
-ffig02, ffig03, ffig04 = pn.SIR_plot(s, i, r, t, R0,
+ffig02, ffig03, ffig04 = pn.SIR_plot(ss, ii, rr, tt, R0,
                                      "SIR deterministic model",
-                                     pos, ts0, pars0, x, xi, yi,
-                                     parsFit, D, KFit, TdFit, Rt, Rti, Rts)
+                                     ppos, tts0, ppars0, xx, xxi, yyi,
+                                     pparsFit, DD, KKFit, TTdFit, RRt, RRti)
 
 ffig02.savefig('immagini/SIR_02.png')
 ffig03.savefig('immagini/SIR_03.png')
