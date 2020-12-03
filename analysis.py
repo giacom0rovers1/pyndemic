@@ -5,6 +5,7 @@ Created on Thu Nov 19 16:14:44 2020
 
 @author: Giacomo Roversi
 """
+import copy
 import pickle
 import numpy as np
 import pandas as pd
@@ -199,15 +200,23 @@ def lockdown(net):
 
 # assortativity
 # TODO funzione
-plt.figure()
-for net in [rando, latti, watts, barab, holme]:
+sbpx = [221, 222, 223, 224]
+nets = [rando, watts, barab, holme]
+# nets = latti
+fig05 = plt.figure()
+for i in range(4):
+    net = copy.copy(nets[i])
+    sbp = sbpx[i]
+    fig05.add_subplot(sbp)
     knn = nx.k_nearest_neighbors(net.G)
-    net.G.knn = [knn[i] for i in np.arange((net.G.k_min), (net.G.k_max+1))]
-    plt.scatter(np.arange((net.G.k_min), (net.G.k_max+1)), net.G.knn)
+    net.G.knn = [knn[i] for i in np.unique(net.G.degree_sequence)]
+    plt.scatter(np.unique(net.G.degree_sequence), net.G.knn)
     plt.xlabel('k')
     plt.ylabel(r'$\langle k_{nn} \rangle$')
-    plt.ylim([net.G.k_min, net.G.k_max])
+    # plt.ylim([net.G.k_min, net.G.k_max])
+    plt.text() #
     plt.title(net.name)
+    plt.tight_layout()
 
     # TODO fit lineare
     # TODO pearson da chiamata nx

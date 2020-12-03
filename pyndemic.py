@@ -535,12 +535,17 @@ def growth_fit(pos, t, ts0, pars0, D, R0):
     # Locates and analyses the first phase of an epidemic spread
     start = np.min(np.where(np.isfinite(pos)))
     f = 0.16
-    end = np.min(np.where(pos > f * np.nanmax(pos)))
-
+    end = start+1
+    
     while end - start < 5:
-        f += 0.01
-        end = np.min(np.where(pos > f * np.nanmax(pos)))
-    print("Initial growth: [start, end, f(end)/max] " + str([start, end, f]))
+        if len(np.where(pos > f * np.nanmax(pos))) == 0:
+            end = start + 6
+        else:
+            end = np.min(np.where(pos > f * np.nanmax(pos)))
+            f += 0.001
+
+    print("\nInitial growth:\n[s  e] f    ")
+    print([start, end], np.array(f).round(3))
 
     xi = t[start:end]
     yi = pos[start:end]
@@ -549,7 +554,9 @@ def growth_fit(pos, t, ts0, pars0, D, R0):
                              xdata=xi,
                              ydata=yi,
                              bounds=(-100, 100))
-    print("Exponential fit parameters: " + str(parsFit))
+    print("\nExp fit params:\n[ K     n(0)  ]")
+    print(np.array(parsFit).round(3))
+    
     KFit = parsFit[0]
     TdFit = np.log(2)/KFit
 
@@ -626,10 +633,11 @@ def contagion_metrics(s, e, i, r, t,
     #                                    min_periods=D,
     #                                    center=True).mean().values
 
-    print("\n R0 [predicted, estimated]: " +
-          str(np.round([R0, Rti[3*D]], 2)))
-    print("\n Growth rate [predicted, estimated]: " +
-          str(np.round([K0, KFit], 2)))
+    print("\nR0\n[pred esti]: ")
+    print(np.array([R0, Rti[3*D]]).round(2))
+    
+    print("\nGrowth rate\n[pred esti]")
+    print(np.array([K0, Ki[3*D]]).round(2))
 
     return x, xi, yi, KFit, Ki, tsFit, parsFit, Rt, Rti, TdFit, Tdi
 

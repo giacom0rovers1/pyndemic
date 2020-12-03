@@ -233,13 +233,29 @@ print("All done. [Elapsed: " + str(round(Toc-Tic, 0)) + " seconds]")
 
 
 # %%
-for net in [watts, rando, latti, barab, holme]:
+for net in [Watts, Rando, Latti, Barab, Holme]:
     print([net.name,
            net.G.size(),
            net.G.number_of_edges(),
            net.G.number_of_nodes(),
            net.G.k_avg,
            net.G.C_avg])
+
+
+with open('pickle/simulations_random.pkl', 'rb') as f:
+    rando = pickle.load(f)
+    
+with open('pickle/simulations_smallw.pkl', 'rb') as f:
+    watts = pickle.load(f)
+
+with open('pickle/simulations_lattice.pkl', 'rb') as f:
+    latti = pickle.load(f)
+
+with open('pickle/simulations_scalefree.pkl', 'rb') as f:
+    barab = pickle.load(f)
+
+with open('pickle/simulations_realw.pkl', 'rb') as f:
+    holme = pickle.load(f)
 
 # Save again all networks together with pickle()
 with open('pickle/all_simulations.pkl', 'wb') as f:
