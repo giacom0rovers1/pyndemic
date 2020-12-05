@@ -70,8 +70,9 @@ with open('pickle/SEIR.pkl', 'wb') as f:
 # =========
 # SIR MODEL
 # =========
+ddays = int(0.6* days ) # int(days/2.3)
 print("\nSIR deterministic model:")
-ss, ii, rr, tt = pn.SIR_odet(perc_inf, beta, tau_r, int(days/2.3))
+ss, ii, rr, tt = pn.SIR_odet(perc_inf, beta, tau_r, ddays)
 
 KK0 = beta*ss[0]-mu
 tts0 = np.log(R0)/KK0
@@ -93,7 +94,7 @@ ffig02.savefig('immagini/SIR_02.png')
 ffig03.savefig('immagini/SIR_03.png')
 ffig04.savefig('immagini/SIR_04.png')
 with open('pickle/SIR.pkl', 'wb') as f:
-    pickle.dump([ss, ii, rr, days, KKFit, ttsFit, pparsFit,
+    pickle.dump([ss, ii, rr, tt, ddays, KKFit, ttsFit, pparsFit,
                  mu, R0, KK0, tts0, ppars0,
                  ffig02, ffig03, ffig04], f)
 

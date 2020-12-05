@@ -794,27 +794,6 @@ class pRandNeTmic(randnet):
                                  self.tau_i, self.tau_r, self.days, self.t)
 
                 member.pos = np.array((member.e + member.i) * self.N)
-                # if len(np.where(np.isfinite(member.pos))) == 0:
-                #     print("\nWARNING: Empty positives array!!.")
-                #     now = dt.datetime.now()
-                #     print(now)
-                #     logname = 'pickle/avoid1_' + \
-                #         now.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl'
-                #     with open(logname, 'wb') as f:
-                #         pickle.dump([member, run, now], f)
-                #     run -= 1
-                #     continue
-                
-                # if np.nanmax(member.pos) < self.perc_inf/100*self.R0*self.N:
-                #     print("\nWARNING: Epidemic did not start.")
-                #     now = dt.datetime.now()
-                #     print(now)
-                #     logname = 'pickle/avoid2_' + \
-                #         now.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl'
-                #     with open(logname, 'wb') as f:
-                #         pickle.dump([member, run, now], f)
-                #     run -= 1
-                #     continue
                 
                 try:
                     member.x, member.xi, member.yi, \
@@ -829,12 +808,13 @@ class pRandNeTmic(randnet):
                                           tau_r=self.tau_r, N=self.N)
                 except:
                     now = dt.datetime.now()
-                    print("\nAN ERROR OCCURRED in contagion_metrics()")
+                    print("\nAN UNKNOWN ERROR OCCURRED in contagion_metrics()")
                     print(now)
                     logname = 'pickle/error_' + \
                         now.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl'
                     with open(logname, 'wb') as f:
                         pickle.dump([member, run, now], f)
+                    print("Error log saved. Repeating run " + str(run))
                     run -= 1
                     continue
                 
