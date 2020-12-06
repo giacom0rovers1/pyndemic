@@ -360,10 +360,10 @@ def SEIR_odet(perc_inf, beta, tau_i, tau_r, days):
     return s, e, i, r, t
 
 
-def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi, 
+def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
               parsFit, D, KFit, TdFit, Rt, Rti):
     y = np.array([s, e, i, r])
-    
+
     fig02 = plt.figure()
     plt.plot(t, y.T)
     # plt.legend(["s", "e", "i", "r"])
@@ -376,41 +376,41 @@ def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.ylim([0, 1])
     plt.grid(axis='y')
     plt.tight_layout()
-    
+
     fig03 = plt.figure()
     plt.plot(t, pos, label="Positives")
 
     if ts0 != 0:
         plt.plot(x, exponential(x, *pars0), 'r--', alpha=0.4,
-                  label="Deterministic exp. growth")
+                 label="Deterministic exp. growth")
 
     plt.plot(xi, yi, label="Initial growth", linewidth=2)
     plt.plot(x, exponential(x, *parsFit), 'k--',
-              label="Exponential fit", alpha=0.8)
+             label="Exponential fit", alpha=0.8)
 
     plt.xlim([0, 3*max(xi)])
     plt.ylim([0, 1.4*np.nanmax(pos)])
     plt.xlabel('t (days)')
     plt.ylabel('Individuals')
     plt.text(D*0.5, np.nanmax(pos,)*0.75,
-              r'$K$ =' + str(np.round(KFit, 2)) +
-              r'; $T_{d}$ =' + str(np.round(TdFit, 2)))  # +
+             r'$K$ =' + str(np.round(KFit, 2)) +
+             r'; $T_{d}$ =' + str(np.round(TdFit, 2)))  # +
     # r'; $\tau_{s}$ =' + str(np.round(ts0, 2)))
     plt.legend(loc='best')
     plt.title(title + " - initial phase of the epidemic")
     plt.grid(axis='y')
     plt.tight_layout()
-    
+
     fig04 = plt.figure()
     plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
-              [1 for i in np.arange(1, len(t)+100)],
-              'r--', linewidth=2, alpha=0.4)
+             [1 for i in np.arange(1, len(t)+100)],
+             'r--', linewidth=2, alpha=0.4)
 
     plt.plot(t, Rt, alpha=0.8,
-              label='R(t) as R0 times s(t)')
+             label='R(t) as R0 times s(t)')
 
     plt.plot(t, Rti, 'orange',
-              label='R(t) from instant. K(t)')
+             label='R(t) from instant. K(t)')
 
     plt.xlabel('t (days)')
     plt.ylabel('R(t)')
@@ -420,7 +420,7 @@ def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.title(title + " - evolution of the reproduction number")
     plt.grid(axis='y')
     plt.tight_layout()
-    
+
     return fig02, fig03, fig04
 
 
@@ -469,8 +469,8 @@ def SIR_odet(perc_inf, beta, tau_r, days):
     return s, i, r, t
 
 
-def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi, 
-              parsFit, D, KFit, TdFit, Rt, Rti):
+def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
+             parsFit, D, KFit, TdFit, Rt, Rti):
     y = np.array([s, i, r])
     fig02 = plt.figure()
     plt.plot(t, y.T)
@@ -483,42 +483,41 @@ def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.ylim([0, 1])
     plt.grid(axis='y')
     plt.tight_layout()
-    
+
     fig03 = plt.figure()
     plt.plot(t, pos, label="Positives")
 
     if ts0 != 0:
         plt.plot(x, exponential(x, *pars0), 'r--', alpha=0.4,
-                  label="Deterministic exp. growth")
+                 label="Deterministic exp. growth")
 
     plt.plot(xi, yi, label="Initial growth", linewidth=2)
     plt.plot(x, exponential(x, *parsFit), 'k--',
-              label="Exponential fit", alpha=0.8)
+             label="Exponential fit", alpha=0.8)
 
     plt.xlim([0, 3*max(xi)])
     plt.ylim([0, 1.4*np.nanmax(pos)])
     plt.xlabel('t (days)')
     plt.ylabel('Individuals')
     plt.text(D*0.5, np.nanmax(pos,)*0.75,
-              r'$K$ =' + str(np.round(KFit, 2)) +
-              r'; $T_{d}$ =' + str(np.round(TdFit, 2)))  # +
+             r'$K$ =' + str(np.round(KFit, 2)) +
+             r'; $T_{d}$ =' + str(np.round(TdFit, 2)))  # +
     # r'; $\tau_{s}$ =' + str(np.round(ts0, 2)))
     plt.legend(loc='best')
     plt.title(title + " - initial phase of the epidemic")
     plt.grid(axis='y')
     plt.tight_layout()
-    
-    
+
     fig04 = plt.figure()
     plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
-              [1 for i in np.arange(1, len(t)+100)],
-              'r--', linewidth=2, alpha=0.4)
+             [1 for i in np.arange(1, len(t)+100)],
+             'r--', linewidth=2, alpha=0.4)
 
     plt.plot(t, Rt, alpha=0.8,
-              label='R(t) as R0 times s(t)')
+             label='R(t) as R0 times s(t)')
 
     plt.plot(t, Rti, 'orange',
-              label='R(t) from instant. K(t)')
+             label='R(t) from instant. K(t)')
 
     plt.xlabel('t (days)')
     plt.ylabel('R(t)')
@@ -528,7 +527,7 @@ def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.title(title + " - evolution of the reproduction number")
     plt.grid(axis='y')
     plt.tight_layout()
-    
+
     return fig02, fig03, fig04
 
 
@@ -538,7 +537,7 @@ def growth_fit(pos, t, ts0, pars0, D, R0):
 
     f = 0.16
     end = start + 1
-    
+
     while (end - start) < 5:
         a = np.where(pos > f * np.nanmax(pos))
 
@@ -560,7 +559,7 @@ def growth_fit(pos, t, ts0, pars0, D, R0):
                              bounds=(-100, 100))
     print("\nExp fit params:\n[ K     n(0)  ]")
     print(np.array(parsFit).round(3))
-    
+
     KFit = parsFit[0]
     TdFit = np.log(2)/KFit
 
@@ -604,10 +603,10 @@ def contagion_metrics(s, e, i, r, t,
 
 
     '''
-    
+
     # Total positives (exposed + infected)
     pos = N * (e+i)
-    
+
     # Rt from s(t)
     Rt = R0 * s
 
@@ -639,7 +638,7 @@ def contagion_metrics(s, e, i, r, t,
 
     print("\nR0\n[pred esti]: ")
     print(np.array([R0, Rti[3*D]]).round(2))
-    
+
     print("\nGrowth rate\n[pred esti]")
     print(np.array([K0, Ki[3*D]]).round(2))
 
@@ -652,7 +651,6 @@ def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
     k = G.degree()
     G.degree_list = [d for n, d in k]
     G.k_avg = np.mean(G.degree_list)
-
 
     # EPIDEMIC MODEL
     frac_inf = perc_inf/100
@@ -737,7 +735,7 @@ class pRandNeTmic(randnet):
         self.Gmini = parent.Gmini
         self.fig00 = parent.Gmini.fig0
         self.fig01 = parent.G.fig1
-        
+
         self.R0 = beta*tau_r
         self.days = days
         self.perc_inf = perc_inf
@@ -755,23 +753,25 @@ class pRandNeTmic(randnet):
         eigval, eigvec = np.linalg.eig(A)
         self.K0 = eigval[0]
         self.ts0 = np.log(self.R0)/self.K0
-        self.pars0 = [self.K0, p[0]*self.N] 
+        self.pars0 = [self.K0, p[0]*self.N]
         self.D = int(self.ts0)
-            
+
     def run(self, runs):
         self.runs = runs
         if self.runs == 1:
             self.s, self.e, self.i, self.r = \
-            SEIR_network(self.G, self.N, self.perc_inf, self.beta, 
-                         self.tau_i, self.tau_r, self.days, self.t)
+                SEIR_network(self.G, self.N, self.perc_inf, self.beta,
+                             self.tau_i, self.tau_r, self.days, self.t)
             # compartments array
             self.y = np.array([self.s, self.e, self.i, self.r])
             self.pos = (self.e + self.i) * self.N
             self.x, self.xi, self.yi, \
                 self.KFit, self.Ki, self.tsFit, self.parsFit, \
                 self.Rt, self.Rti, self.TdFit, self.Tdi = \
-                contagion_metrics(s=self.s, e=self.e, i=self.i, r=self.r, t=self.t,
-                                  K0=self.K0, ts0=self.ts0, pars0=self.pars0,
+                contagion_metrics(s=self.s, e=self.e, i=self.i,
+                                  r=self.r, t=self.t,
+                                  K0=self.K0, ts0=self.ts0,
+                                  pars0=self.pars0,
                                   D=self.D, R0=self.R0, tau_i=self.tau_i,
                                   tau_r=self.tau_r, N=self.N)
         else:
@@ -780,21 +780,21 @@ class pRandNeTmic(randnet):
             self.im = pd.Series(data=None)
             self.rm = pd.Series(data=None)
             self.pm = pd.Series(data=None)
-            
+
             self.parsFitm0 = pd.Series(data=None)
             self.parsFitm1 = pd.Series(data=None)
             self.Rtim = pd.Series(data=None)
-            
+
             # run n simulations
             member = self.copy()
             for run in range(runs):
                 print("\n" + str(run+1) + " of " + str(runs))
                 member.s, member.e, member.i, member.r = \
-                    SEIR_network(self.G, self.N, self.perc_inf, self.beta, 
+                    SEIR_network(self.G, self.N, self.perc_inf, self.beta,
                                  self.tau_i, self.tau_r, self.days, self.t)
 
                 member.pos = np.array((member.e + member.i) * self.N)
-                
+
                 try:
                     member.x, member.xi, member.yi, \
                         member.KFit, member.Ki, member.tsFit, member.parsFit, \
@@ -804,7 +804,8 @@ class pRandNeTmic(randnet):
                                           r=member.r, t=self.t,
                                           K0=self.K0, ts0=self.ts0,
                                           pars0=self.pars0,
-                                          D=self.D, R0=self.R0, tau_i=self.tau_i,
+                                          D=self.D, R0=self.R0,
+                                          tau_i=self.tau_i,
                                           tau_r=self.tau_r, N=self.N)
                 except:
                     now = dt.datetime.now()
@@ -817,62 +818,68 @@ class pRandNeTmic(randnet):
                     print("Error log saved. Repeating run " + str(run))
                     run -= 1
                     continue
-                
+
                 self.sm = self.sm.append(pd.Series(member.s))
                 self.em = self.em.append(pd.Series(member.e))
                 self.im = self.im.append(pd.Series(member.i))
                 self.rm = self.rm.append(pd.Series(member.r))
                 self.pm = self.pm.append(pd.Series(member.pos))
-                
-                self.parsFitm0 = self.parsFitm0.append(pd.Series(member.parsFit[0]))
-                self.parsFitm1 = self.parsFitm1.append(pd.Series(member.parsFit[1]))
+
+                self.parsFitm0 = \
+                    self.parsFitm0.append(pd.Series(member.parsFit[0]))
+                self.parsFitm1 = \
+                    self.parsFitm1.append(pd.Series(member.parsFit[1]))
 
                 self.Rtim = self.Rtim.append(pd.Series(member.Rti))
-            
+
             self.s = np.array([self.sm[i].median() for i in self.t])
             self.e = np.array([self.em[i].median() for i in self.t])
             self.i = np.array([self.im[i].median() for i in self.t])
             self.r = np.array([self.rm[i].median() for i in self.t])
             self.pos = np.array([self.pm[i].median() for i in self.t])
-                
+
             self.s05 = np.array([self.sm[i].quantile(0.05) for i in self.t])
             self.e05 = np.array([self.em[i].quantile(0.05) for i in self.t])
             self.i05 = np.array([self.im[i].quantile(0.05) for i in self.t])
-            self.r05 = np.array([self.rm[i].quantile(0.05) for i in self.t])    
-            self.p05 = np.array([self.pm[i].quantile(0.05) for i in self.t])    
-                
+            self.r05 = np.array([self.rm[i].quantile(0.05) for i in self.t])
+            self.p05 = np.array([self.pm[i].quantile(0.05) for i in self.t])
+
             self.s95 = np.array([self.sm[i].quantile(0.95) for i in self.t])
             self.e95 = np.array([self.em[i].quantile(0.95) for i in self.t])
             self.i95 = np.array([self.im[i].quantile(0.95) for i in self.t])
             self.r95 = np.array([self.rm[i].quantile(0.95) for i in self.t])
             self.p95 = np.array([self.pm[i].quantile(0.95) for i in self.t])
-            
+
             # Contagion metrics of the median scenario
             self.x, self.xi, self.yi, \
-            self.KFit, self.Ki, self.tsFit, self.parsFit, \
-            self.Rt, self.Rti, \
-            self.TdFit, self.Tdi = \
-            contagion_metrics(s=self.s, e=self.e, i=self.i,
-                              r=self.r, t=self.t,
-                              K0=self.K0, ts0=self.ts0,
-                              pars0=self.pars0,
-                              D=self.D, R0=self.R0, tau_i=self.tau_i,
-                              tau_r=self.tau_r, N=self.N)
-            
+                self.KFit, self.Ki, self.tsFit, self.parsFit, \
+                self.Rt, self.Rti, \
+                self.TdFit, self.Tdi = \
+                contagion_metrics(s=self.s, e=self.e, i=self.i,
+                                  r=self.r, t=self.t,
+                                  K0=self.K0, ts0=self.ts0,
+                                  pars0=self.pars0,
+                                  D=self.D, R0=self.R0, tau_i=self.tau_i,
+                                  tau_r=self.tau_r, N=self.N)
+
             self.Rt05 = self.R0 * self.s05
             self.Rt95 = self.R0 * self.s95
-            
+
             self.parsFit50 = [self.parsFitm0.median(), self.parsFitm1.median()]
-            self.parsFit05 = [self.parsFitm0.quantile(0.05), self.parsFitm1.quantile(0.05)]
-            self.parsFit95 = [self.parsFitm0.quantile(0.95), self.parsFitm1.quantile(0.95)]
-            
+            self.parsFit05 = [self.parsFitm0.quantile(0.05),
+                              self.parsFitm1.quantile(0.05)]
+            self.parsFit95 = [self.parsFitm0.quantile(0.95),
+                              self.parsFitm1.quantile(0.95)]
+
             self.KFit50 = self.parsFit50[0]
             self.TdFit50 = np.log(2)/self.KFit50
-            
+
             self.Rti50 = np.array([self.Rtim[i].median() for i in self.t])
-            self.Rti05 = np.array([self.Rtim[i].quantile(0.05) for i in self.t]) 
-            self.Rti95 = np.array([self.Rtim[i].quantile(0.95) for i in self.t])
-            
+            self.Rti05 = np.array([self.Rtim[i].quantile(0.05)
+                                   for i in self.t])
+            self.Rti95 = np.array([self.Rtim[i].quantile(0.95)
+                                   for i in self.t])
+
     def plot(self):
         if self.runs == 1:
             # main plot
@@ -891,15 +898,15 @@ class pRandNeTmic(randnet):
             # initial growth
             self.fig03 = plt.figure()
             plt.plot(self.t, self.pos, label="Positives")
-        
+
             if self.ts0 != 0:
                 plt.plot(self.x, exponential(self.x, *self.pars0), 'r--', alpha=0.4,
                          label="Deterministic exp. growth")
-        
+
             plt.plot(self.xi, self.yi, label="Initial growth", linewidth=2)
             plt.plot(self.x, exponential(self.x, *self.parsFit), 'k--',
                      label="Exponential fit", alpha=0.8)
-        
+
             plt.xlim([0, 3*max(self.xi)])
             plt.ylim([0, 1.4*np.nanmax(self.pos)])
             plt.xlabel('t (days)')
@@ -917,13 +924,13 @@ class pRandNeTmic(randnet):
             plt.plot(np.arange(np.min(self.t)-50, np.max(self.t)+50),
                      [1 for i in np.arange(1, len(self.t)+100)],
                      'r--', linewidth=2, alpha=0.4)
-        
+
             plt.plot(self.t, self.Rt, alpha=0.8,
                      label='R(t) as R0 times s(t)')
-        
+
             plt.plot(self.t, self.Rti, 'orange',
                      label='R(t) from instant. K(t)')
-        
+
             plt.xlabel('t (days)')
             plt.ylabel('R(t)')
             plt.legend(loc='best')
@@ -936,19 +943,19 @@ class pRandNeTmic(randnet):
         else:
             # main plot
             self.fig02 = plt.figure()
-            
+
             plt.fill_between(self.t, self.s05, self.s95, alpha=0.3)
             plt.plot(self.t, self.s, label="Susceptible")
-            
+
             plt.fill_between(self.t, self.e05, self.e95, alpha=0.3)
             plt.plot(self.t, self.e, label="Exposed")
-            
+
             plt.fill_between(self.t, self.i05, self.i95, alpha=0.3)
             plt.plot(self.t, self.i, label="Infected")
-            
+
             plt.fill_between(self.t, self.r05, self.r95, alpha=0.3)
             plt.plot(self.t, self.r, label="Removed")
-            
+
             plt.legend(loc='best')
             plt.text(self.D, 0.5, r'$R_{0}$ ='+str(np.round(self.R0, 2)))
             plt.xlabel('t (days)')
@@ -958,25 +965,26 @@ class pRandNeTmic(randnet):
             plt.ylim([0, 1])
             plt.grid(axis='y')
             plt.tight_layout()
-            
+
             # initial growth
             self.fig03 = plt.figure()
             plt.fill_between(self.t, self.p05, self.p95, alpha=0.3)
             plt.plot(self.t, self.pos, label="Positives")
-        
+
             if self.ts0 != 0:
-                plt.plot(self.x, exponential(self.x, *self.pars0), 'r--', alpha=0.8,
+                plt.plot(self.x, exponential(self.x, *self.pars0),
+                         'r--', alpha=0.8,
                          label="Deterministic exp. growth")
-            
+
             plt.plot(self.xi, self.yi, label="Initial growth", linewidth=2)
-            
+
             plt.fill_between(self.x,
-                              exponential(self.x, *self.parsFit05),
-                              exponential(self.x, *self.parsFit95),
-                              facecolor='grey', alpha=0.2)
+                             exponential(self.x, *self.parsFit05),
+                             exponential(self.x, *self.parsFit95),
+                             facecolor='grey', alpha=0.2)
             plt.plot(self.x, exponential(self.x, *self.parsFit50), 'k--',
                      label="Exponential fit", alpha=0.8)
-        
+
             plt.xlim([0, 3*max(self.xi)])
             plt.ylim([0, 1.4*np.nanmax(self.pos)])
             plt.xlabel('t (days)')
@@ -994,15 +1002,16 @@ class pRandNeTmic(randnet):
             plt.plot(np.arange(np.min(self.t)-50, np.max(self.t)+50),
                      [1 for i in np.arange(1, len(self.t)+100)],
                      'r--', linewidth=2, alpha=0.4)
-            
+
             plt.fill_between(self.t, self.Rt05, self.Rt95, alpha=0.3)
             plt.plot(self.t, self.Rt, alpha=0.8,
                      label='R(t) as R0 times s(t)')
-        
-            plt.fill_between(self.t, self.Rti05, self.Rti95, facecolor='orange', alpha=0.3)
+
+            plt.fill_between(self.t, self.Rti05, self.Rti95,
+                             facecolor='orange', alpha=0.3)
             plt.plot(self.t, self.Rti50, 'orange',
                      label='R(t) from instant. K(t)')
-        
+
             plt.xlabel('t (days)')
             plt.ylabel('R(t)')
             plt.legend(loc='best')
@@ -1011,7 +1020,6 @@ class pRandNeTmic(randnet):
             plt.title(self.name + " - evolution of the reproduction number")
             plt.grid(axis='y')
             plt.tight_layout()
-
 
     def copy(self):
         return copy.copy(self)

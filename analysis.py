@@ -51,7 +51,7 @@ TdFit = np.log(2)/KFit
 TTdFit = np.log(2)/KKFit
 
 
-#%%%
+# %%%
 
 # Model parameters
 parameters = pd.DataFrame(columns=(["N", "perc_inf", "beta",
@@ -61,7 +61,7 @@ parameters = parameters.append({"N": N,
                                 "beta": beta,
                                 "gamma": gamma,
                                 "mu": mu},
-                                ignore_index=True)
+                               ignore_index=True)
 print(parameters.round(2))
 
 parameters.filename = "tex/params.tex"
@@ -87,7 +87,7 @@ properties = properties.append({"R0": R0,
                                 "TTd0": TTd0,
                                 "K0": K0,
                                 "Td0": Td0},
-                                ignore_index=True)
+                               ignore_index=True)
 print(properties.round(2))
 
 properties.filename = "tex/props.tex"
@@ -188,16 +188,14 @@ for net in [rando, latti, watts, barab, holme]:
     final_r = net.r[t_final]
     final_p = int(net.pos[t_final]/net.N)
     newline = {"Model": net.name,
-                "KFit": net.KFit50,
-                "TdFit": net.TdFit50,
-                "Final p": final_p,
-                "Final r": final_r,
-                "peak": peak/net.N,
-                "t_peak": t_peak,
-                "t_final": t_final}
+               "KFit": net.KFit50,
+               "TdFit": net.TdFit50,
+               "Final p": final_p,
+               "Final r": final_r,
+               "peak": peak/net.N,
+               "t_peak": t_peak,
+               "t_final": t_final}
     results = results.append(newline, ignore_index=True)
-
-
 
 print(results.round(3))
 
@@ -205,17 +203,17 @@ results.filename = "tex/results.tex"
 if not os.path.isfile(results.filename):
     print("Saving TeX file...")
     results.to_latex(buf=results.filename,
-                      index=False,
-                      caption="Simulations summary.",
-                      label="tab:results",
-                      escape=False,
-                      header=["Model", "$K_0^{Fit}$ $(d^{-1})$",
-                              "$T_d^{Fit}$ $(d)$", "$i_{end}$", 
-                              "$r_{end}$", "End day $(\#)$"
-                              "Peak $\%$", "Peak day $(\#)$"],
-                      float_format="%.2f")
+                     index=False,
+                     caption="Simulations summary.",
+                     label="tab:results",
+                     escape=False,
+                     header=["Model", "$K_0^{Fit}$ $(d^{-1})$",
+                             "$T_d^{Fit}$ $(d)$", "$i_{end}$",
+                             "$r_{end}$", "End day $(\#)$",
+                             "Peak $\%$", "Peak day $(\#)$"],
+                     float_format="%.2f")
 
-# %% 
+# %%
 
 # Boxplots for K, r_final
 peaks = pd.DataFrame()
@@ -227,21 +225,25 @@ for net in [rando, latti, watts, barab, holme]:
     real_runs = int(len(net.pm)/(net.days+1))
     if real_runs != net.runs:
         print("Warning: different number of runs than expected.")
-    matr_p = np.array(net.pm).reshape(real_runs,(net.days+1))
-    
+    matr_p = np.array(net.pm).reshape(real_runs, (net.days+1))
+
     net.peak = np.max(matr_p, axis=1)
-    peaks[net.name] = np.append(net.peak, np.ones(np.abs(real_runs-net.runs))*np.nan)
-    
-    net.t_peaks = [np.nanmin(np.where(matr_p[t,:] == net.peak[t])).item()
+    peaks[net.name] = np.append(net.peak,
+                                np.ones(np.abs(real_runs-net.runs))*np.nan)
+
+    net.t_peaks = [np.nanmin(np.where(matr_p[t, :] == net.peak[t])).item()
                    for t in range(real_runs)]
-    times[net.name] = np.append(net.t_peaks, np.ones(np.abs(real_runs-net.runs))*np.nan)
-    
-    matr_r = np.array(net.rm).reshape(real_runs,(net.days+1))
-    net.finals = matr_r[:,-1]
-    final[net.name] = np.append(net.finals, np.ones(np.abs(real_runs-net.runs))*np.nan)
-    
-    rates[net.name] = np.append(net.parsFitm0, np.ones(np.abs(real_runs-net.runs))*np.nan)
-        
+    times[net.name] = np.append(net.t_peaks,
+                                np.ones(np.abs(real_runs-net.runs))*np.nan)
+
+    matr_r = np.array(net.rm).reshape(real_runs, (net.days+1))
+    net.finals = matr_r[:, -1]
+    final[net.name] = np.append(net.finals,
+                                np.ones(np.abs(real_runs-net.runs))*np.nan)
+
+    rates[net.name] = np.append(net.parsFitm0,
+                                np.ones(np.abs(real_runs-net.runs))*np.nan)
+
 
 peaks.plot.box(ylabel=r'Maximun number of positives $(individuals)$')
 times.plot.box(ylabel=r'Peak day $(d)$')
@@ -266,11 +268,11 @@ for i in range(4):
     fig05.add_subplot(sbp)
     knn = nx.k_nearest_neighbors(net.G)
     net.G.knn = [knn[i] for i in np.unique(net.G.degree_sequence)]
-    
+
     x = np.unique(net.G.degree_sequence)
     y = net.G.knn
     r = nx.degree_pearson_correlation_coefficient(net.G)
-    
+
     plt.scatter(x, y)
     plt.xlabel('k')
     plt.ylabel(r'$\langle k_{nn} \rangle$')
@@ -278,9 +280,9 @@ for i in range(4):
     plt.text(net.G.k_min, np.min(y),
              'r = ' + str(np.round(r, 2)),
              color='red', alpha=0.7)
-    
-    coef = np.polyfit(x,y,1)
-    poly1d_fn = np.poly1d(coef) 
+
+    coef = np.polyfit(x, y, 1)
+    poly1d_fn = np.poly1d(coef)
     plt.plot(x, poly1d_fn(x), 'r--', alpha=0.5)
     plt.title(net.name)
     plt.tight_layout()

@@ -70,7 +70,7 @@ with open('pickle/SEIR.pkl', 'wb') as f:
 # =========
 # SIR MODEL
 # =========
-ddays = int(0.6* days ) # int(days/2.3)
+ddays = int(0.6 * days)  # int(days/2.3)
 print("\nSIR deterministic model:")
 ss, ii, rr, tt = pn.SIR_odet(perc_inf, beta, tau_r, ddays)
 
@@ -104,7 +104,7 @@ with open('pickle/SIR.pkl', 'wb') as f:
 
 if os.path.isfile('pickle/all_networks.pkl'):
     print("Loading existing networks...")
-    
+
     # Getting back the objects:
     with open('pickle/all_networks.pkl', 'rb') as f:
         Watts, Rando, Latti, Barab, Holme = pickle.load(f)
@@ -113,36 +113,36 @@ else:
     print("No networks found, generating...")
     print("Random [1/5]")
     Rando = pn.randnet('Erdos-Renyi',
-                    'random',
-                    nx.connected_watts_strogatz_graph(int(N), 12,
-                                                      1, seed=1234),
-                    nx.connected_watts_strogatz_graph(int(n), 12,
-                                                      1, seed=1234))
+                       'random',
+                       nx.connected_watts_strogatz_graph(int(N), 12,
+                                                         1, seed=1234),
+                       nx.connected_watts_strogatz_graph(int(n), 12,
+                                                         1, seed=1234))
     print("Lattice [2/5]")
     Latti = pn.randnet('Ring lattice',
-                    'lattice',
-                    nx.connected_watts_strogatz_graph(int(N), 12,
-                                                      0, seed=1234),
-                    nx.connected_watts_strogatz_graph(int(n), 12,
-                                                      0, seed=1234))
+                       'lattice',
+                       nx.connected_watts_strogatz_graph(int(N), 12,
+                                                         0, seed=1234),
+                       nx.connected_watts_strogatz_graph(int(n), 12,
+                                                         0, seed=1234))
     print("Small world [3/5]")
     Watts = pn.randnet('Watts-Strogatz',
-                    'smallw',
-                    nx.connected_watts_strogatz_graph(int(N), 12,
-                                                      0.1, seed=1234),
-                    nx.connected_watts_strogatz_graph(int(n), 12,
-                                                      0.1, seed=1234))
+                       'smallw',
+                       nx.connected_watts_strogatz_graph(int(N), 12,
+                                                         0.1, seed=1234),
+                       nx.connected_watts_strogatz_graph(int(n), 12,
+                                                         0.1, seed=1234))
     print("Scale free [4/5]")
     Barab = pn.randnet('Barabasi-Albert',
-                    'scalefree',
-                    nx.barabasi_albert_graph(int(N),  6, seed=1234),
-                    nx.barabasi_albert_graph(int(n),  6, seed=1234))
+                       'scalefree',
+                       nx.barabasi_albert_graph(int(N),  6, seed=1234),
+                       nx.barabasi_albert_graph(int(n),  6, seed=1234))
 
     print("Realistic [5/5]")
     Holme = pn.randnet('Holme-Kim',
-                    'realw',
-                    nx.powerlaw_cluster_graph(int(N), 6, 0.1, seed=1234),
-                    nx.powerlaw_cluster_graph(int(n), 6, 0.1, seed=1234))
+                       'realw',
+                       nx.powerlaw_cluster_graph(int(N), 6, 0.1, seed=1234),
+                       nx.powerlaw_cluster_graph(int(n), 6, 0.1, seed=1234))
 
     # Save all networks together with pickle()
     print('Saving networks...')
@@ -151,10 +151,10 @@ else:
 
 
 if os.path.isfile('pickle/all_models.pkl'):
-        print("Loading existing models...")
-        # Getting back the objects:
-        with open('pickle/all_models.pkl', 'rb') as f:
-            watts, rando, latti, barab, holme = pickle.load(f)
+    print("Loading existing models...")
+    # Getting back the objects:
+    with open('pickle/all_models.pkl', 'rb') as f:
+        watts, rando, latti, barab, holme = pickle.load(f)
 else:
     watts = pn.pRandNeTmic(Watts, perc_inf, beta, tau_i, tau_r, daysll)
     rando = pn.pRandNeTmic(Rando, perc_inf, beta, tau_i, tau_r, days)
@@ -172,7 +172,7 @@ else:
 print("\nSEIR over random network:")
 # with open('pickle/network_random.pkl', 'rb') as f:
 #     Rando = pickle.load(f)
-#rando = pn.pRandNeTmic(Rando, perc_inf, beta, tau_i, tau_r, days)
+# rando = pn.pRandNeTmic(Rando, perc_inf, beta, tau_i, tau_r, days)
 rando.run(100)
 rando.plot()
 rando.save()
@@ -185,7 +185,7 @@ rando.save()
 print("\nSEIR over lattice network:")
 # with open('pickle/network_lattice.pkl', 'rb') as f:
 #     Latti = pickle.load(f)
-#latti = pn.pRandNeTmic(Latti, perc_inf, beta, tau_i, tau_r, days)
+# latti = pn.pRandNeTmic(Latti, perc_inf, beta, tau_i, tau_r, days)
 latti.run(100)
 latti.plot()
 latti.save()
@@ -245,7 +245,7 @@ for net in [Watts, Rando, Latti, Barab, Holme]:
 
 with open('pickle/simulations_random.pkl', 'rb') as f:
     rando = pickle.load(f)
-    
+
 with open('pickle/simulations_smallw.pkl', 'rb') as f:
     watts = pickle.load(f)
 
