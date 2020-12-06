@@ -5,32 +5,107 @@ Created on Thu Nov 19 16:14:44 2020
 
 @author: Giacomo Roversi
 """
+import os
+import copy
 import pickle
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import networkx as nx
 
 N = 1e4
+n = N/100
 perc_inf = 0.1
-days = 600
-beta = 0.22         # infection probability
-tau_i = 20          # incubation time
-tau_r = 10          # recovery time
+days = 100
+beta = 0.73         # infection probability
+tau_i = 3          # incubation time
+tau_r = 3          # recovery time
 R0 = beta * tau_r   # basic reproduction number
 
+
 # Getting back the objects:
-with open('pickle/all_networks.pkl', 'rb') as f:
+with open('pickle/all_simulations.pkl', 'rb') as f:
     watts, rando, latti, barab, holme = pickle.load(f)
 
-with open('pickle/smallw_long.pkl', 'rb') as f:
-    watts_long = pickle.load(f)
+# with open('pickle/smallw_long.pkl', 'rb') as f:
+#     watts_long = pickle.load(f)
 
 with open('pickle/SEIR.pkl', 'rb') as f:
-    s, e, i, r, t, K, ts, pars, fig02, fig03, fig04 = pickle.load(f)
+    s, e, i, r, t, days, daysl, KFit, tsFit, parsFit, \
+                 mu, gamma, R0, K0, ts0, pars0, \
+                 fig02, fig03, fig04 = pickle.load(f)
 
 with open('pickle/SIR.pkl', 'rb') as f:
-    ss, ii, rr, tt, KK, tts, ppars, ffig02, ffig03, ffig04 = pickle.load(f)
+    ss, ii, rr, tt, ddays, KKFit, ttsFit, pparsFit, \
+                 mu, R0, KK0, tts0, ppars0, \
+                 ffig02, ffig03, ffig04 = pickle.load(f)
 
+# Add missing information
+p = e + i
+pos = p*N
+
+Td0 = np.log(2)/K0
+TTd0 = np.log(2)/KK0
+
+TdFit = np.log(2)/KFit
+TTdFit = np.log(2)/KKFit
+
+
+# %%%
+
+# Model parameters
+parameters = pd.DataFrame(columns=(["N", "perc_inf", "beta",
+                                    "gamma", "mu"]))
+parameters = parameters.append({"N": N,
+                                "perc_inf": perc_inf,
+                                "beta": beta,
+                                "gamma": gamma,
+                                "mu": mu},
+                               ignore_index=True)
+print(parameters.round(2))
+
+parameters.filename = "tex/params.tex"
+if not os.path.isfile(parameters.filename):
+    print("Saving TeX file...")
+    parameters.to_latex(buf=parameters.filename,
+                        index=False,
+                        caption="Model parameters.",
+                        label="tab:params",
+                        escape=False,
+                        header=["Total population",
+                                "$i_{start}$ $(\%)$",
+                                "$\beta $ $(d^{-1})$",
+                                "$\gamma $ $(d^{-1})$",
+                                "$\mu$ $(d^{-1})$"],
+                        float_format="%.2f")
+
+# %%%
+# Derived properties
+properties = pd.DataFrame(columns=("R0", "KK0", "TTd0", "K0", "Td0"))
+properties = properties.append({"R0": R0,
+                                "KK0": KK0,
+                                "TTd0": TTd0,
+                                "K0": K0,
+                                "Td0": Td0},
+                               ignore_index=True)
+print(properties.round(2))
+
+properties.filename = "tex/props.tex"
+if not os.path.isfile(properties.filename):
+    print("Saving TeX file...")
+    properties.to_latex(buf=properties.filename,
+                        index=False,
+                        caption="Model properties.",
+                        label="tab:props",
+                        escape=False,
+                        header=["$R_0$",
+                                "$K^{SIR}_0$ $(d^{-1})$",
+                                "$T^{SIR}_d$ $(d)$",
+                                "$K^{SEIR}_0$ $(d^{-1})$",
+                                "$T^{SEIR}_d$ $(d)$"],
+                        float_format="%.2f")
+
+# %%%
 # Networks data
 networks = pd.DataFrame(columns=["Net", "E", "N", "<k>", "<C>"])
 
@@ -43,85 +118,173 @@ for net in [rando, latti, watts, barab, holme]:
                "<C>": net.G.C_avg}
     networks = networks.append(newline, ignore_index=True)
 
-print(networks.round(3))
-# networks.to_latex(buf="tex/networks.tex",
-#                   index=False,
-#                   caption="Networks properties.",
-#                   label="tab:networks",
-#                   escape=False,
-#                   header=["Network", "Edges", "Nodes",
-#                           "$<k>$", "$<C>$"],
-#                   float_format="%.2f")
+print(networks.round(2))
 
+networks.filename = "tex/networks.tex"
+if not os.path.isfile(networks.filename):
+    print("Saving TeX file...")
+    networks.to_latex(buf=networks.filename,
+                      index=False,
+                      caption="Networks properties.",
+                      label="tab:networks",
+                      escape=False,
+                      header=["Network", "Edges", "Nodes",
+                              "$<k>$", "$<C>$"],
+                      float_format="%.2f")
 
-# outputs data
-p = e + i
+# %%%
+# simulation results
 
-results = pd.DataFrame(columns=["Model", "K0", "ts", "Final_i",
-                                "Final_r", "peak", "t_peak", "t_final"])
+results = pd.DataFrame(columns=["Model", "KFit", "TdFit", "Final p",
+                                "Final r", "peak", "t_peak", "t_final"])
+
+ppeak = np.nanmax(ii)
+tt_peak = np.min(np.where(ii == ppeak))
+if ii[-1] == 0:
+    tt_final = np.nanmin(np.where(ii == 0))
+else:
+    tt_final = ddays
+ffinal_r = rr[tt_final]
+ffinal_p = ii[tt_final]
 
 results = results.append({"Model": "Det. SIR",
-                          "K0": KK,
-                          "ts": tts,
-                          "Final_i": ii[250],
-                          "Final_r":  rr[250],
-                          "peak":  np.nanmax(ii)*100,
-                          "t_peak": np.min(np.where(ii == np.nanmax(ii))),
-                          "t_final": np.min(np.where(ii < 1/N))},
+                          "KFit": KKFit,
+                          "TdFit": TTdFit,
+                          "Final p": ffinal_p,
+                          "Final r":  ffinal_r,
+                          "peak":  ppeak,
+                          "t_peak": tt_peak,
+                          "t_final": tt_final},
                          ignore_index=True)
+
+
+peak = np.nanmax(p)
+t_peak = np.min(np.where(p == peak))
+if pos[-1] == 0:
+    t_final = np.nanmin(np.where(pos == 0))
+else:
+    t_final = days
+final_r = r[t_final]
+final_p = p[t_final]
 
 results = results.append({"Model": "Det. SEIR",
-                          "K0": K,
-                          "ts": ts,
-                          "Final_i": i[days],
-                          "Final_r": r[days],
-                          "peak": np.nanmax(p)*100,
-                          "t_peak": np.min(np.where(p == np.nanmax(p))),
-                          "t_final": np.min(np.where(p < 1/N))},
+                          "KFit": KFit,
+                          "TdFit": TdFit,
+                          "Final p": final_p,
+                          "Final r": final_r,
+                          "peak": ppeak,
+                          "t_peak": t_peak,
+                          "t_final": t_final},
                          ignore_index=True)
 
 
-for net in [rando, latti, watts_long, barab, holme]:
-    net.p = net.i + net.e
+for net in [rando, latti, watts, barab, holme]:
+    peak = np.nanmax(net.pos)
+    t_peak = np.min(np.where(net.pos == peak))
+    if net.pos[-1] == 0:
+        t_final = np.nanmin(np.where(net.pos == 0))
+    else:
+        t_final = len(net.pos) - 1
+    final_r = net.r[t_final]
+    final_p = int(net.pos[t_final]/net.N)
     newline = {"Model": net.name,
-               "K0": net.K0,
-               "ts": net.ts,
-               "Final_i": net.i[days],
-               "Final_r": net.r[days],
-               "peak": np.nanmax(net.p)*100,
-               "t_peak": np.min(np.where(net.p == np.nanmax(net.p))),
-               "t_final": np.min(np.where(net.p == 0))}
+               "KFit": net.KFit50,
+               "TdFit": net.TdFit50,
+               "Final p": final_p,
+               "Final r": final_r,
+               "peak": peak/net.N,
+               "t_peak": t_peak,
+               "t_final": t_final}
     results = results.append(newline, ignore_index=True)
 
-print(results.round(2))
-# results.to_latex(buf="tex/results.tex",
-#                  index=False,
-#                  caption="Simulations summary.",
-#                  label="tab:results",
-#                  escape=False,
-#                  header=["Model", "$K_{0}$", "$\tau_{s}$", "$i_{final}$",
-#                          "$r_{final}$", "Peak $\%$", "peak day", "end day"],
-#                  float_format="%.2f")
+print(results.round(3))
 
-gamma = 1/tau_i
-mu = 1/tau_r
-presentation = pd.DataFrame(columns=(["N", "perc_inf", "beta",
-                                      "gamma", "mu", "R0"]))
-presentation = presentation.append({"N": N,
-                                    "perc_inf": perc_inf,
-                                    "beta": beta,
-                                    "gamma": gamma,
-                                    "mu": mu,
-                                    "R0": R0},
-                                   ignore_index=True)
-print(presentation)
-# presentation.to_latex(buf="tex/params.tex",
-#                       index=False,
-#                       caption="Model parameters.",
-#                       label="tab:params",
-#                       escape=False,
-#                       header=["Total population", "$i_{start}$ $\%$", "$\beta$",
-#                               "$\gamma$", "$\mu$", "$R_{0}$"],
-#                       float_format="%.2f")
+results.filename = "tex/results.tex"
+if not os.path.isfile(results.filename):
+    print("Saving TeX file...")
+    results.to_latex(buf=results.filename,
+                     index=False,
+                     caption="Simulations summary.",
+                     label="tab:results",
+                     escape=False,
+                     header=["Model", "$K_0^{Fit}$ $(d^{-1})$",
+                             "$T_d^{Fit}$ $(d)$", "$i_{end}$",
+                             "$r_{end}$", "End day $(\#)$",
+                             "Peak $\%$", "Peak day $(\#)$"],
+                     float_format="%.2f")
+
+# %%
+
+# Boxplots for K, r_final
+peaks = pd.DataFrame()
+times = pd.DataFrame()
+rates = pd.DataFrame()
+final = pd.DataFrame()
+
+for net in [rando, latti, watts, barab, holme]:
+    real_runs = int(len(net.pm)/(net.days+1))
+    if real_runs != net.runs:
+        print("Warning: different number of runs than expected.")
+    matr_p = np.array(net.pm).reshape(real_runs, (net.days+1))
+
+    net.peak = np.max(matr_p, axis=1)
+    peaks[net.name] = np.append(net.peak,
+                                np.ones(np.abs(real_runs-net.runs))*np.nan)
+
+    net.t_peaks = [np.nanmin(np.where(matr_p[t, :] == net.peak[t])).item()
+                   for t in range(real_runs)]
+    times[net.name] = np.append(net.t_peaks,
+                                np.ones(np.abs(real_runs-net.runs))*np.nan)
+
+    matr_r = np.array(net.rm).reshape(real_runs, (net.days+1))
+    net.finals = matr_r[:, -1]
+    final[net.name] = np.append(net.finals,
+                                np.ones(np.abs(real_runs-net.runs))*np.nan)
+
+    rates[net.name] = np.append(net.parsFitm0,
+                                np.ones(np.abs(real_runs-net.runs))*np.nan)
+
+
+peaks.plot.box(ylabel=r'Maximun number of positives $(individuals)$')
+times.plot.box(ylabel=r'Peak day $(d)$')
+rates.plot.box(ylabel=r'Initial growth rate $(d^{-1})$')
+final.plot.box(ylabel=r'Total affected population $(fraction)$')
+
+# %%
+# # mitigation
+# def lockdown(net):
+
+#     return net
+
+# %%
+# assortativity (NOT RELEVANT)
+sbpx = [221, 222, 223, 224]
+nets = [rando, watts, barab, holme]
+# nets = latti
+fig05 = plt.figure()
+for i in range(4):
+    net = copy.copy(nets[i])
+    sbp = sbpx[i]
+    fig05.add_subplot(sbp)
+    knn = nx.k_nearest_neighbors(net.G)
+    net.G.knn = [knn[i] for i in np.unique(net.G.degree_sequence)]
+
+    x = np.unique(net.G.degree_sequence)
+    y = net.G.knn
+    r = nx.degree_pearson_correlation_coefficient(net.G)
+
+    plt.scatter(x, y)
+    plt.xlabel('k')
+    plt.ylabel(r'$\langle k_{nn} \rangle$')
+    # plt.ylim([net.G.k_min, net.G.k_max])
+    plt.text(net.G.k_min, np.min(y),
+             'r = ' + str(np.round(r, 2)),
+             color='red', alpha=0.7)
+
+    coef = np.polyfit(x, y, 1)
+    poly1d_fn = np.poly1d(coef)
+    plt.plot(x, poly1d_fn(x), 'r--', alpha=0.5)
+    plt.title(net.name)
+    plt.tight_layout()
 
 # fine

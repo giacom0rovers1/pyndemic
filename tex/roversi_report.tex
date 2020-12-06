@@ -20,6 +20,8 @@
 \usepackage{esdiff}
 \usepackage{xfrac}
 
+
+\graphicspath{ {../immagini/} } % aggiornare una volta definitive % 08_beforeLastFixes/
 \definecolor{linkcolour}{rgb}{0,0.2,0.6}
 \hypersetup{colorlinks,breaklinks,urlcolor=linkcolour,linkcolor=linkcolour}  
 
@@ -72,160 +74,281 @@
 \end{flushleft}
 %	\section*{Abstract}
 	
-	\section{Introduction}
+	\section*{Introduction}
 	\label{sec:intro}
 	This work is based on \citet{Pastor-Satorras} %  Pastor-Satorras et al. (2015) 
 	and aims to analyse numerically a series of contagion scenarios, inspired to the current COVID-19 pandemic, over a complex network of the human interaction patterns. 
  	Theoretical fundamentals and deterministic predictions of the SIR and SEIR models are firstly presented. These predictions are then compared with discrete-time numerical simulations over complex networks, carried out in python exploiting the \textit{NetworkX} and \textit{NDlib} libraries. The networks are chosen to show different aspects of the contagion dynamics, going from a random network to a clustered-scale-free one in progressive steps of realism and resemblance to the real human interaction networks. 
- 	Finally, some mitigation and immunization strategies are tested.
+ 	Finally, some mitigation and immunization strategies are discussed.
   
   
+  \section{Theoretical reference}
+  \label{sec:theory}
+  Under some simple assumption, the spreading of a contagion phenomenon could be studied analytically ..
   
-  
-  \section{The SIR epidemic model}
-  The SIR model divides the population into three compartments: susceptible ($S$), infected ($I$) and removed ($R$), the latter meaning either recovered and immune or deceased. Its basic implementation assumes no vital dynamics (closed population, no births or deaths in the $S$ compartment) and homogeneous mixing (completely random interactions). Under this assumptions the transitions between compartments are regulated by a set of deterministic differential equations following the mass-action law. Calling $s = \sfrac{S}{N}$, $i = \sfrac{I}{N}$ and $r = \sfrac{R}{N}$ the relative populations of the three compartments, the differential equations read:
-  
-  \begin{align}
-  	\diff{s}{t} = - \beta s i \quad;  \qquad 	\diff{i}{t} = \beta s i - \mu r \quad; \qquad  \diff{r}{t} = \mu r
-  \end{align}
-  
-  The conservation of the total population, fixed at 10.000 individuals, is always granted: %$\quad s + i + r = 1 \ \ ; \quad \sfrac{\mathrm{d}N}{\mathrm{d}t}= 0$. \\
-  \begin{align}
-  	s + i + r = 1 \quad ; \qquad \diff{N}{t}= 0
-  \end{align}
-  The coefficients $\beta$ and $\mu$ are the transition rates of two Poisson processes, i.e. with independent exponentially distributed events. The ratio between them is the basic reproduction number $R_{0}$, which is the total number of secondary infections generated on average by one infected individual.   
-  The average time during which an individual can spread the contagion is $\tau_{r} = \sfrac{1}{\mu}$. The infection rate $\beta$ could be seen as the probability of a contagion event in a single time interval. Thus $R_{0}$ is the product of the probability of one infected individual to infect one susceptible times the duration of the contagious condition.
-  \begin{align}
-			R_{0} = \frac{\beta}{\mu} = \beta \cdot \tau_{r}
-  \end{align}
-  
-  The condition for an epidemic to develop is that, given an initial small fraction of infected individuals ($i \approx 0.1 \%$), the time derivative of $i$ needs to be greater than zero:
-  \begin{align}
-  	\diff{i}{t} = \beta s i - \mu r > 0 \qquad \Rightarrow \quad 	\frac{\beta}{\mu} > 1  % \mathrm{This \ requires:}
-  \end{align}
-  
-  Thus the contagion is going to spread if $R_{0}$ is greater than one. The values of the transition rates are kept constant throughout the various simulations: $\beta = 0.22 \ d^{-1}$ and $\mu = 0.1 \ d^{-1}$, resulting in $R_{0} = 2.2$. The unit $d$ indicates "days", the simulation time step is $1 \ d$.
-  
-  % TODO dichiarare i parametri utilizzati (cfr. studi COVID19)
-  
-  
-  
-  
-  \subsection{The exponential growth}
-  
+  \subsection{The SIR epidemic model}
+  The SIR model divides the population into three compartments: susceptible ($S$), infected ($I$) and removed ($R$), the latter meaning either recovered and immune, hospitalized, self quarantined, deceased or any other situation where the contagion chain develops no further. Its basic implementation assumes no vital dynamics (closed population, no births or deaths in the $S$ compartment) and homogeneous mixing (completely random interactions). Under this assumptions the transitions between compartments are regulated by a set of deterministic differential equations following the mass-action law. 
+    
   \begin{figure}[h!]
   	\centering
-  	\includegraphics[width=0.7\linewidth]{../immagini/SIR_03.png}
-  	\caption{Exponential growth in the initial phase of an epidemic. }
-  	\label{fig:SIRexp}
+  	\includegraphics[width=0.7\linewidth]{SIR_02.png}
+  	\caption{The complete development of the SIR model starting with $0.1\%$ infected population.}
+  	\label{fig:SIRoverall}
   \end{figure}
+
+  Calling $N$ the total population considered and $s = \sfrac{S}{N}$, $i = \sfrac{I}{N}$ and $r = \sfrac{R}{N}$ the relative populations of the three compartments, the differential equations read:
   
-  In the initial phase, $s(t)$ could be approximated to one. % and the time before recovery to infinite ($\mu$ very small). 
+  \begin{align}
+  	\diff{s}{t} = - \beta s i \quad;  \qquad 	\diff{i}{t} = \beta s i - \mu i \quad; \qquad  \diff{r}{t} = \mu i
+  	\label{eq:sir}
+  \end{align}
+
+  where the conservation of the total population is implicitly granted: %$\quad s + i + r = 1 \ \ ; \quad \sfrac{\mathrm{d}N}{\mathrm{d}t}= 0$. \\
+  
+  \begin{align}
+  	s + i + r = 1 \quad ; \qquad \diff{s}{t} + \diff{i}{t} + \diff{r}{t} = 0  \quad ; \qquad  \diff{N}{t}= 0
+  	\label{eq:sir_sum}
+  \end{align}
+
+  The coefficients $\beta$ and $\mu$ are the transition rates of two Poisson processes, i.e. with independent, exponentially distributed events. The ratio between them is called the basic reproduction number $R_0$, which is the expected total number of secondary infections generated by one infected individual (here estimated \textit{a priori}).   
+  The average time during which an individual can spread the contagion is $\tau_{r} = \sfrac{1}{\mu}$. The infection rate $\beta$ could be seen as the probability of a contagion event in a single time interval. Thus $R_0$ is the product of the probability of one infected individual to infect one susceptible times the duration of the contagious condition.
+  \begin{align}
+			R_0 = \frac{\beta}{\mu} = \beta \cdot \tau_{r}
+			\label{eq:R0}
+  \end{align}
+% TODO REFERENCE to the "Complexity of R0"  
+
+  \subsubsection{The initial growth}
+  The condition for an epidemic to develop is that, given an initial small fraction of infected individuals, the time derivative of $i$ is greater than zero:
+  
+  \begin{align}
+  	\diff{i}{t} = \beta s i - \mu i > 0 
+  	\label{sir_growthCond}
+  \end{align}
+
+  \begin{align} % \qquad \Rightarrow \quad 	
+  	\frac{\beta s}{\mu} > 1  % \mathrm{This \ requires:}
+  	\label{eq:sir_growthReq}
+  \end{align}
+  
+  Thus, for a completely susceptible population ($s \approx 1$), the contagion is going to spread if $R_0$ is greater than one. In the initial phase, $s(t=0)$ could be approximated to the constant $s_0$.
   Under this assumption the evolution of the infected population $i(t)$ becomes purely exponential:
+  
   \begin{align}
-  	\diff{i}{t} \approx  \beta i \qquad \Rightarrow \quad 	i(t) \approx i(0) \cdot e^{K_{0} t} \qquad \mathrm{with} \qquad K_{0} = (\beta - \mu)
+  	\diff{i}{t} \approx  (\beta s_0 - \mu) \cdot i 
+  	\label{eq:sir_approxi}
+  \end{align}
+
+  \begin{align} % \qquad \Rightarrow \quad 	
+  	i(t) \approx i(0) \cdot e^{K_0 t} 
+  	\label{eq:sir_growthK0}
+  \end{align}
+
+  \begin{align} % \qquad  \mathrm{with} \qquad 
+  	K_0 = (\beta s_0 - \mu)
+  	\label{eq:sir_K0}
   \end{align}
 	
-	Besides the initial growth rate $K_{0}$, the exponential description could also be made through either the doubling time $T_{d}$, or the basic reproduction number itself:
-	% in which case it becomes: $\ i(t) \approx i(0) \cdot 2^{\sfrac{t}{T_{d}}}$, : $\ i(t) \approx i(0) \cdot R_{0}^{\sfrac{t}{\tau_{s}}}$.
+	being $K_0$ the initial growth rate. The exponential growth could also be described in terms of either the doubling time:
 	\begin{align}
-		\ i(t) \approx i(0) \cdot 2^{\sfrac{t}{T_{d}}} \quad ; \qquad i(t) \approx i(0) \cdot R_{0}^{\sfrac{t}{\tau_{s}}}
+		T_{d} = \frac{\ln 2}{K_0}
+		\label{eq:doubling} 
 	\end{align}
-%	 where $\tau_{s}$ is the serial interval, i.e. the average time of a complete iteration of the infection process .
+
+	\begin{align}
+		i(t) \approx i(0) \cdot 2^{\sfrac{t}{T_{d}}}
+		\label{eq:sir_growthTd} 
+	\end{align}
+
+	or the basic reproduction number $R_0$ itself:
 	
-	In the latter, the serial interval $\tau_{s}$ represents the average time elapsed during one complete iteration of the infection chain process (i.e. from a generation $A$ to the generation $B$ of secondary infections produced by $A$) and it is estimated from $R_{0}$ and $K_{0}$: 
 	\begin{align}
-		\tau_{s} = \frac{\ln(R_{0})}{K_{0}}
+		i(t) \approx i(0) \cdot R_0^{\sfrac{t}{\tau_s}}
+		\label{eq:sir_growthR0}
 	\end{align}
 
-	The initial growth rate $K_{0}$ could be estimated through the exponential fit of the positives curve $i(t)$ in the initial phase of the epidemic, as shown in Fig. \ref{fig:SIRexp}. The initial part is arbitrarily selected to end at $\sfrac{1}{6}$ of the curve's maximum (epidemic peak), or to include at least 5 readings. From the fit results a growth rate $K_{0}$ of $0.11 \ d^{-1}$, which corresponds to a doubling time $T_{d}$ of $6.07 \ d$ and, given a reproduction number of $2.2$, to a serial interval $\tau_{s}$ of $6.9 \ d$.
+The serial interval $\tau_s$ represents the average time elapsed during one complete iteration of the infection chain process (i.e. from a generation $A$ to the generation $B$ of secondary infections produced by $A$) and it is here estimated from $R_0$ and $K_0$, since no real clinical data was analysed: 
+	\begin{align}
+		\tau_s = \frac{\ln(R_0)}{K_0}
+		\label{eq:serial}
+	\end{align}
 
+The basic reproduction number and the serial interval are here considered general parameters of the specific infectious phenomenon and are not changed through the epidemic, even though real-life, pandemic-scale events clearly are more heterogeneous.  
 
-
-  \subsection{The evolution of the epidemic}
-  
-  \begin{figure}[h!]
-  	\centering
-%  	\includegraphics[width=0.7\linewidth]{../immagini/SIR_02.png}
-  	\includegraphics[width=0.49\linewidth]{../immagini/SIR_02.png}
-  	\includegraphics[width=0.49\linewidth]{../immagini/SIR_04.png}
-  	\caption{Typical evolution of a SIR model. }
-  	\label{fig:SIRtot}
-  \end{figure}
-
+  \subsubsection{The evolution of the epidemic}
   As the epidemic grows, the depletion of susceptible individuals is no longer negligible and the reduction of the number of available candidates slows down the contagion.
   The actual reproduction number follows the evolution of the susceptible population and represents the remaining strength of the contagion:
+  
   \begin{align}
-		R_{t} = R_{0} \cdot s(t) 
+		R(t) = R_0 \cdot s(t) 
 		\label{eq:Rt}
   \end{align}
-  As its value reaches $1$, the number of simultaneously infected individuals reaches a peak and, from there on, becomes exponentially smaller and eventually dies out.
-  
-  The evolution shown in Fig. \ref{fig:SIRtot}, left panel, is obtained integrating the differential equations of the model with the \textit{SciPy} python library, starting from an initially infected population of $0.1 \%$ (10 individuals). The infectious peak is near $1900$ individuals simultaneously infected ($18.8 \%$ of the total population) and is reached on day 59. After $188 \ d$ the total population interested by the infection $r_{final}$ reaches $85 \%$ and the infected population $i_{final}$ is zero: the epidemic has ended. 
-  
-  In the right panel, blue line, the $R_{t}$ predicted from Eq. \ref{eq:Rt} is shown. The grey and orange lines are instead the values of $R_{t}$ obtained by ....
 
-  
-  %Here introduced metric / framework for following analysis with networks
-  
-  %Initial numerical instability, then Rt follows the prediction, then numerical instability again
-  
-  %(mettere dopo, a confronto con SEIR, in una figura 2x2)
- 	
-% \begin{figure}[h]
-%   \centering
-%   \includegraphics[width=0.75\linewidth]{../immagini/SIR_04.png}
-%   \caption{Exponential growth in the initial phase of an epidemic. }
-%   \label{fig:SIRr0}
-% \end{figure}
-%  
-  % TODO Metodi per calcolare R e K istante per istante
-  
-  
-  \section{The SEIR epidemic model}
-  The SEIR mode introduces the exposed (E) compartment, where individuals that have already been infected but are not yet contagious belong. The presence of this incubation phase makes it more suitable for modelling the spread of an influenza-like epidemic as the COVID-19 one. Calling the new compartment's relative population $e = \sfrac{E}{N}$, the differential equations of the model read:
+  When the value of $R(t)$ reaches $1$, the number of simultaneously infected individuals is at its peak. From there on, it becomes exponentially smaller and eventually dies out. 
+  This behaviour is portrayed by the evolution of the instantaneous growth rate $K(t)$:
   
   \begin{align}
-  	\diff{s}{t} = - \beta s i \quad;  \qquad 	\diff{e}{t} = \beta s i - \gamma e \quad; \qquad \diff{i}{t} = \gamma e - \mu r \quad; \qquad \diff{r}{t} = \mu r
+  	K(t) =  \diff{\ln(i(t))}{t} %  \quad ; \qquad  
+  	\label{eq:Kt}
   \end{align}
-  
-  where $\gamma = 0.05 \ d^{-1}$ is the transition rate between exposed and infective compartments. The total population is again conserved: $ s + e + i + r = 1$. For the SEIR model, the exponential growth is evaluated from the total positives, defined as the sum of the exposed and the infected populations: $p(t) = e(t) + i(t)$. The growth is slower due to the delay added by the incubation period $\tau_{i}=\sfrac{1}{\gamma}$. The serial interval associated to the basic reproduction number is therefore bigger: $25 d$ instead of just $7 d$. Here $r_{final}$ and the peak intensity are practically the same as in the SIR model ($84 \% \ \mathrm{vs} \ 85 \%$ and $18.75 \% \ \mathrm{vs} \ 18.79 \% \ $ respectively), but the peak is reached 137 days later (on day 195), the end of the SEIR epidemic 337 days after the SIR has ended (on day 525). %This is the reference framework to which the following simulations are compared.
-  
-  \begin{figure}[h]
-  	\centering
-  	\includegraphics[width=0.477\linewidth]{../immagini/SEIR_02.png}
-  	\includegraphics[width=0.503\linewidth]{../immagini/SEIR_03.png}
-  	\caption{}
-  	\label{}
-  \end{figure}
 
+	Knowing the instantaneous growth rate and having defined the serial interval, which remains constant, it is possible to obtain a direct estimate for $R(t)$ combining Eq. \ref{eq:sir_growthK0} and Eq. \ref{eq:sir_growthR0}, independent from Eq. \ref{eq:Rt}:
+
+  \begin{align}
+  	R_K(t) = e^{K(t) \cdot \tau_s}
+  	\label{eq:RKt}
+  \end{align}
+
+	$R(t)$ and $R_K(t)$ should be comparable. If they are not, the assumptions on which $R_0$ is based are called into question.
+  
+  
+  \subsection{The SEIR epidemic model}
+  The SEIR model adds the exposed (E) compartment to the picture. Compartment E includes individuals who have already been infected but are not yet contagious. The presence of this incubation phase makes the SEIR model more suitable for modelling the spread of an influenza-like epidemic as that of COVID-19. 
+  Calling $e = \sfrac{E}{N}$ the new compartment's relative population, the differential equations of the model now read:
+  
+  \begin{align}
+  	\diff{s}{t} = - \beta s i \quad;  \qquad 	\diff{e}{t} = \beta s i - \gamma e \quad; \qquad \diff{i}{t} = \gamma e - \mu i \quad; \qquad \diff{r}{t} = \mu i
+  	\label{eq:seir}
+  \end{align}
+
+   where $\gamma$ is the poissonian transition rate between the exposed and the infective compartments. The total population is again conserved: $ s + e + i + r = 1$. 
+  The Eq. \ref{eq:sir_approxi} for the SIR model becomes here a set of two joint equations for $e$ and $i$, which can be written in the form of a matrix operator applied to a vector. Determining the temporal evolution of the model has become an eigenvalue problem. Specifically, the initial growth problem with the $s(0) = s_0$ approximation reads as follows: 
+  
+  \begin{align}
+  	\diff{}{t}
+  	\begin{pmatrix}
+  			e \\
+  			i
+  	\end{pmatrix}
+  	\approx 
+  	\begin{pmatrix}
+  		 - \gamma & \beta s_0\\
+  		 \gamma & - \mu
+  	\end{pmatrix}
+  	\begin{pmatrix}
+  		e \\
+  		i
+  	\end{pmatrix}
+	  = K_0 %^{SEIR}
+	  \begin{pmatrix}
+	  	e \\
+	  	i
+	  \end{pmatrix} %> 0
+		\label{eq:seir_approxi}
+	\end{align}
+
+The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue of the operator and it is obtained solving the equation: 
+
+	\begin{align}
+		\det 
+		\begin{pmatrix}
+			- \gamma - K_0 & \beta s_0\\ % ^{SEIR}
+			\gamma & - \mu - K_0  %^{SEIR}
+		\end{pmatrix} = 0
+	\label{eq:seir_K0}
+	\end{align}
+ 
+ The initial evolution of the total positive population ($p = e + i$) still follows an exponential law identical to Eq. \ref{eq:sir_growthK0}. But due to the incubation delay that is added to the dynamics of the infection, the other parameters being equal, the initial growth will be slower than in the SIR model.
+ 
+	\section{Numerical models}
+	\label{sec:numerical}
+	
+  \subsection{Model configuration}
+	Epidemiological studies have identified that for the SARS-CoV-2 infection the incubation period is approximately 4 to 5 days ($https://www.nejm.org/doi/10.1056/NEJMcp2009249$), specifically 4.2 d according to $https://wwwnc.cdc.gov/eid/article/26/7/20-0282_article$. The same study shows that, before awareness of the COVID-19 danger, the time from symptom onset to hospitalization was 5.5 days, whereas after reports of potential human-to-human transmission, the duration shortened significantly to 1.5 days. We can assume similar time scales for the self-quarantine measures. Since patients may be infectious 1 to 3 days before symptom onset ($https://www.nejm.org/doi/10.1056/NEJMcp2009249$), the actual model parameters should be shifted of that interval, being the model not about symptoms but infections. 
+  The model is therefore initialized with seven days removal period ("non-awareness mode") or three days ("awareness mode") and three days incubation period, as shown in Tab. \ref{tab:params}. 
+	%  The contagion rate $\beta$ is 0.22 $d^{-1}$, the recovery time scale is 10 days ($\mu$ = 0.1 $d^{-1}$) and the incubation time scale (for the SEIR model) is 20 days ($\gamma$ = 0.05 $d^{-1})$. The three parameters are not strictly realistic but are chosen conveniently to produce a smooth output at the 1-day resolution and to result in a basic reproduction number $R_0$ of $2.2$, which is compatible with disease transmitted over respiratory droplets like influenza, common cold, SARS or COVID-19 itself.
   
   \input{params.tex}
+ 
+  The SIR and SEIR model are initialized with the same input parameters (obviously except $\gamma$). Among the initial population of ten thousand people there are initially ten infected individuals. 
   
-  %To gauge the strength of the epidemic process, the reproduction number is followed through the evolution of the contagion. 
+  The $\beta$ parameter is chosen accordingly to give an estimate of $R_0$ around 2.2 in "awareness mode", which results in an $R_0$ greater than 5 for the initial outbreak of the contagion, when people were not yet aware of the contagiousness of the disease. These numbers are in agreement with the referenced literature.
+  The expected values of $R_0$, $K_0$ and $T_d$ are calculated with Eq. \ref{eq:R0}, Eq. \ref{eq:seir_K0} and Eq. \ref{eq:doubling} respectively and are presented in Tab. \ref{tab:props}. The SEIR initial doubling time is more than three time the SIR one because of the incubation phase.
+
+	\input{props.tex}  
   
-  %Parameters are computed (R0, $K_{0}$, describe...)
+  \subsection{Numerical solutions}
+	The SciPy library offers an ODE solver ...
+%	The evolution shown in Fig. \ref{fig:SIRtot}, left panel, is obtained integrating the differential equations of the model with the \textit{SciPy} python library, starting from an initially infected population of $0.1 \%$ (10 individuals).
+	
+
+
+	SIR faster than SEIR, same shape of positives ($p$).
+	
+		 \begin{figure}[h!]
+		\centering
+		\includegraphics[width=0.49\linewidth]{SIR_03.png}
+		\includegraphics[width=0.49\linewidth]{SEIR_03.png}
+		\caption{Exponential growth in the initial phase of an epidemic. }
+		\label{fig:BothExp}
+	\end{figure}
+
+	$N$ is fixed at 10.000 individuals
+	($i \approx 0.1 \%$)
+	The values of the transition rates are kept constant throughout the various simulations: $\beta = 0.22 \ d^{-1}$ and $\mu = 0.1 \ d^{-1}$, resulting in $R_0 = 2.2$. The unit $d$ indicates "days", the simulation time step is $1 \ d$.
+
+
+
+	The initial growth rate $K_0$ could be estimated through the exponential fit of the positives curve $i(t)$ in the initial phase of the epidemic, as shown in Fig. \ref{fig:SIRexp}. The initial part is arbitrarily selected to end at $\sfrac{1}{6}$ of the curve's maximum (epidemic peak), or to include at least 5 readings. From the fit results a growth rate $K_0$ of $0.11 \ d^{-1}$, which corresponds to a doubling time $T_{d}$ of $6.07 \ d$. Given the reproduction number of $2.2$, the serial interval $\tau_s$ results $6.9 \ d$, that is smaller than the total duration of the illness $\tau_{r}$.
+
+	\begin{figure}[h!]
+		\centering
+		%  	\includegraphics[width=0.7\linewidth]{SIR_02.png}
+		\includegraphics[width=0.49\linewidth]{SEIR_02.png}
+		\includegraphics[width=0.49\linewidth]{SEIR_04.png}
+		\caption{\textbf{Left}: Typical evolution of a SEIR model. \textbf{Right}: Instantaneous reproduction number }
+		\label{fig:SIRtot}
+	\end{figure}
+	 
+	The infectious peak is near $1900$ individuals simultaneously infected ($18.8 \%$ of the total population) and is reached on day 59. After $188 \ d$ the total population interested by the infection $r_{final}$ reaches $85 \%$ and the infected population $i_{final}$ is zero: the epidemic has ended. 
+	
+	  %To gauge the strength of the epidemic process, the reproduction number is followed through the evolution of the contagion. 
+	In the right panel, blue line, the $R(t)$ predicted from Eq. \ref{eq:Rt} is shown. 
+	The derivative is performed with second order accurate central differences, the resulting $R(t)$ estimate is plotted in gray. A rolling window mean is applied to filter out the noise if present (orange line). The two estimates of the reproduction number show some differences in the first and last plateau values, but are in perfect agreement about the slope value and the crossing time of the $R = 1$ line (red, dashed).
+	
+	
+	SEIR:	
+%	\begin{figure}[h]
+%		\centering
+%		\includegraphics[width=0.477\linewidth]{SEIR_02.png}
+%		\includegraphics[width=0.503\linewidth]{SEIR_03.png}
+%		\caption{}
+%		\label{}
+%	\end{figure}
+	
+	For the SEIR model, the exponential growth rate K controls the evolution of the number of total positives, defined as the sum of the exposed and the infected populations: $p(t) = e(t) + i(t)$. 
+	
+	% TODO initial population y0 = np.array([(1-frac_inf), frac_inf*(1-beta), frac_inf*beta, 0])
+	
+	$\gamma = 0.05 \ d^{-1}$ The growth is slower due to the delay added by the incubation period $\tau_{i}=\sfrac{1}{\gamma}$. The serial interval associated to the basic reproduction number is therefore bigger: $25 d$ instead of just $7 d$. Here $r_{final}$ and the peak intensity are practically the same as in the SIR model ($84 \% \ \mathrm{vs} \ 85 \%$ and $18.75 \% \ \mathrm{vs} \ 18.79 \% \ $ respectively), but the peak is reached 137 days later (on day 195), the end of the SEIR epidemic 337 days after the SIR has ended (on day 525). %This is the reference framework to which the following simulations are compared.
   
-  
-  
-  
-  
+  % Confronto tempi di ricovero/rimozione
+
   
   \section{Complex networks}
+  \label{sec:network}
   Translate: \textit{L'assunzione di omogeneita` e` sicuramente inadeguata per sistemi reali che presentano forte eterogeneita` di composizione e di rapporti relazionali. Si affronta la modellizzazione di questa eterogeneita` relazionale tramite reti complesse sulle quali riprodurre i modelli di contagio per step di interazione individuo-individuo discretizzati. In una rappresentazione discreta su network, i parametri del modello acquisiscono il valore di probabilita` di transizione (quindi su reti piccole si evidenzia l'effetto di fluttuazioni random, necessario approccio ensemble).  }
   
   Homogeneous mixing hypothesis is certainly inadequate for modelling real systems, which show heterogeneity of composition and relationship spanning various scales. 
   
+  Nodes = individuals, links = way of interaction (contagion)
+  
+  The transition rates $\beta$ are from now on the product of the probabilities of the contagion happening during an interaction $\beta_k$ times the average number of interactions per node (individual). The number of interactions is given by the connectivity degree $k$ of each node and is fixed for the whole period (static network). More advanced approaches like the ref ($https://www.nature.com/articles/s41591-020-1036-8\#Sec12$), with network topology following the actual contact dynamics during the day are not reproduced here due to computational and complexity concerns (difficulties, limitations?).
+  
+  The average connectivity degree $\langle k \rangle$ is set equal to 12 for all network types and assumed as a reasonable approximation for the average of daily physical contacts in real life. No characterization of the strength of the interactions is attempted (the networks are un-weighted) and all contacts are assumed mutual (networks are un-directed). To maintain the same configuration of the deterministic numerical models, the probability $\beta_k$ is fixed to $6.1 \%$, so that:
+  \begin{align}
+			\beta_k \cdot \langle k \rangle = 0.73 = \beta
+  \end{align}
   
   \input{networks.tex}
   
   Approach: recreate the same analysis work flow of the deterministic model
-  Nodes = individuals, links = way of interaction (contagion)
+
   
   The deterministic prediction works as mean field approximation?
-  
-  Here $\beta$ is the contagion probability for a single interaction ($\xi$) times the average number of interactions which is given by the average connectivity degree $<k>$ of the network. The $<k>$ and $\xi$ parameters are chosen in such a way that $\beta$, hence $R_{0}$, is kept constant and equal to the deterministic infection rate. This is done to allow cross-network intercomparison. Given that the average connectivity is considered, for heterogeneous networks there could locally be major fluctuations from the average behaviour.
-  
+%  
+%  Here $\beta$ is the contagion probability for a single interaction ($\xi$) times the average number of interactions which is given by the average connectivity degree $<k>$ of the network. The $<k>$ and $\xi$ parameters are chosen in such a way that $\beta$, hence $R_0$, is kept constant and equal to the deterministic infection rate. This is done to allow cross-network intercomparison. Given that the average connectivity is considered, for heterogeneous networks there could locally be major fluctuations from the average behaviour.
+%  
   
   Initial 10 infected nodes chosen at random (further work: ensemble)
   
@@ -246,16 +369,16 @@
   
   \subsection{Small-World}
   Watts Strogatz
-  Starts similar to lattice, evolves similar to random. GOOD
+  NOT TRUE: Starts similar to lattice, evolves similar to random. GOOD
   
   \subsection{Scale free}
   Barabasi-Albert
-  Initial boost is the fastest, $K_{0}=0.006$ and Td is less than 12 days. Look at the degree structure..
+  Initial boost is the fastest, $K_0=0.006$ and Td is less than 12 days. Look at the degree structure..
   
   
   \subsection{Scale free with clustering}
   Holme-Kim
-  The initial growth is almost exponential and $K_{0}$ is high but after that the pandemic slows down extremely fast
+  The initial growth is almost exponential and $K_0$ is high but after that the pandemic slows down extremely fast
   
   
   
@@ -263,6 +386,10 @@
   
   
   \section{Immunization and mitigation strategies}
+  \label{sec:immuni}
+    It was already evident in Section \ref{sec:numerical} how much the delay between symptoms recognition and isolation measurements affects the overall strength of the epidemic.
+    ref ($https://www.nature.com/articles/s41591-020-1036-8\#Sec12$)
+    
   \subsection{Lockdown and quarantine}
   \subsection{Vaccines}
   \subsubsection{Random (failure)}

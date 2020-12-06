@@ -6,10 +6,11 @@ Created on Wed Nov 18 18:20:43 2020
 @author: Giacomo Roversi
 """
 import time
-import pickle
+# import pickle
+import numpy as np
 import networkx as nx
 
-from pyndemic import SEIR_odet, SIR_odet, contagion_metrics, pRandNeTmic
+from pyndemic import SEIR_odet, contagion_metrics, pRandNeTmic
 Tic = time.perf_counter()
 
 N = 1e4
@@ -26,12 +27,21 @@ R0 = beta * tau_r   # basic reproduction number
 # ==========
 # SEIR MODEL
 # ==========
-print("\nSEIR deterministic model:")
+print("\nSEIR deterministic model with longer time-span:")
 s, e, i, r, t, fig02 = SEIR_odet(perc_inf, beta, tau_i, tau_r, days,
                                  "SEIR deterministic model")
+p = e + i
+mu = 1/tau_r
+gamma = 1/tau_i
+A = np.array([[-gamma, beta*s[0]], [gamma, -mu]])
+eigval, eigvec = np.linalg.eig(A)
+K0 = eigval[0]
+ts0 = np.log(R0)/K0
+pars0 = [K0, p[0]*N]
 
 K, Ki, ts, pars, Rt, Rti, Rts, Td0, Tdi, Tds, fig03, fig04 = \
-    contagion_metrics(s, e, i, r, t, 0, 0, [0, 0], R0, tau_i, tau_r, N,
+    contagion_metrics(s, e, i, r, t, K0, ts0, pars0,
+                      R0, tau_i, tau_r, N,
                       "SEIR deterministic model")
 
 # ===================
@@ -48,5 +58,16 @@ watts_long.run(perc_inf, beta, tau_i, tau_r, days, t)
 
 # with open('pickle/smallw_long.pkl', 'rb') as f:
 #     watts_long = pickle.load(f)
-watts_long.plot(beta, tau_i, tau_r, days, t, K, ts, pars)
+watts_long.plot(beta, tau_i, tau_r, days, t, K0, ts0, pars0)
 watts_long.save()
+
+Toc = time.perf_counter()
+print("All done. [Elapsed: " + str(round(Toc-Tic, 0)) + " seconds]")
+
+for net in [watts_long]:
+    print([net.name,
+           net.G.size(),
+           net.G.number_of_edges(),
+           net.G.number_of_nodes(),
+           net.G.k_avg,
+           net.G.C_avg])
