@@ -6,7 +6,7 @@ Created on Thu Nov 19 16:14:44 2020
 @author: Giacomo Roversi
 """
 import os
-import copy
+# import copy
 import pickle
 import numpy as np
 import pandas as pd
@@ -263,7 +263,7 @@ nets = [rando, watts, barab, holme]
 # nets = latti
 fig05 = plt.figure()
 for i in range(4):
-    net = copy.copy(nets[i])
+    net = nets[i]
     sbp = sbpx[i]
     fig05.add_subplot(sbp)
     knn = nx.k_nearest_neighbors(net.G)
@@ -273,7 +273,7 @@ for i in range(4):
     y = net.G.knn
     r = nx.degree_pearson_correlation_coefficient(net.G)
 
-    plt.scatter(x, y)
+    plt.scatter(x, y, alpha=0.5)
     plt.xlabel('k')
     plt.ylabel(r'$\langle k_{nn} \rangle$')
     # plt.ylim([net.G.k_min, net.G.k_max])
@@ -287,4 +287,16 @@ for i in range(4):
     plt.title(net.name)
     plt.tight_layout()
 
+
+# %%
+# Peak vs peak Day
+
+fig06 = plt.figure()
+for net in [rando, watts, barab, holme, latti]:
+    plt.scatter(net.t_peaks, net.peak, alpha=0.5, label=net.name)
+plt.legend()
+plt.ylabel("Positives peak")
+plt.xlabel("Peak day")
+plt.tight_layout()
+    
 # fine
