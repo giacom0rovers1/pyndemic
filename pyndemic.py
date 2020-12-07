@@ -366,7 +366,7 @@ def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
               parsFit, D, KFit, TdFit, Rt, Rti):
     y = np.array([s, e, i, r])
 
-    fig02 = plt.figure()
+    fig02 = plt.figure(figsize=(5.5, 5), dpi=300)
     plt.plot(t, y.T)
     # plt.legend(["s", "e", "i", "r"])
     plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
@@ -379,7 +379,7 @@ def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.grid(axis='y')
     plt.tight_layout()
 
-    fig03 = plt.figure()
+    fig03 = plt.figure(figsize=(5.5, 5), dpi=300)
     plt.plot(t, pos, label="Positives")
 
     if ts0 != 0:
@@ -403,7 +403,7 @@ def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.grid(axis='y')
     plt.tight_layout()
 
-    fig04 = plt.figure()
+    fig04 = plt.figure(figsize=(5.5, 5), dpi=300)
     plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
              [1 for i in np.arange(1, len(t)+100)],
              'r--', linewidth=2, alpha=0.4)
@@ -474,7 +474,7 @@ def SIR_odet(perc_inf, beta, tau_r, days):
 def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
              parsFit, D, KFit, TdFit, Rt, Rti):
     y = np.array([s, i, r])
-    fig02 = plt.figure()
+    fig02 = plt.figure(dpi=300)
     plt.plot(t, y.T)
     plt.legend(["Susceptible", "Infected", "Removed"])
     plt.text(0.8*(len(t)-1), 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
@@ -486,7 +486,7 @@ def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.grid(axis='y')
     plt.tight_layout()
 
-    fig03 = plt.figure()
+    fig03 = plt.figure(figsize=(5.5, 5), dpi=300)
     plt.plot(t, pos, label="Positives")
 
     if ts0 != 0:
@@ -510,7 +510,7 @@ def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.grid(axis='y')
     plt.tight_layout()
 
-    fig04 = plt.figure()
+    fig04 = plt.figure(dpi=300)
     plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
              [1 for i in np.arange(1, len(t)+100)],
              'r--', linewidth=2, alpha=0.4)
@@ -885,7 +885,7 @@ class pRandNeTmic(randnet):
     def plot(self):
         if self.runs == 1:
             # main plot
-            self.fig02 = plt.figure()
+            self.fig02 = plt.figure(dpi=300)
             plt.plot(self.t, self.y.T)
             plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
             plt.text(self.D, 0.5, r'$R_{0}$ ='+str(np.round(self.R0, 2)))
@@ -898,7 +898,7 @@ class pRandNeTmic(randnet):
             plt.tight_layout()
 
             # initial growth
-            self.fig03 = plt.figure()
+            self.fig03 = plt.figure(dpi=300)
             plt.plot(self.t, self.pos, label="Positives")
 
             if self.ts0 != 0:
@@ -922,7 +922,7 @@ class pRandNeTmic(randnet):
             plt.tight_layout()
 
             # Rt evolution
-            self.fig04 = plt.figure()
+            self.fig04 = plt.figure(dpi=300)
             plt.plot(np.arange(np.min(self.t)-50, np.max(self.t)+50),
                      [1 for i in np.arange(1, len(self.t)+100)],
                      'r--', linewidth=2, alpha=0.4)
@@ -944,7 +944,7 @@ class pRandNeTmic(randnet):
 
         else:
             # main plot
-            self.fig02 = plt.figure()
+            self.fig02 = plt.figure(dpi=300)
 
             plt.fill_between(self.t, self.s05, self.s95, alpha=0.3)
             plt.plot(self.t, self.s, label="Susceptible")
@@ -969,7 +969,7 @@ class pRandNeTmic(randnet):
             plt.tight_layout()
 
             # initial growth
-            self.fig03 = plt.figure()
+            self.fig03 = plt.figure(dpi=300)
             plt.fill_between(self.t, self.p05, self.p95, alpha=0.3)
             plt.plot(self.t, self.pos, label="Positives")
 
@@ -1000,7 +1000,7 @@ class pRandNeTmic(randnet):
             plt.tight_layout()
 
             # Rt evolution
-            self.fig04 = plt.figure()
+            self.fig04 = plt.figure(dpi=300)
             plt.plot(np.arange(np.min(self.t)-50, np.max(self.t)+50),
                      [1 for i in np.arange(1, len(self.t)+100)],
                      'r--', linewidth=2, alpha=0.4)

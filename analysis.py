@@ -261,7 +261,7 @@ final.plot.box(ylabel=r'Total affected population $(fraction)$')
 sbpx = [221, 222, 223, 224]
 nets = [rando, watts, barab, holme]
 # nets = latti
-fig05 = plt.figure()
+fig05 = plt.figure(dpi=300)
 for i in range(4):
     net = nets[i]
     sbp = sbpx[i]
@@ -291,7 +291,7 @@ for i in range(4):
 # %%
 # Peak vs peak Day
 
-fig06 = plt.figure()
+fig06 = plt.figure(dpi=300)
 for net in [rando, watts, barab, holme, latti]:
     plt.scatter(net.t_peaks, net.peak, alpha=0.5, label=net.name)
 plt.legend()
