@@ -123,12 +123,12 @@ def dydt(t, y):
 
 
 y = sp.integrate.solve_ivp(fun=dydt,
-                           t_span=(0, days),
+                           t_span=(d0, days+d0),
                            y0=y0,
-                           t_eval=np.arange(0, days+1))
+                           t_eval=np.arange(d0, days+d0+1))
 
 s, e, i, r = [y.y[line, :] for line in range(4)]
-t = y.t + d0
+t = y.t
 
 p = e + i
 pos = N * p
