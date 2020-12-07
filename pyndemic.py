@@ -370,11 +370,12 @@ def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.plot(t, y.T)
     # plt.legend(["s", "e", "i", "r"])
     plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
-    plt.text(0.8*(len(t)-1), 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
+    plt.text(D+np.min(t), 0.5, r'$R_{0}$ ='+str(np.round(R0, 2)))
     plt.xlabel('t (days)')
     plt.ylabel('Relative population')
     plt.title(title)
-    plt.xlim([0, (len(t)-1)])
+    # plt.xlim([0, (len(t)-1)])
+    plt.xlim([np.min(t), np.max(t)])
     plt.ylim([0, 1])
     plt.grid(axis='y')
     plt.tight_layout()
@@ -390,11 +391,12 @@ def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.plot(x, exponential(x, *parsFit), 'k--',
              label="Exponential fit", alpha=0.8)
 
-    plt.xlim([0, 3*max(xi)])
+    # plt.xlim([0, 3*max(xi)])
+    plt.xlim([np.min(t), 3*np.max(xi)])
     plt.ylim([0, 1.4*np.nanmax(pos)])
     plt.xlabel('t (days)')
     plt.ylabel('Individuals')
-    plt.text(D*0.5, np.nanmax(pos,)*0.75,
+    plt.text(D*0.5+np.min(t), np.nanmax(pos,)*0.75,
              r'$K$ =' + str(np.round(KFit, 2)) +
              r'; $T_{d}$ =' + str(np.round(TdFit, 2)))  # +
     # r'; $\tau_{s}$ =' + str(np.round(ts0, 2)))
@@ -477,11 +479,12 @@ def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     fig02 = plt.figure(dpi=300)
     plt.plot(t, y.T)
     plt.legend(["Susceptible", "Infected", "Removed"])
-    plt.text(0.8*(len(t)-1), 0.9, r'$R_{0}$ ='+str(np.round(R0, 2)))
+    plt.text(D+np.min(t), 0.5, r'$R_{0}$ ='+str(np.round(R0, 2)))
     plt.xlabel('t (days)')
     plt.ylabel('Relative population')
     plt.title(title)
-    plt.xlim([0, (len(t)-1)])
+    # plt.xlim([0, (len(t)-1)])
+    plt.xlim([np.min(t), np.max(t)])
     plt.ylim([0, 1])
     plt.grid(axis='y')
     plt.tight_layout()
@@ -497,11 +500,12 @@ def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.plot(x, exponential(x, *parsFit), 'k--',
              label="Exponential fit", alpha=0.8)
 
-    plt.xlim([0, 3*max(xi)])
+    # plt.xlim([0, 3*max(xi)])
+    plt.xlim([np.min(t), 3*np.max(xi)])
     plt.ylim([0, 1.4*np.nanmax(pos)])
     plt.xlabel('t (days)')
     plt.ylabel('Individuals')
-    plt.text(D*0.5, np.nanmax(pos,)*0.75,
+    plt.text(D*0.5+np.min(t), np.nanmax(pos,)*0.75,
              r'$K$ =' + str(np.round(KFit, 2)) +
              r'; $T_{d}$ =' + str(np.round(TdFit, 2)))  # +
     # r'; $\tau_{s}$ =' + str(np.round(ts0, 2)))
@@ -558,7 +562,7 @@ def growth_fit(pos, t, ts0, pars0, D, R0):
     parsFit, cov = curve_fit(f=exponential,
                              xdata=xi,
                              ydata=yi,
-                             bounds=(-100, 100))
+                             bounds=(-1e4, 1e4))
     print("\nExp fit params:\n[ K     n(0)  ]")
     print(np.array(parsFit).round(3))
 
@@ -616,10 +620,10 @@ def contagion_metrics(s, e, i, r, t,
     x, xi, yi, parsFit, KFit, TdFit, tsFit = growth_fit(pos, t,
                                                         ts0, pars0,
                                                         D, R0)
-    if ts0 == 0:
-        ts0 = tsFit
-    if K0 == 0:
-        K0 = KFit
+    # if ts0 == 0:
+    #     ts0 = tsFit
+    # if K0 == 0:
+    #     K0 = KFit
 
     # Actual growth rate
     Ki = np.gradient(np.log(pos)) / np.gradient(t)
@@ -641,8 +645,8 @@ def contagion_metrics(s, e, i, r, t,
     print("\nR0\n[pred esti]: ")
     print(np.array([R0, Rti[3*D]]).round(2))
 
-    print("\nGrowth rate\n[pred esti]")
-    print(np.array([K0, Ki[3*D]]).round(2))
+    print("\nGrowth rate\n[pred esti fit ]")
+    print(np.array([K0, Ki[3*D], KFit]).round(2))
 
     return x, xi, yi, KFit, Ki, tsFit, parsFit, Rt, Rti, TdFit, Tdi
 
@@ -788,9 +792,12 @@ class pRandNeTmic(randnet):
             self.Rtim = pd.Series(data=None)
 
             # run n simulations
+            run = 0
             member = self.copy()
-            for run in range(runs):
+
+            while run < runs:
                 print("\n" + str(run+1) + " of " + str(runs))
+
                 member.s, member.e, member.i, member.r = \
                     SEIR_network(self.G, self.N, self.perc_inf, self.beta,
                                  self.tau_i, self.tau_r, self.days, self.t)
@@ -809,6 +816,8 @@ class pRandNeTmic(randnet):
                                           D=self.D, R0=self.R0,
                                           tau_i=self.tau_i,
                                           tau_r=self.tau_r, N=self.N)
+                    run += 1
+
                 except:
                     now = dt.datetime.now()
                     print("\nAN UNKNOWN ERROR OCCURRED in contagion_metrics()")
@@ -818,7 +827,6 @@ class pRandNeTmic(randnet):
                     with open(logname, 'wb') as f:
                         pickle.dump([member, run, now], f)
                     print("Error log saved. Repeating run " + str(run))
-                    run -= 1
                     continue
 
                 self.sm = self.sm.append(pd.Series(member.s))
@@ -888,7 +896,8 @@ class pRandNeTmic(randnet):
             self.fig02 = plt.figure(dpi=300)
             plt.plot(self.t, self.y.T)
             plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
-            plt.text(self.D, 0.5, r'$R_{0}$ ='+str(np.round(self.R0, 2)))
+            plt.text(self.D+np.min(self.t), 0.5, r'$R_{0}$ =' +
+                     str(np.round(self.R0, 2)))
             plt.xlabel('t (days)')
             plt.ylabel('Relative population')
             plt.title(self.name + " - SEIR time evolution")
@@ -902,7 +911,8 @@ class pRandNeTmic(randnet):
             plt.plot(self.t, self.pos, label="Positives")
 
             if self.ts0 != 0:
-                plt.plot(self.x, exponential(self.x, *self.pars0), 'r--', alpha=0.4,
+                plt.plot(self.x, exponential(self.x, *self.pars0),
+                         'r--', alpha=0.4,
                          label="Deterministic exp. growth")
 
             plt.plot(self.xi, self.yi, label="Initial growth", linewidth=2)
@@ -913,7 +923,7 @@ class pRandNeTmic(randnet):
             plt.ylim([0, 1.4*np.nanmax(self.pos)])
             plt.xlabel('t (days)')
             plt.ylabel('Individuals')
-            plt.text(self.D*0.5, np.nanmax(self.pos,)*0.75,
+            plt.text(self.D*0.5+np.min(self.t), np.nanmax(self.pos,)*0.75,
                      r'$K$ =' + str(np.round(self.KFit, 2)) +
                      r'; $T_{d}$ =' + str(np.round(self.TdFit, 2)))  # +
             plt.legend(loc='best')
@@ -959,11 +969,13 @@ class pRandNeTmic(randnet):
             plt.plot(self.t, self.r, label="Removed")
 
             plt.legend(loc='best')
-            plt.text(self.D, 0.5, r'$R_{0}$ ='+str(np.round(self.R0, 2)))
+            plt.text(self.D+np.min(self.t), 0.5, r'$R_{0}$ =' +
+                     str(np.round(self.R0, 2)))
             plt.xlabel('t (days)')
             plt.ylabel('Relative population')
             plt.title(self.name + " - SEIR time evolution")
-            plt.xlim([0, self.days])
+            # plt.xlim([0, self.days])
+            plt.xlim([np.min(self.t), np.max(self.t)])
             plt.ylim([0, 1])
             plt.grid(axis='y')
             plt.tight_layout()
@@ -987,11 +999,12 @@ class pRandNeTmic(randnet):
             plt.plot(self.x, exponential(self.x, *self.parsFit50), 'k--',
                      label="Exponential fit", alpha=0.8)
 
-            plt.xlim([0, 3*max(self.xi)])
+            # plt.xlim([0, 3*max(self.xi)])
+            plt.xlim([np.min(self.t), 3*np.max(self.xi)])
             plt.ylim([0, 1.4*np.nanmax(self.pos)])
             plt.xlabel('t (days)')
             plt.ylabel('Individuals')
-            plt.text(self.D*0.5, np.nanmax(self.pos,)*0.75,
+            plt.text(self.D*0.5+np.min(self.t), np.nanmax(self.pos,)*0.75,
                      r'$K$ =' + str(np.round(self.KFit50, 2)) +
                      r'; $T_{d}$ =' + str(np.round(self.TdFit50, 2)))
             plt.legend(loc='best')

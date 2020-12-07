@@ -6,12 +6,12 @@ Created on Thu Nov 19 16:14:44 2020
 @author: Giacomo Roversi
 """
 import os
-# import copy
 import pickle
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import networkx as nx
+
 
 N = 1e4
 n = N/100
@@ -132,6 +132,7 @@ if not os.path.isfile(networks.filename):
                               "$<k>$", "$<C>$"],
                       float_format="%.2f")
 
+
 # %%%
 # simulation results
 
@@ -250,11 +251,6 @@ times.plot.box(ylabel=r'Peak day $(d)$')
 rates.plot.box(ylabel=r'Initial growth rate $(d^{-1})$')
 final.plot.box(ylabel=r'Total affected population $(fraction)$')
 
-# %%
-# # mitigation
-# def lockdown(net):
-
-#     return net
 
 # %%
 # assortativity (NOT RELEVANT)
@@ -298,5 +294,5 @@ plt.legend()
 plt.ylabel("Positives peak")
 plt.xlabel("Peak day")
 plt.tight_layout()
-    
+
 # fine
