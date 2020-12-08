@@ -28,7 +28,7 @@ import pyndemic as pn
 # Reduction factor: voglio la stessa probabilità ma ho <k> inferiore
 redfa = 0.6
 d0 = 14
-runs = 100
+# runs = 100
 
 
 N = 1e4
@@ -98,10 +98,10 @@ G = Holme_lbc.G
 
 # %%
 
-# with open('pickle/SEIR.pkl', 'rb') as f:
-#     s, e, i, r, t, days, daysl, KFit, tsFit, parsFit, \
-#                  mu, gamma, R0, K0, ts0, pars0, \
-#                  fig02, fig03, fig04 = pickle.load(f)
+with open('pickle/SEIR.pkl', 'rb') as f:
+    s, e, i, r, t, days, daysl, KFit, tsFit, parsFit, \
+                  mu, gamma, R0, K0, ts0, pars0, \
+                  fig02, fig03, fig04 = pickle.load(f)
 
 print("\nSEIR deterministic model:")
 # calculate constants
@@ -110,7 +110,9 @@ gamma = 1/tau_i
 mu = 1/tau_r
 
 # y0 = np.array([(1-frac_inf), frac_inf*(1-beta), frac_inf*beta, 0])
-y0 = np.array([holme.s[d0], holme.e[d0], holme.i[d0], holme.r[d0]])
+p = e + i
+ds0 = np.min(np.where(p > holme.pos[d0]/holme.N))
+y0 = np.array([s[ds0], e[ds0], i[ds0], r[ds0]])
 
 y = y0
 
@@ -123,12 +125,18 @@ def dydt(t, y):
 
 
 y = sp.integrate.solve_ivp(fun=dydt,
-                           t_span=(d0, days+d0),
+                           t_span=(ds0, days+ds0),
                            y0=y0,
-                           t_eval=np.arange(d0, days+d0+1))
+                           t_eval=np.arange(ds0, days+ds0+1))
 
-s, e, i, r = [y.y[line, :] for line in range(4)]
-t = y.t
+s2, e2, i2, r2 = [y.y[line, :] for line in range(4)]
+t2 = y.t
+
+s = np.append(s[:ds0], s2)
+e = np.append(e[:ds0], e2)
+i = np.append(i[:ds0], i2)
+r = np.append(r[:ds0], r2)
+t = np.append(t[:ds0], t2)
 
 p = e + i
 pos = N * p
@@ -148,14 +156,14 @@ x, xi, yi, KFit, Ki, tsFit, parsFit, \
                          D, R0, tau_i, tau_r, N)
 
 fig02, fig03, fig04 = pn.SEIR_plot(s, e, i, r, t, R0,
-                                   "SEIR deterministic model",
+                                   "SEIR deterministic model\n",
                                    pos, ts0, pars0, x, xi, yi,
                                    parsFit, D, KFit, TdFit, Rt, Rti)
 
 
-fig02.savefig('immagini/SEIR_02lockdown.png')
-fig03.savefig('immagini/SEIR_03lockdown.png')
-fig04.savefig('immagini/SEIR_04lockdown.png')
+fig02.savefig('immagini/SEIR_02lockdown2.png')
+fig03.savefig('immagini/SEIR_03lockdown2.png')
+fig04.savefig('immagini/SEIR_04lockdown2.png')
 with open('pickle/SEIRlockdown.pkl', 'wb') as f:
     pickle.dump([s, e, i, r, t, days, days, KFit, tsFit, parsFit,
                  mu, gamma, R0, K0, ts0, pars0,
@@ -182,24 +190,25 @@ lock.D = int(lock.ts0)
 
 # %%
 # SIMULATION
-lock.runs = runs
+lock.t = t
+lock.runs = holme.runs
 
-lock.sm = pd.Series(data=None)
-lock.em = pd.Series(data=None)
-lock.im = pd.Series(data=None)
-lock.rm = pd.Series(data=None)
-lock.pm = pd.Series(data=None)
+lock.sm = pd.Series(data=None, dtype='float64')
+lock.em = pd.Series(data=None, dtype='float64')
+lock.im = pd.Series(data=None, dtype='float64')
+lock.rm = pd.Series(data=None, dtype='float64')
+lock.pm = pd.Series(data=None, dtype='float64')
 
-lock.parsFitm0 = pd.Series(data=None)
-lock.parsFitm1 = pd.Series(data=None)
-lock.Rtim = pd.Series(data=None)
+lock.parsFitm0 = pd.Series(data=None, dtype='float64')
+lock.parsFitm1 = pd.Series(data=None, dtype='float64')
+lock.Rtim = pd.Series(data=None, dtype='float64')
 
 # run n simulations
 run = 0
 member = lock.copy()
 
-while run < runs:
-    print("\n" + str(run+1) + " of " + str(runs))
+while run < lock.runs:
+    print("\n" + str(run+1) + " of " + str(lock.runs))
 
     # Config:
     model = ep.SEIRModel(G)
@@ -221,19 +230,19 @@ while run < runs:
         init[ind] = 0
 
     i = 0
-    while i < int(holme.e[d0]*N):
+    while i < int(list(holme.em[d0])[run]*N):
         idx = random.choice(list(init))
         if init[idx] == 0:
             init[idx] = 2
             i += 1
     i = 0
-    while i < int(holme.i[d0]*N):
+    while i < int(list(holme.im[d0])[run]*N):
         idx = random.choice(list(init))
         if init[idx] == 0:
             init[idx] = 1
             i += 1
     i = 0
-    while i < int(holme.r[d0]*N):
+    while i < int(list(holme.rm[d0])[run]*N):
         idx = random.choice(list(init))
         if init[idx] == 0:
             init[idx] = 3
@@ -258,38 +267,43 @@ while run < runs:
     r = np.array([R for S, E, I, R in
                   [list(it['node_count'].values()) for it in iterations]])/N
 
+    s = np.append(np.array(list(holme.sm[(101*run):(101*run)+d0])), s)
+    e = np.append(np.array(list(holme.em[(101*run):(101*run)+d0])), e)
+    i = np.append(np.array(list(holme.im[(101*run):(101*run)+d0])), i)
+    r = np.append(np.array(list(holme.rm[(101*run):(101*run)+d0])), r)
+
     # resampling through t (variable spacing decided by the ODE solver)
     member.s = np.interp(t, np.arange(0, len(s)), s)
     member.e = np.interp(t, np.arange(0, len(e)), e)
     member.i = np.interp(t, np.arange(0, len(i)), i)
     member.r = np.interp(t, np.arange(0, len(r)), r)
-    member.t = t
+    member.t = lock.t
     member.pos = np.array((member.e + member.i) * lock.N)
 
-    try:
-        member.x, member.xi, member.yi, \
-            member.KFit, member.Ki, member.tsFit, member.parsFit, \
-            member.Rt, member.Rti, \
-            member.TdFit, member.Tdi = \
-            pn.contagion_metrics(s=member.s, e=member.e, i=member.i,
-                                 r=member.r, t=lock.t,
-                                 K0=lock.K0, ts0=lock.ts0,
-                                 pars0=lock.pars0,
-                                 D=lock.D, R0=lock.R0,
-                                 tau_i=lock.tau_i,
-                                 tau_r=lock.tau_r, N=lock.N)
-        run += 1
+    # try:
+    member.x, member.xi, member.yi, \
+        member.KFit, member.Ki, member.tsFit, member.parsFit, \
+        member.Rt, member.Rti, \
+        member.TdFit, member.Tdi = \
+        pn.contagion_metrics(s=member.s, e=member.e, i=member.i,
+                             r=member.r, t=lock.t,
+                             K0=lock.K0, ts0=lock.ts0,
+                             pars0=lock.pars0,
+                             D=lock.D, R0=lock.R0,
+                             tau_i=lock.tau_i,
+                             tau_r=lock.tau_r, N=lock.N)
+    run += 1
 
-    except:
-        now = dt.datetime.now()
-        print("\nAN UNKNOWN ERROR OCCURRED in contagion_metrics()")
-        print(now)
-        logname = 'pickle/error_' + \
-            now.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl'
-        with open(logname, 'wb') as f:
-            pickle.dump([member, run, now], f)
-        print("Error log saved. Repeating run " + str(run))
-        continue
+    # except ValueError:
+    #     now = dt.datetime.now()
+    #     print("\nVALUE ERROR OCCURRED in contagion_metrics()")
+    #     print(now)
+    #     logname = 'pickle/error_' + \
+    #         now.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl'
+    #     with open(logname, 'wb') as f:
+    #         pickle.dump([member, run, now], f)
+    #     print("Error log saved. Repeating run " + str(run))
+    #     continue
 
     lock.sm = lock.sm.append(pd.Series(member.s))
     lock.em = lock.em.append(pd.Series(member.e))

@@ -781,15 +781,15 @@ class pRandNeTmic(randnet):
                                   D=self.D, R0=self.R0, tau_i=self.tau_i,
                                   tau_r=self.tau_r, N=self.N)
         else:
-            self.sm = pd.Series(data=None)
-            self.em = pd.Series(data=None)
-            self.im = pd.Series(data=None)
-            self.rm = pd.Series(data=None)
-            self.pm = pd.Series(data=None)
+            self.sm = pd.Series(data=None, dtype='float64')
+            self.em = pd.Series(data=None, dtype='float64')
+            self.im = pd.Series(data=None, dtype='float64')
+            self.rm = pd.Series(data=None, dtype='float64')
+            self.pm = pd.Series(data=None, dtype='float64')
 
-            self.parsFitm0 = pd.Series(data=None)
-            self.parsFitm1 = pd.Series(data=None)
-            self.Rtim = pd.Series(data=None)
+            self.parsFitm0 = pd.Series(data=None, dtype='float64')
+            self.parsFitm1 = pd.Series(data=None, dtype='float64')
+            self.Rtim = pd.Series(data=None, dtype='float64')
 
             # run n simulations
             run = 0
