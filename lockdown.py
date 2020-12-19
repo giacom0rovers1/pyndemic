@@ -100,8 +100,8 @@ G = Holme_lbc.G
 
 with open('pickle/SEIR.pkl', 'rb') as f:
     s, e, i, r, t, days, daysl, KFit, tsFit, parsFit, \
-                  mu, gamma, R0, K0, ts0, pars0, \
-                  fig02, fig03, fig04 = pickle.load(f)
+        mu, gamma, R0, K0, ts0, pars0, \
+        fig02, fig03, fig04 = pickle.load(f)
 
 print("\nSEIR deterministic model:")
 # calculate constants

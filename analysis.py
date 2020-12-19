@@ -32,13 +32,17 @@ with open('pickle/all_simulations.pkl', 'rb') as f:
 
 with open('pickle/SEIR.pkl', 'rb') as f:
     s, e, i, r, t, days, daysl, KFit, tsFit, parsFit, \
-                 mu, gamma, R0, K0, ts0, pars0, \
-                 fig02, fig03, fig04 = pickle.load(f)
+        mu, gamma, R0, K0, ts0, pars0, \
+        fig02, fig03, fig04 = pickle.load(f)
 
 with open('pickle/SIR.pkl', 'rb') as f:
     ss, ii, rr, tt, ddays, KKFit, ttsFit, pparsFit, \
-                 mu, R0, KK0, tts0, ppars0, \
-                 ffig02, ffig03, ffig04 = pickle.load(f)
+        mu, R0, KK0, tts0, ppars0, \
+        ffig02, ffig03, ffig04 = pickle.load(f)
+
+with open('pickle/simulations_immuni_BC.pkl', 'rb') as f:
+    lock = pickle.load(f)
+
 
 # Add missing information
 p = e + i
@@ -55,12 +59,14 @@ TTdFit = np.log(2)/KKFit
 
 # Model parameters
 parameters = pd.DataFrame(columns=(["N", "perc_inf", "beta",
-                                    "gamma", "mu"]))
+                                    "gamma", "mu", 'R0', "1/R0"]))
 parameters = parameters.append({"N": N,
                                 "perc_inf": perc_inf,
                                 "beta": beta,
                                 "gamma": gamma,
-                                "mu": mu},
+                                "mu": mu,
+                                "R0": R0,
+                                "1/R0": np.round(1/R0, 2)},
                                ignore_index=True)
 print(parameters.round(2))
 
@@ -76,17 +82,23 @@ if not os.path.isfile(parameters.filename):
                                 "$i_{start}$ $(\%)$",
                                 "$\beta $ $(d^{-1})$",
                                 "$\gamma $ $(d^{-1})$",
-                                "$\mu$ $(d^{-1})$"],
+                                "$\mu$ $(d^{-1})$",
+                                "$R_0$", "$\sfrac{1}{R0}$"],
                         float_format="%.2f")
 
 # %%%
 # Derived properties
-properties = pd.DataFrame(columns=("R0", "KK0", "TTd0", "K0", "Td0"))
-properties = properties.append({"R0": R0,
-                                "KK0": KK0,
-                                "TTd0": TTd0,
+properties = pd.DataFrame(columns=("Model", "K0", "Td0", "tau_s"))
+properties = properties.append({"Model": "SIR",
+                                "K0": KK0,
+                                "Td0": TTd0,
+                                "tau_s": tts0},
+                               ignore_index=True)
+
+properties = properties.append({"Model": "SEIR",
                                 "K0": K0,
-                                "Td0": Td0},
+                                "Td0": Td0,
+                                "tau_s": ts0},
                                ignore_index=True)
 print(properties.round(2))
 
@@ -98,18 +110,81 @@ if not os.path.isfile(properties.filename):
                         caption="Model properties.",
                         label="tab:props",
                         escape=False,
-                        header=["$R_0$",
-                                "$K^{SIR}_0$ $(d^{-1})$",
+                        header=["$K^{SIR}_0$ $(d^{-1})$",
                                 "$T^{SIR}_d$ $(d)$",
                                 "$K^{SEIR}_0$ $(d^{-1})$",
                                 "$T^{SEIR}_d$ $(d)$"],
                         float_format="%.2f")
 
 # %%%
+# simulation results 1
+
+models = pd.DataFrame(columns=["Model", "KFit", "TdFit", "Final p",
+                               "Final r", "t_final",
+                               "peak", "t_peak", "s_peak"])
+
+ppeak = np.nanmax(ii)
+tt_peak = np.min(np.where(ii == ppeak))
+if ii[-1] == 0:
+    tt_final = np.nanmin(np.where(ii == 0))
+else:
+    tt_final = ddays
+ffinal_r = rr[tt_final]
+ffinal_p = ii[tt_final]
+
+models = models.append({"Model": "Det. SIR",
+                        "KFit": KKFit,
+                        "TdFit": TTdFit,
+                        "Final p": ffinal_p,
+                        "Final r":  ffinal_r,
+                        "t_final": tt_final,
+                        "peak":  ppeak,
+                        "t_peak": tt_peak,
+                        "s_peak": ss[tt_peak]},
+                       ignore_index=True)
+
+
+peak = np.nanmax(p)
+t_peak = np.min(np.where(p == peak))
+if pos[-1] == 0:
+    t_final = np.nanmin(np.where(pos == 0))
+else:
+    t_final = days
+final_r = r[t_final]
+final_p = p[t_final]
+
+models = models.append({"Model": "SEIR",
+                        "KFit": KFit,
+                        "TdFit": TdFit,
+                        "Final p": final_p,
+                        "Final r": final_r,
+                        "t_final": t_final,
+                        "peak": ppeak,
+                        "t_peak": t_peak,
+                        "s_peak": s[t_peak]},
+                       ignore_index=True)
+print(models.round(2))
+models.filename = "tex/models.tex"
+if not os.path.isfile(models.filename):
+    print("Saving TeX file...")
+    models.to_latex(buf=models.filename,
+                    index=False,
+                    caption="Simulations summary.",
+                    label="tab:models",
+                    escape=False,
+                    header=["Network model", "$K_0^{Fit}$ $(d^{-1})$",
+                            "$T_d^{Fit}$ $(d)$", "$i_{end}$",
+                            "$r_{end}$", "End day $(\#)$",
+                            "Peak $\%$", "Peak day $(\#)$",
+                            "$s_{peak}$"],
+                    float_format="%.2f")
+
+
+# %%%
 # Networks data
 networks = pd.DataFrame(columns=["Net", "E", "N", "<k>", "<C>"])
 
-for net in [rando, latti, watts, barab, holme]:
+for net in [rando, latti, watts, barab, holme, lock]:
     newline = {"Net": net.name,
                # "Size": net.G.size(),
                "E": net.G.number_of_edges(),
@@ -134,71 +209,34 @@ if not os.path.isfile(networks.filename):
 
 
 # %%%
-# simulation results
+# simulation results 2
 
-results = pd.DataFrame(columns=["Model", "KFit", "TdFit", "Final p",
-                                "Final r", "peak", "t_peak", "t_final"])
-
-ppeak = np.nanmax(ii)
-tt_peak = np.min(np.where(ii == ppeak))
-if ii[-1] == 0:
-    tt_final = np.nanmin(np.where(ii == 0))
-else:
-    tt_final = ddays
-ffinal_r = rr[tt_final]
-ffinal_p = ii[tt_final]
-
-results = results.append({"Model": "Det. SIR",
-                          "KFit": KKFit,
-                          "TdFit": TTdFit,
-                          "Final p": ffinal_p,
-                          "Final r":  ffinal_r,
-                          "peak":  ppeak,
-                          "t_peak": tt_peak,
-                          "t_final": tt_final},
-                         ignore_index=True)
+results = pd.DataFrame(columns=["Network model", "KFit", "TdFit", "Final p",
+                                "Final r", "t_final",
+                                "Peak", "t_Peak", "s_Peak"])
 
 
-peak = np.nanmax(p)
-t_peak = np.min(np.where(p == peak))
-if pos[-1] == 0:
-    t_final = np.nanmin(np.where(pos == 0))
-else:
-    t_final = days
-final_r = r[t_final]
-final_p = p[t_final]
-
-results = results.append({"Model": "Det. SEIR",
-                          "KFit": KFit,
-                          "TdFit": TdFit,
-                          "Final p": final_p,
-                          "Final r": final_r,
-                          "peak": ppeak,
-                          "t_peak": t_peak,
-                          "t_final": t_final},
-                         ignore_index=True)
-
-
-for net in [rando, latti, watts, barab, holme]:
-    peak = np.nanmax(net.pos)
-    t_peak = np.min(np.where(net.pos == peak))
+for net in [rando, latti, watts, barab, holme, lock]:
+    net.Peak = np.nanmax(net.pos)
+    net.t_Peak = np.min(np.where(net.pos == net.Peak))
     if net.pos[-1] == 0:
-        t_final = np.nanmin(np.where(net.pos == 0))
+        net.t_final = np.nanmin(np.where(net.pos == 0))
     else:
-        t_final = len(net.pos) - 1
-    final_r = net.r[t_final]
-    final_p = int(net.pos[t_final]/net.N)
-    newline = {"Model": net.name,
+        net.t_final = len(net.pos) - 1
+    net.final_r = net.r[net.t_final]
+    net.final_p = int(net.pos[net.t_final]/net.N)
+    newline = {"Network model": net.name,
                "KFit": net.KFit50,
                "TdFit": net.TdFit50,
-               "Final p": final_p,
-               "Final r": final_r,
-               "peak": peak/net.N,
-               "t_peak": t_peak,
-               "t_final": t_final}
+               "Final p": net.final_p,
+               "Final r": net.final_r,
+               "t_final": net.t_final,
+               "Peak": net.Peak/net.N,
+               "t_Peak": net.t_Peak,
+               "s_Peak": net.s[net.t_Peak]}
     results = results.append(newline, ignore_index=True)
 
-print(results.round(3))
+print(results.round(2))
 
 results.filename = "tex/results.tex"
 if not os.path.isfile(results.filename):
@@ -208,10 +246,11 @@ if not os.path.isfile(results.filename):
                      caption="Simulations summary.",
                      label="tab:results",
                      escape=False,
-                     header=["Model", "$K_0^{Fit}$ $(d^{-1})$",
+                     header=["Network model", "$K_0^{Fit}$ $(d^{-1})$",
                              "$T_d^{Fit}$ $(d)$", "$i_{end}$",
                              "$r_{end}$", "End day $(\#)$",
-                             "Peak $\%$", "Peak day $(\#)$"],
+                             "Peak $\%$", "Peak day $(\#)$", 
+                             "$s_{peak}$"],
                      float_format="%.2f")
 
 # %%
@@ -221,6 +260,7 @@ peaks = pd.DataFrame()
 times = pd.DataFrame()
 rates = pd.DataFrame()
 final = pd.DataFrame()
+clust = np.array([])
 
 for net in [rando, latti, watts, barab, holme]:
     real_runs = int(len(net.pm)/(net.days+1))
@@ -245,12 +285,15 @@ for net in [rando, latti, watts, barab, holme]:
     rates[net.name] = np.append(net.parsFitm0,
                                 np.ones(np.abs(real_runs-net.runs))*np.nan)
 
+    clust = np.append(clust, net.G.C_avg)
 
-peaks.plot.box(ylabel=r'Maximun number of positives $(individuals)$')
-times.plot.box(ylabel=r'Peak day $(d)$')
-rates.plot.box(ylabel=r'Initial growth rate $(d^{-1})$')
-final.plot.box(ylabel=r'Total affected population $(fraction)$')
 
+# peaks.plot.box(ylabel=r'Maximun number of positives $(individuals)$')
+# times.plot.box(ylabel=r'Peak day $(d)$')
+# rates.plot.box(ylabel=r'Initial growth rate $(d^{-1})$')
+final.plot.box(ylabel=r'Total affected population $(fraction)$',
+               positions=clust)
+plt.violinplot(final,  positions=clust)
 
 # %%
 # assortativity (NOT RELEVANT)
@@ -267,14 +310,14 @@ for i in range(4):
 
     x = np.unique(net.G.degree_sequence)
     y = net.G.knn
-    r = nx.degree_pearson_correlation_coefficient(net.G)
+    R = nx.degree_pearson_correlation_coefficient(net.G)
 
     plt.scatter(x, y, alpha=0.5)
     plt.xlabel('k')
     plt.ylabel(r'$\langle k_{nn} \rangle$')
     # plt.ylim([net.G.k_min, net.G.k_max])
     plt.text(net.G.k_min, np.min(y),
-             'r = ' + str(np.round(r, 2)),
+             'r = ' + str(np.round(R, 2)),
              color='red', alpha=0.7)
 
     coef = np.polyfit(x, y, 1)
@@ -294,5 +337,26 @@ plt.legend()
 plt.ylabel("Positives peak")
 plt.xlabel("Peak day")
 plt.tight_layout()
+fig06.savefig('immagini/analysis_Peak.png')
+
+# %%
+# Clustering vs Outbreak size
+x = np.array([])
+y = np.array([])
+fig07 = plt.figure(dpi=300)
+for net in [rando, watts, barab, holme, latti]:
+    xi = np.ones(len(net.finals))*net.G.C_avg
+    yi = np.array(net.finals)
+    x = np.append(x, xi)
+    y = np.append(y, yi)  # final_r))
+    plt.scatter(xi, yi, alpha=0.5, label=net.name)
+coef = np.polyfit(x, y, 1)
+poly1d_fn = np.poly1d(coef)
+plt.plot(sorted(x), poly1d_fn(sorted(x)), 'r--', alpha=0.5)
+plt.legend()
+plt.ylabel("Outbreak size")
+plt.xlabel("Average clustering")
+plt.tight_layout()
+fig07.savefig('immagini/analysis_Size.png')
 
 # fine
