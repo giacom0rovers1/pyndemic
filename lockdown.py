@@ -6,7 +6,7 @@ Created on Mon Dec  7 22:35:53 2020
 @author: giacomo
 """
 import scipy as sp
-import datetime as dt
+# import datetime as dt
 # import os
 import copy
 import pickle
@@ -44,11 +44,11 @@ R0 = beta * tau_r     # basic reproduction number
 # %%
 # Mitigation based on node metric
 
-def attack_avg_conn(graph, rank, thr):
-    nodes = sorted(graph.nodes(), key=lambda n: rank[n])
+def attack_list(graph, ranklist, thr):
+    nodes = sorted(graph.nodes(), key=lambda n: ranklist[n])
 
     while graph.k_avg > thr:
-        # remove node with highest rank
+        # remove node with highest rank until reaching an avg degree threshold
         graph.remove_node(nodes.pop())
 
         # update average connectivity degree
@@ -65,9 +65,17 @@ with open('pickle/network_realw.pkl', 'rb') as f:
 with open('pickle/simulations_realw.pkl', 'rb') as f:
     holme = pickle.load(f)
 
+
+Holme_lbc = pn.randnet("HK lockdown scenario",
+                       "lockHighBC",
+                       attack_list(Holme.G, Holme.G.BC_list, 12*redfa),
+                       attack_list(Holme.Gmini, Holme.G.BC_list, 12*redfa))
+
+G = Holme_lbc.G
+# %%
 # Holme_lcd = copy.copy(Holme)
 # Holme_lcd.nick = "immuni_CD"
-# Holme_lcd.G = attack_avg_conn(Holme_lcd.G, Holme_lcd.G.degree_list, 12*redfa)
+# Holme_lcd.G = attack_list(Holme_lcd.G, Holme_lcd.G.degree_list, 12*redfa)
 
 # holme_lcd = pn.pRandNeTmic(Holme_lcd, alert*perc_inf,
 #                            beta, tau_i, tau_r, days)
@@ -75,20 +83,23 @@ with open('pickle/simulations_realw.pkl', 'rb') as f:
 # holme_lcd.plot()
 # holme_lcd.save()
 
-# # %%
-Holme_lbc = copy.copy(Holme)
-Holme_lbc.nick = "immuni_BC"
-Holme_lbc.name = "Holme-Kim without the highest BC nodes\nAfter 14 days"
-Holme_lbc.G = attack_avg_conn(Holme_lbc.G, Holme_lbc.G.BC_list, 12*redfa)
+# # # %%
+# Holme_lbc = copy.copy(Holme)
+# Holme_lbc.nick = "immuni_BC"
+# Holme_lbc.name = "Holme-Kim without the highest BC nodes\nAfter 14 days"
+# Holme_lbc.G = attack_list(Holme_lbc.G, Holme_lbc.G.BC_list, 12*redfa)
 
-# holme_lbc = pn.pRandNeTmic(Holme_lbc, alert*perc_inf,
-#                            beta*redfa, tau_i, tau_r, days)
-# holme_lbc.run(100)
-# holme_lbc.plot()
-# holme_lbc.save()
+# # holme_lbc = pn.pRandNeTmic(Holme_lbc, alert*perc_inf,
+# #                            beta*redfa, tau_i, tau_r, days)
+# # holme_lbc.run(100)
+# # holme_lbc.plot()
+# # holme_lbc.save()
 
-# G = Holme_lcd.G
-G = Holme_lbc.G
+# # G = Holme_lcd.G
+# G = Holme_lbc.G
+# G = pn.graph_tools(G)
+# G = pn.graph_plots(G, G.name, [1])
+
 # %%
 # Salient links
 # Lockd.G.S = sl.salience(Lockd.G)
@@ -371,3 +382,17 @@ lock.Rti95 = np.array([lock.Rtim[i].quantile(0.95)
 
 lock.plot()
 lock.save()
+
+
+# %% fix
+
+with open('pickle/simulations_lockHighBC.pkl', 'rb') as f:
+    lock = pickle.load(f)
+
+lock.name = "HK lockdown scenario"
+
+lock.Gmini = pn.graph_plots(lock.Gmini, lock.name, [0])
+lock.fig00 = lock.Gmini.fig0
+
+lock.G = pn.graph_plots(lock.G, lock.name, [1])
+lock.fig01 = lock.G.fig1

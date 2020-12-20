@@ -141,8 +141,8 @@ else:
     print("Realistic [5/5]")
     Holme = pn.randnet('Holme-Kim',
                        'realw',
-                       nx.powerlaw_cluster_graph(int(N), 6, 0.1, seed=1234),
-                       nx.powerlaw_cluster_graph(int(n), 6, 0.1, seed=1234))
+                       nx.powerlaw_cluster_graph(int(N), 6, 1, seed=1234),
+                       nx.powerlaw_cluster_graph(int(n), 6, 1, seed=1234))
 
     # Save all networks together with pickle()
     print('Saving networks...')
@@ -173,7 +173,7 @@ print("\nSEIR over random network:")
 # with open('pickle/network_random.pkl', 'rb') as f:
 #     Rando = pickle.load(f)
 # rando = pn.pRandNeTmic(Rando, perc_inf, beta, tau_i, tau_r, days)
-rando.run(100)
+# rando.run(100)
 rando.plot()
 rando.save()
 
@@ -186,7 +186,7 @@ print("\nSEIR over lattice network:")
 # with open('pickle/network_lattice.pkl', 'rb') as f:
 #     Latti = pickle.load(f)
 # latti = pn.pRandNeTmic(Latti, perc_inf, beta, tau_i, tau_r, days)
-latti.run(100)
+# latti.run(100)
 latti.plot()
 latti.save()
 
@@ -199,7 +199,7 @@ print("\nSEIR over small-world network:")
 # with open('pickle/network_smallw.pkl', 'rb') as f:
 #     Watts = pickle.load(f)
 # watts = pn.pRandNeTmic(Watts, perc_inf, beta, tau_i, tau_r, days)
-watts.run(100)
+# watts.run(100)
 watts.plot()
 watts.save()
 
@@ -211,7 +211,7 @@ print("\nSEIR over scale-free network:")
 # with open('pickle/network_scalefree.pkl', 'rb') as f:
 #     Barab = pickle.load(f)
 # barab = pn.pRandNeTmic(Barab, perc_inf, beta, tau_i, tau_r, days)
-barab.run(100)
+# barab.run(100)
 barab.plot()
 barab.save()
 
@@ -224,7 +224,7 @@ print("\nSEIR over clustered scale-free network:")
 # with open('pickle/network_realw.pkl', 'rb') as f:
 #     Holme = pickle.load(f)
 # holme = pn.pRandNeTmic(Holme, perc_inf, beta, tau_i, tau_r, days)
-holme.run(100)
+# holme.run(100)
 holme.plot()
 holme.save()
 

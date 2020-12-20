@@ -40,7 +40,7 @@ with open('pickle/SIR.pkl', 'rb') as f:
         mu, R0, KK0, tts0, ppars0, \
         ffig02, ffig03, ffig04 = pickle.load(f)
 
-with open('pickle/simulations_immuni_BC.pkl', 'rb') as f:
+with open('pickle/simulations_lockHighBC.pkl', 'rb') as f:
     lock = pickle.load(f)
 
 

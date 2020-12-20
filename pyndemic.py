@@ -161,15 +161,22 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
         G.gauss = norm.pdf(x, G.k_avg, G.k_std)
         G.poiss = poisson.pmf(xi, mu=G.k_avg)
 
-        if len(yi) > 0:
-            G.sf_pars, G.sf_cov = curve_fit(f=scale_free,
-                                            xdata=xi,
-                                            ydata=yi,
-                                            p0=[1, 1],
-                                            bounds=(1e-10, np.inf))
-        else:
-            G.sf_pars = [0, -1]
+        sk = 0
+        try:  #len(yi) > 0:
+            while sk<10:
+                G.sf_pars, G.sf_cov = curve_fit(f=scale_free,
+                                                xdata=xi[sk:],
+                                                ydata=yi[sk:],
+                                                p0=[1, 1],
+                                                bounds=(1e-10, np.inf))
+                break
+            else:
+                G.sf_pars = [0.8, 1.5]
+                print("Wrong power law fit")
 
+        except ValueError:
+            sk +=1
+            
         # Degree histogram
         G.fig1.add_subplot(121)
         plt.scatter(xi, yi, alpha=0.75)
@@ -476,7 +483,7 @@ def SIR_odet(perc_inf, beta, tau_r, days):
 def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
              parsFit, D, KFit, TdFit, Rt, Rti):
     y = np.array([s, i, r])
-    fig02 = plt.figure(dpi=300)
+    fig02 = plt.figure(figsize=(6.4, 4.8), dpi=300)
     plt.plot(t, y.T)
     plt.legend(["Susceptible", "Infected", "Removed"])
     plt.text(D+np.min(t), 0.5, r'$R_{0}$ ='+str(np.round(R0, 2)))
@@ -514,7 +521,7 @@ def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.grid(axis='y')
     plt.tight_layout()
 
-    fig04 = plt.figure(dpi=300)
+    fig04 = plt.figure(figsize=(6.4, 4.8), dpi=300)
     plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
              [1 for i in np.arange(1, len(t)+100)],
              'r--', linewidth=2, alpha=0.4)
@@ -893,7 +900,7 @@ class pRandNeTmic(randnet):
     def plot(self):
         if self.runs == 1:
             # main plot
-            self.fig02 = plt.figure(dpi=300)
+            self.fig02 = plt.figure(figsize=(6.4, 4.8), dpi=300)
             plt.plot(self.t, self.y.T)
             plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
             plt.text(self.D+np.min(self.t), 0.5, r'$R_{0}$ =' +
@@ -907,7 +914,7 @@ class pRandNeTmic(randnet):
             plt.tight_layout()
 
             # initial growth
-            self.fig03 = plt.figure(dpi=300)
+            self.fig03 = plt.figure(figsize=(6.4, 4.8), dpi=300)
             plt.plot(self.t, self.pos, label="Positives")
 
             if self.ts0 != 0:
@@ -932,7 +939,7 @@ class pRandNeTmic(randnet):
             plt.tight_layout()
 
             # Rt evolution
-            self.fig04 = plt.figure(dpi=300)
+            self.fig04 = plt.figure(figsize=(6.4, 4.8), dpi=300)
             plt.plot(np.arange(np.min(self.t)-50, np.max(self.t)+50),
                      [1 for i in np.arange(1, len(self.t)+100)],
                      'r--', linewidth=2, alpha=0.4)
@@ -954,7 +961,7 @@ class pRandNeTmic(randnet):
 
         else:
             # main plot
-            self.fig02 = plt.figure(dpi=300)
+            self.fig02 = plt.figure(figsize=(6.4, 4.8), dpi=300)
 
             plt.fill_between(self.t, self.s05, self.s95, alpha=0.3)
             plt.plot(self.t, self.s, label="Susceptible")
@@ -981,7 +988,7 @@ class pRandNeTmic(randnet):
             plt.tight_layout()
 
             # initial growth
-            self.fig03 = plt.figure(dpi=300)
+            self.fig03 = plt.figure(figsize=(6.4, 4.8), dpi=300)
             plt.fill_between(self.t, self.p05, self.p95, alpha=0.3)
             plt.plot(self.t, self.pos, label="Positives")
 
@@ -1013,7 +1020,7 @@ class pRandNeTmic(randnet):
             plt.tight_layout()
 
             # Rt evolution
-            self.fig04 = plt.figure(dpi=300)
+            self.fig04 = plt.figure(figsize=(6.4, 4.8), dpi=300)
             plt.plot(np.arange(np.min(self.t)-50, np.max(self.t)+50),
                      [1 for i in np.arange(1, len(self.t)+100)],
                      'r--', linewidth=2, alpha=0.4)
