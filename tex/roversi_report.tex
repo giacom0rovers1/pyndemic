@@ -76,7 +76,7 @@
 	
 	\section*{Introduction}
 	\label{sec:intro}
-	This work studies and compares a series of idealized contagion scenarios, simulated over different un-weighted un-directed static random networks resembling human-to-human interactions. It is inspired by the current worldwide effort in containing the COVID-19 pandemic and follows mainly \citet{PastorSatorras} and \citep{Firth2020}.
+	This work studies and compares a series of idealized contagion scenarios, simulated over different unweighted undirected static random networks resembling human-to-human interactions. It is inspired by the current worldwide effort in containing the COVID-19 pandemic and follows mainly \citet{PastorSatorras} and \citep{Firth2020}.
 	
  	In the first section I will present the fundamental differential equations and the deterministic numerical solutions of the SIR and SEIR models. I will then compare the deterministic predictions with the results of discrete-time simulations over various random networks. The networks share the same size and average connectivity, but differ in clustering and degree distribution, allowing a progression from simple models to more realistic and complex ones, to show different aspects of the contagion dynamics. The simulations are carried out in Python 3, exploiting the \textit{NetworkX} and \textit{NDlib} libraries, which are integrated in a specific framework crafted for the occasion. % \citep{pyndemic}. 
  	Finally, I will implement and discuss some mitigation strategies.
@@ -320,7 +320,7 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
   
   \section{Complex networks}
   \label{sec:network}
-  Homogeneous mixing hypothesis is certainly inadequate for real systems modelling. Human social networks show in fact structural heterogeneity spanning various scales. Implementing the SEIR model as a diffusion process over a complex network should give more insight in the dynamics characterizing the epidemic spreading in a real environment. Here I will adopt the simplest network representation of the social contacts, i.e. with the nodes representing the individuals and the edges (links) the interactions between them. All edges are here considered equally effective in transmitting the contagion (un-weighted network). The epidemic model will be discrete both regarding time (at the $1 d$ scale) and number of cases (at the single individual scale). Edges will be bi-directional (un-directed network) because there is no hierarchical or ordering process in influenza-like diseases spreading, apart from a node being already infected or not (but this is the model responsibility, not the network). Edges and nodes are static in time, meaning that all contacts are supposed to be active for all the time at the daily scale and that neither births nor deaths are considered, as it was for the deterministic continuous models. 
+  Homogeneous mixing hypothesis is certainly inadequate for real systems modelling. Human social networks show in fact structural heterogeneity spanning various scales. Implementing the SEIR model as a diffusion process over a complex network should give more insight in the dynamics characterizing the epidemic spreading in a real environment. Here I will adopt the simplest network representation of the social contacts, i.e. with the nodes representing the individuals and the edges (links) the interactions between them. All edges are here considered equally effective in transmitting the contagion (unweighted network). The epidemic model will be discrete both regarding time (at the $1 d$ scale) and number of cases (at the single individual scale). Edges will be bi-directional (undirected network) because there is no hierarchical or ordering process in influenza-like diseases spreading, apart from a node being already infected or not (but this is the model responsibility, not the network). Edges and nodes are static in time, meaning that all contacts are supposed to be active for all the time at the daily scale and that neither births nor deaths are considered, as it was for the deterministic continuous models. 
   
   In this configuration, the transition rate $\beta$ is the product between the average probability of the contagion happening during a single interaction $\beta_k$ and the average number of interactions per node, which is the mean connectivity degree $\langle k \rangle$ of the network. 
   To maintain the same configuration of the numerical models and allow comparisons, the probability $\beta_k$ for all the network models is fixed at $6.1 \%$, so that on average the infection rate $\beta$ an the other initial parameters are the same of Tab. \ref{tab:params}:
@@ -469,12 +469,12 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
 		\centering
 		\caption{Networks properties. $\langle k \rangle$ and $\langle C \rangle$ are the average node connectivity degree and the average clustering coefficient respectively. }
 		\label{tab:lock_networks}
-		\begin{tabular}{lcccc}
+		\begin{tabular}{lccccc}
 			\toprule
-			Network &  Edges &  Nodes & $\langle k \rangle$ & $\langle C \rangle$ \\
+			Network &  Edges &  Nodes & $\langle k \rangle$ & $\langle C \rangle$ & $\langle l \rangle$\\
 			\midrule
-			Holme-Kim 		&  59963 &  10000 & 11.99 &  0.38 \\
-			BC Truncated 	&  33718 &   9368 &  7.20 &  0.28 \\
+			Holme-Kim 		&  59963 &  10000 & 11.99 &  0.38 &  3.98 \\
+			BC Truncated 	&  33717 &   9363 &  7.20 &  0.28 &  7.36 \\
 			
 			\bottomrule
 		\end{tabular}

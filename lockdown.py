@@ -20,7 +20,7 @@ import ndlib.models.epidemics as ep
 import ndlib.models.ModelConfig as mc
 # from ndlib.viz.mpl.DiffusionTrend import DiffusionTrend
 
-# import networkx as nx
+import networkx as nx
 import pyndemic as pn
 
 # import salience_unw as sl
@@ -50,13 +50,13 @@ def attack_list(graph, ranklist, thr):
     while graph.k_avg > thr:
         # remove node with highest rank until reaching an avg degree threshold
         graph.remove_node(nodes.pop())
-
+        
         # update average connectivity degree
         k = graph.degree()
         graph.degree_list = [d for n, d in k]
         graph.k_avg = np.mean(graph.degree_list)
-
-    return graph
+        
+    return graph.subgraph(max(nx.connected_components(graph), key=len)).copy()
 
 
 with open('pickle/network_realw.pkl', 'rb') as f:
@@ -67,7 +67,7 @@ with open('pickle/simulations_realw.pkl', 'rb') as f:
 
 
 Holme_lbc = pn.randnet("HK lockdown scenario",
-                       "lockHighBC",
+                       "lockHiBC_connected",
                        attack_list(Holme.G, Holme.G.BC_list, 12*redfa),
                        attack_list(Holme.Gmini, Holme.G.BC_list, 12*redfa))
 
@@ -386,13 +386,13 @@ lock.save()
 
 # %% fix
 
-with open('pickle/simulations_lockHighBC.pkl', 'rb') as f:
-    lock = pickle.load(f)
+# with open('pickle/simulations_lockHighBC.pkl', 'rb') as f:
+#     lock = pickle.load(f)
 
-lock.name = "HK lockdown scenario"
+# lock.name = "HK lockdown scenario"
 
-lock.Gmini = pn.graph_plots(lock.Gmini, lock.name, [0])
-lock.fig00 = lock.Gmini.fig0
+# lock.Gmini = pn.graph_plots(lock.Gmini, lock.name, [0])
+# lock.fig00 = lock.Gmini.fig0
 
-lock.G = pn.graph_plots(lock.G, lock.name, [1])
-lock.fig01 = lock.G.fig1
+# lock.G = pn.graph_plots(lock.G, lock.name, [1])
+# lock.fig01 = lock.G.fig1
