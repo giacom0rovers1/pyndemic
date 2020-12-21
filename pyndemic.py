@@ -81,7 +81,8 @@ def graph_tools(G):
 
     G.nn = len(list(G.nodes))
     G.nl = len(list(G.edges))
-
+    
+    print("    Calculating connectivity...")
     k = G.degree()
     G.degree_list = [d for n, d in k]
     G.k_avg = np.mean(G.degree_list)
@@ -90,11 +91,12 @@ def graph_tools(G):
     G.k_max = np.max(G.degree_list)  # G.degree_sequence[0]
     G.k_min = np.min(G.degree_list)  # G.degree_sequence[-1]
     G.k_histD = np.array(nx.degree_histogram(G))/G.nn
-    print("Connectivity degree histogram completed.")
+    print("   Connectivity degree histogram completed.")
 
+    print("    Calculating betweenness centrality...")
     BC = nx.betweenness_centrality(G)  # , normalized = False)
     G.BC_list = [bc for bc in BC.values()]
-    print("Betweenness centrality list completed.")
+    print("    Betweenness centrality list completed.")
 
     # Cl = nx.closeness_centrality(G)
     # Cl_list = [cl for cl in Cl.values()]
@@ -107,12 +109,16 @@ def graph_tools(G):
     # # plt.spy(A)
     # G.eig_val, G.eig_vec = sp.sparse.linalg.eigs(G.A)
 
+    print("    Calculating clustering...")
     C = nx.clustering(G)
     G.C_list = [c for c in C.values()]
     G.C_avg = nx.average_clustering(G)
-    print("Clustering list completed.")
+    print("    Clustering list completed.")
 
-    # G.L = nx.average_shortest_path_length(G)
+    print("    Calculating shortest path lengths...")
+    G.L_avg = nx.average_shortest_path_length(G)
+    print("    Average shortest path lengt estimated.")
+    
     toc = time.perf_counter()
     print(f'--> graph_tools() completed in {toc - tic:0.0f} seconds.\n')
 

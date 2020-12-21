@@ -182,7 +182,7 @@ if not os.path.isfile(models.filename):
 
 # %%%
 # Networks data
-networks = pd.DataFrame(columns=["Net", "E", "N", "<k>", "<C>"])
+networks = pd.DataFrame(columns=["Net", "E", "N", "<k>", "<C>", "<l>"])
 
 for net in [rando, latti, watts, barab, holme, lock]:
     newline = {"Net": net.name,
@@ -190,7 +190,8 @@ for net in [rando, latti, watts, barab, holme, lock]:
                "E": net.G.number_of_edges(),
                "N": net.G.number_of_nodes(),
                "<k>": net.G.k_avg,
-               "<C>": net.G.C_avg}
+               "<C>": net.G.C_avg,
+               "<l>": net.G.L_avg}
     networks = networks.append(newline, ignore_index=True)
 
 print(networks.round(2))
@@ -204,7 +205,7 @@ if not os.path.isfile(networks.filename):
                       label="tab:networks",
                       escape=False,
                       header=["Network", "Edges", "Nodes",
-                              "$<k>$", "$<C>$"],
+                              "$<k>$", "$<C>$", "$<l>$"],
                       float_format="%.2f")
 
 
