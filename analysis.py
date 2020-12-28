@@ -16,7 +16,7 @@ import networkx as nx
 N = 1e4
 n = N/100
 perc_inf = 0.1
-days = 100
+days = 120
 beta = 0.73         # infection probability
 tau_i = 3          # incubation time
 tau_r = 3          # recovery time
@@ -40,7 +40,7 @@ with open('pickle/SIR.pkl', 'rb') as f:
         mu, R0, KK0, tts0, ppars0, \
         ffig02, ffig03, ffig04 = pickle.load(f)
 
-with open('pickle/simulations_lockHighBC.pkl', 'rb') as f:
+with open('pickle/simulations_lockHiBC_connected.pkl', 'rb') as f:
     lock = pickle.load(f)
 
 
@@ -54,10 +54,11 @@ TTd0 = np.log(2)/KK0
 TdFit = np.log(2)/KFit
 TTdFit = np.log(2)/KKFit
 
-
+network_models = [rando, watts, barab, holme, latti, lock]
 # %%%
 
 # Model parameters
+print("\nModel parameters:")
 parameters = pd.DataFrame(columns=(["N", "perc_inf", "beta",
                                     "gamma", "mu", 'R0', "1/R0"]))
 parameters = parameters.append({"N": N,
@@ -88,6 +89,7 @@ if not os.path.isfile(parameters.filename):
 
 # %%%
 # Derived properties
+print("\nModel properties:")
 properties = pd.DataFrame(columns=("Model", "K0", "Td0", "tau_s"))
 properties = properties.append({"Model": "SIR",
                                 "K0": KK0,
@@ -118,15 +120,15 @@ if not os.path.isfile(properties.filename):
 
 # %%%
 # simulation results 1
-
+print("\nSimulation results without networks:")
 models = pd.DataFrame(columns=["Model", "KFit", "TdFit", "Final p",
                                "Final r", "t_final",
                                "peak", "t_peak", "s_peak"])
 
 ppeak = np.nanmax(ii)
 tt_peak = np.min(np.where(ii == ppeak))
-if ii[-1] == 0:
-    tt_final = np.nanmin(np.where(ii == 0))
+if ii[-1] < 1/N:
+    tt_final = np.nanmin(np.where(ii < 1/N))
 else:
     tt_final = ddays
 ffinal_r = rr[tt_final]
@@ -146,8 +148,8 @@ models = models.append({"Model": "Det. SIR",
 
 peak = np.nanmax(p)
 t_peak = np.min(np.where(p == peak))
-if pos[-1] == 0:
-    t_final = np.nanmin(np.where(pos == 0))
+if pos[-1] < 1:
+    t_final = np.nanmin(np.where(pos < 1))
 else:
     t_final = days
 final_r = r[t_final]
@@ -182,9 +184,10 @@ if not os.path.isfile(models.filename):
 
 # %%%
 # Networks data
+print("\nNetworks data:")
 networks = pd.DataFrame(columns=["Net", "E", "N", "<k>", "<C>", "<l>"])
 
-for net in [rando, latti, watts, barab, holme, lock]:
+for net in network_models:
     newline = {"Net": net.name,
                # "Size": net.G.size(),
                "E": net.G.number_of_edges(),
@@ -211,13 +214,13 @@ if not os.path.isfile(networks.filename):
 
 # %%%
 # simulation results 2
-
+print("\nResults on networks:")
 results = pd.DataFrame(columns=["Network model", "KFit", "TdFit", "Final p",
                                 "Final r", "t_final",
                                 "Peak", "t_Peak", "s_Peak"])
 
 
-for net in [rando, latti, watts, barab, holme, lock]:
+for net in network_models:
     net.Peak = np.nanmax(net.pos)
     net.t_Peak = np.min(np.where(net.pos == net.Peak))
     if net.pos[-1] == 0:
@@ -254,7 +257,8 @@ if not os.path.isfile(results.filename):
                              "$s_{peak}$"],
                      float_format="%.2f")
 
-# %%
+
+# %%   EXTRACTS QUANTITIES
 
 # Boxplots for K, r_final
 peaks = pd.DataFrame()
@@ -263,22 +267,38 @@ rates = pd.DataFrame()
 final = pd.DataFrame()
 clust = np.array([])
 
-for net in [rando, latti, watts, barab, holme]:
-    real_runs = int(len(net.pm)/(net.days+1))
-    if real_runs != net.runs:
-        print("Warning: different number of runs than expected.")
-    matr_p = np.array(net.pm).reshape(real_runs, (net.days+1))
-
+for net in network_models:
+    real_runs = int(len(net.pm)/len(net.s))
+    # if real_runs != net.runs:
+    #     print(net.name + " - Warning: different number of runs than expected.")
+    #     print("Real runs: " + str(real_runs))
+    #     print("expected:  " + str(net.runs))
+        
+    # matr_p = np.array(net.pm).reshape(net.runs, (net.days+1))
+    try:
+        matr_p = np.array(net.pm).reshape(net.runs, len(net.s))
+    except ValueError:
+        print(net.name + str(net.runs) + str(len.net.s))
+        continue
+    
     net.peak = np.max(matr_p, axis=1)
     peaks[net.name] = np.append(net.peak,
                                 np.ones(np.abs(real_runs-net.runs))*np.nan)
 
     net.t_peaks = [np.nanmin(np.where(matr_p[t, :] == net.peak[t])).item()
                    for t in range(real_runs)]
+    net.t_finals = [np.nanmin(np.where(matr_p[t, :] < 8)).item()
+                   for t in range(real_runs)]
+
     times[net.name] = np.append(net.t_peaks,
                                 np.ones(np.abs(real_runs-net.runs))*np.nan)
 
-    matr_r = np.array(net.rm).reshape(real_runs, (net.days+1))
+    # matr_r = np.array(net.rm).reshape(real_runs, (net.days+1))
+    try:
+        matr_r = np.array(net.rm).reshape(net.runs, len(net.s))
+    except ValueError:
+        print(net.name + str(net.runs) + str(len.net.s))
+        continue
     net.finals = matr_r[:, -1]
     final[net.name] = np.append(net.finals,
                                 np.ones(np.abs(real_runs-net.runs))*np.nan)
@@ -292,16 +312,16 @@ for net in [rando, latti, watts, barab, holme]:
 # peaks.plot.box(ylabel=r'Maximun number of positives $(individuals)$')
 # times.plot.box(ylabel=r'Peak day $(d)$')
 # rates.plot.box(ylabel=r'Initial growth rate $(d^{-1})$')
-final.plot.box(ylabel=r'Total affected population $(fraction)$',
-               positions=clust)
-plt.violinplot(final,  positions=clust)
+# final.plot.box(ylabel=r'Total affected population $(fraction)$',
+#                positions=clust)
+# plt.violinplot(final,  positions=clust)
 
 # %%
 # assortativity (NOT RELEVANT)
 sbpx = [221, 222, 223, 224]
 nets = [rando, watts, barab, holme]
 # nets = latti
-fig05 = plt.figure(dpi=300)
+fig05 = plt.figure(figsize=(6.4, 4.8), dpi=300)
 for i in range(4):
     net = nets[i]
     sbp = sbpx[i]
@@ -310,8 +330,8 @@ for i in range(4):
     net.G.knn = [knn[i] for i in np.unique(net.G.degree_sequence)]
 
     x = np.unique(net.G.degree_sequence)
-    y = net.G.knn
-    R = nx.degree_pearson_correlation_coefficient(net.G)
+    y = np.array(net.G.knn)
+    R = nx.degree_assortativity_coefficient(net.G)
 
     plt.scatter(x, y, alpha=0.5)
     plt.xlabel('k')
@@ -321,18 +341,19 @@ for i in range(4):
              'r = ' + str(np.round(R, 2)),
              color='red', alpha=0.7)
 
+    # coef = np.polyfit(x[x<100], y[x<100], 1)
     coef = np.polyfit(x, y, 1)
     poly1d_fn = np.poly1d(coef)
     plt.plot(x, poly1d_fn(x), 'r--', alpha=0.5)
     plt.title(net.name)
     plt.tight_layout()
-
+fig05.savefig('immagini/analysis_Assort.png')
 
 # %%
 # Peak vs peak Day
 
-fig06 = plt.figure(dpi=300)
-for net in [rando, watts, barab, holme, latti]:
+fig06 = plt.figure(figsize=(6.4, 4.8), dpi=300)
+for net in network_models:
     plt.scatter(net.t_peaks, net.peak, alpha=0.5, label=net.name)
 plt.legend()
 plt.ylabel("Positives peak")
@@ -341,23 +362,69 @@ plt.tight_layout()
 fig06.savefig('immagini/analysis_Peak.png')
 
 # %%
-# Clustering vs Outbreak size
+# # Clustering vs Outbreak size
 x = np.array([])
 y = np.array([])
-fig07 = plt.figure(dpi=300)
-for net in [rando, watts, barab, holme, latti]:
-    xi = np.ones(len(net.finals))*net.G.C_avg
+fig07 = plt.figure(figsize=(6.4, 4.8), dpi=300)
+for net in [rando, watts]: #, latti]:
+    xi = np.ones(len(net.t_finals))*net.G.C_avg
+    # yi = np.array(net.t_finals)
     yi = np.array(net.finals)
+    # yi = np.array(net.peak)
     x = np.append(x, xi)
     y = np.append(y, yi)  # final_r))
     plt.scatter(xi, yi, alpha=0.5, label=net.name)
 coef = np.polyfit(x, y, 1)
 poly1d_fn = np.poly1d(coef)
-plt.plot(sorted(x), poly1d_fn(sorted(x)), 'r--', alpha=0.5)
+plt.plot(sorted(x), poly1d_fn(sorted(x)), '--', color="grey", alpha=0.5)
+
+x = np.array([])
+y = np.array([])
+for net in [barab, holme]:  #, lock]:
+    xi = np.ones(len(net.t_finals))*net.G.C_avg
+    # yi = np.array(net.t_finals)
+    yi = np.array(net.finals)
+    # # yi = np.array(net.peak)
+    x = np.append(x, xi)
+    y = np.append(y, yi)  # final_r))
+    plt.scatter(xi, yi, alpha=0.5, label=net.name)
+coef = np.polyfit(x, y, 1)
+poly1d_fn = np.poly1d(coef)
+plt.plot(sorted(x), poly1d_fn(sorted(x)), '--', 
+         color="purple", alpha=0.5)
+
 plt.legend()
 plt.ylabel("Outbreak size")
 plt.xlabel("Average clustering")
 plt.tight_layout()
+
 fig07.savefig('immagini/analysis_Size.png')
 
 # fine
+
+
+
+# %% DBMF
+print("\n\nDBMF results:")
+
+for net in network_models:
+    print("\n[ " + net.name + " ]") 
+    
+    net.beta_n = net.beta/net.G.k_avg
+    net.G.Ka  = net.beta_n * net.G.Lma * s[0]
+    net.G.Kar = net.beta_n * net.G.Lma * s[0] - net.mu
+    
+    print("Ksi:  " + str(np.round([net.G.Ka.item(), net.beta_n * net.G.Lm * net.s[0]], 2)))
+    print("Ksir: " + str(np.round([net.G.Kar.item(), net.beta_n * net.G.Lm * net.s[0] - net.mu], 2))) 
+    
+    A1a = np.array([[-net.gamma, net.beta_n * net.G.Lma.item() * net.s[0]], [net.gamma, -net.mu]])
+    eigval1a, eigvec1a = np.linalg.eig(A1a)
+    net.K1a = eigval1a[0]
+    
+    A1 = np.array([[-net.gamma, net.beta_n * net.G.Lm * net.s[0]], [net.gamma, -net.mu]])
+    eigval1, eigvec1 = np.linalg.eig(A1)
+    net.K1 = eigval1[0]
+    
+    # Growt rates from Lma (uncorrelated approx with k moments), Lm (actual bigger eigenvalue of the corrected connectivity matrix) and from the actual Fit:
+    print("Kseir: " + str(np.round([net.K1a, net.K1, net.KFit], 2)))
+   

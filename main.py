@@ -18,7 +18,7 @@ Tic = time.perf_counter()
 N = 1e4
 n = N/100
 perc_inf = 0.1
-days = 100
+days = 150  # 100 too short for Rando
 daysl = days*2
 daysll = days*3
 beta = 0.73         # infection probability
@@ -114,6 +114,7 @@ else:
     print("Random [1/5]")
     Rando = pn.randnet('Erdos-Renyi',
                        'random',
+                       # nx.erdos_renyi_graph(10000, 12/10000, seed=1234)
                        nx.connected_watts_strogatz_graph(int(N), 12,
                                                          1, seed=1234),
                        nx.connected_watts_strogatz_graph(int(n), 12,
@@ -173,7 +174,7 @@ print("\nSEIR over random network:")
 # with open('pickle/network_random.pkl', 'rb') as f:
 #     Rando = pickle.load(f)
 # rando = pn.pRandNeTmic(Rando, perc_inf, beta, tau_i, tau_r, days)
-# rando.run(100)
+rando.run(100)
 rando.plot()
 rando.save()
 
@@ -186,7 +187,7 @@ print("\nSEIR over lattice network:")
 # with open('pickle/network_lattice.pkl', 'rb') as f:
 #     Latti = pickle.load(f)
 # latti = pn.pRandNeTmic(Latti, perc_inf, beta, tau_i, tau_r, days)
-# latti.run(100)
+latti.run(100)
 latti.plot()
 latti.save()
 
@@ -199,7 +200,7 @@ print("\nSEIR over small-world network:")
 # with open('pickle/network_smallw.pkl', 'rb') as f:
 #     Watts = pickle.load(f)
 # watts = pn.pRandNeTmic(Watts, perc_inf, beta, tau_i, tau_r, days)
-# watts.run(100)
+watts.run(100)
 watts.plot()
 watts.save()
 
@@ -211,7 +212,7 @@ print("\nSEIR over scale-free network:")
 # with open('pickle/network_scalefree.pkl', 'rb') as f:
 #     Barab = pickle.load(f)
 # barab = pn.pRandNeTmic(Barab, perc_inf, beta, tau_i, tau_r, days)
-# barab.run(100)
+barab.run(100)
 barab.plot()
 barab.save()
 
@@ -224,7 +225,7 @@ print("\nSEIR over clustered scale-free network:")
 # with open('pickle/network_realw.pkl', 'rb') as f:
 #     Holme = pickle.load(f)
 # holme = pn.pRandNeTmic(Holme, perc_inf, beta, tau_i, tau_r, days)
-# holme.run(100)
+holme.run(100)
 holme.plot()
 holme.save()
 

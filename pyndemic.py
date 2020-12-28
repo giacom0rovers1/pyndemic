@@ -85,12 +85,38 @@ def graph_tools(G):
     print("    [1/4] Calculating connectivity...")
     k = G.degree()
     G.degree_list = [d for n, d in k]
+    
     G.k_avg = np.mean(G.degree_list)
     G.k_std = np.std(G.degree_list)
+    G.k_var = np.var(G.degree_list)
+    
     G.degree_sequence = sorted(G.degree_list, reverse=True)
     G.k_max = np.max(G.degree_list)  # G.degree_sequence[0]
     G.k_min = np.min(G.degree_list)  # G.degree_sequence[-1]
     G.k_histD = np.array(nx.degree_histogram(G))/G.nn
+    
+    # Prima correzione per non avere matrice singolare
+    G.kx = np.array(range(len(G.k_histD)), ndmin=2) + 1e-10
+    G.kfm = np.dot(G.kx, G.k_histD)
+    G.ksm = np.dot(G.kx**2, G.k_histD)
+    G.Lma = G.ksm/G.kfm - 1
+    
+    # G.Ka  = beta_n * G.Lma
+    # G.Kar = ((beta_n * G.ksm) - (beta_n + mu)*G.kfm)/G.kfm
+    
+    G.ktilde = np.transpose((G.kx - 1)/G.kx)
+    
+    # Seconda correzione per non avere matrice singolare
+    G.Mix = nx.degree_mixing_matrix(G)[G.k_min:, G.k_min:] + 1e-10
+    
+    G.P = 1/sum(G.Mix) * G.Mix
+    G.Ckk = G.kx[:, G.k_min:] * G.P * G.ktilde[G.k_min:, :]
+    G.w, G.v = np.linalg.eig(G.Ckk)
+    G.Lm = np.real(np.nanmax(G.w))
+    print("Lm:   " + str(np.round([G.Lma.item(), G.Lm], 2)))
+    # print("Ksi:  " + str(np.round([G.Ka.item(), beta_n * G.Lm], 2)))
+    # print("Ksir: " + str(np.round([G.Kar.item(), net.KFit], 2)))
+    
     print("    Connectivity degree histogram completed.")
 
     print("    [2/4] Calculating betweenness centrality...")
@@ -774,6 +800,12 @@ class pRandNeTmic(randnet):
         self.ts0 = np.log(self.R0)/self.K0
         self.pars0 = [self.K0, p[0]*self.N]
         self.D = int(self.ts0)
+        
+        # DBMF
+        self.beta_n = self.beta/self.G.k_avg
+        self.G.Ka  = self.beta_n * self.G.Lma * s[0]
+        self.G.Kar = self.beta_n * self.G.Lma * s[0] - self.mu
+        
 
     def run(self, runs):
         self.runs = runs
@@ -831,11 +863,11 @@ class pRandNeTmic(randnet):
                                           tau_r=self.tau_r, N=self.N)
                     run += 1
 
-                except:
+                except ValueError:
                     now = dt.datetime.now()
-                    print("\nAN UNKNOWN ERROR OCCURRED in contagion_metrics()")
+                    print("\nA VALUE ERROR OCCURRED in contagion_metrics()")
                     print(now)
-                    logname = 'pickle/error_' + \
+                    logname = 'pickle/valerror_' + \
                         now.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl'
                     with open(logname, 'wb') as f:
                         pickle.dump([member, run, now], f)
@@ -902,6 +934,13 @@ class pRandNeTmic(randnet):
                                    for i in self.t])
             self.Rti95 = np.array([self.Rtim[i].quantile(0.95)
                                    for i in self.t])
+            
+            #print("Ksi:  " + str(np.round([self.G.Ka.item(),    # manca il termine s0
+                                           #self.beta_n * self.G.Lm], 2)))
+            #print("Ksir: " + str(np.round([self.G.Kar.item(), self.KFit], 2)))  # cambiare KFit con (self.beta_n * self.G.Lm - self.mu)
+            
+            #print("Ksir: " + str(np.round([self.K1, self.KFit], 2)))
+             
 
     def plot(self):
         if self.runs == 1:

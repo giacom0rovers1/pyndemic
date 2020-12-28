@@ -6,13 +6,13 @@ Created on Mon Dec  7 22:35:53 2020
 @author: giacomo
 """
 import scipy as sp
-# import datetime as dt
-# import os
+import datetime as dt
+import os
 import copy
 import pickle
 import numpy as np
 import pandas as pd
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 import random
 
@@ -34,7 +34,7 @@ d0 = 14
 N = 1e4
 n = N/100
 perc_inf = 0.1
-days = 100
+days = 150
 beta = 0.73 * redfa   # corrected infection rate
 tau_i = 3             # incubation time
 tau_r = 3             # recovery time
@@ -65,11 +65,20 @@ with open('pickle/network_realw.pkl', 'rb') as f:
 with open('pickle/simulations_realw.pkl', 'rb') as f:
     holme = pickle.load(f)
 
+if os.path.isfile('pickle/network_lockHiBC_connected.pkl'):
+    print("Loading existing networks...")
 
-Holme_lbc = pn.randnet("HK lockdown scenario",
-                       "lockHiBC_connected",
-                       attack_list(Holme.G, Holme.G.BC_list, 12*redfa),
-                       attack_list(Holme.Gmini, Holme.G.BC_list, 12*redfa))
+    # Getting back the objects:
+    with open('pickle/network_lockHiBC_connected.pkl', 'rb') as f:
+       Holme_lbc = pickle.load(f)
+
+else:
+    print("No networks found, generating...")
+    print("Holme - lock HiBC [1/5]")
+    Holme_lbc = pn.randnet("HK lockdown scenario",
+                           "lockHiBC_connected",
+                           attack_list(Holme.G, Holme.G.BC_list, 12*redfa),
+                           attack_list(Holme.Gmini, Holme.G.BC_list, 12*redfa))
 
 G = Holme_lbc.G
 # %%
@@ -217,21 +226,20 @@ lock.Rtim = pd.Series(data=None, dtype='float64')
 # run n simulations
 run = 0
 member = lock.copy()
+# Config:
+model = ep.SEIRModel(G)
+
+# print(model.parameters)
+# print(model.available_statuses)
+
+config = mc.Configuration()
+config.add_model_parameter('alpha', gamma)
+config.add_model_parameter('beta',  beta_n)
+config.add_model_parameter('gamma', mu)
+config.add_model_parameter("percentage_infected", 0.00011)
 
 while run < lock.runs:
     print("\n" + str(run+1) + " of " + str(lock.runs))
-
-    # Config:
-    model = ep.SEIRModel(G)
-
-    # print(model.parameters)
-    # print(model.available_statuses)
-
-    config = mc.Configuration()
-    config.add_model_parameter('alpha', gamma)
-    config.add_model_parameter('beta',  beta_n)
-    config.add_model_parameter('gamma', mu)
-    config.add_model_parameter("percentage_infected", 0.00011)
 
     model.set_initial_status(config)
 
@@ -270,18 +278,18 @@ while run < lock.runs:
 
     # Recover status variables:
     s = np.array([S for S, E, I, R in
-                  [list(it['node_count'].values()) for it in iterations]])/N
+                [list(it['node_count'].values()) for it in iterations]])/N
     e = np.array([E for S, E, I, R in
-                  [list(it['node_count'].values()) for it in iterations]])/N
+                [list(it['node_count'].values()) for it in iterations]])/N
     i = np.array([I for S, E, I, R in
-                  [list(it['node_count'].values()) for it in iterations]])/N
+                [list(it['node_count'].values()) for it in iterations]])/N
     r = np.array([R for S, E, I, R in
-                  [list(it['node_count'].values()) for it in iterations]])/N
+                [list(it['node_count'].values()) for it in iterations]])/N
 
-    s = np.append(np.array(list(holme.sm[(101*run):(101*run)+d0])), s)
-    e = np.append(np.array(list(holme.em[(101*run):(101*run)+d0])), e)
-    i = np.append(np.array(list(holme.im[(101*run):(101*run)+d0])), i)
-    r = np.append(np.array(list(holme.rm[(101*run):(101*run)+d0])), r)
+    s = np.append(np.array(list(holme.sm[((holme.days+1)*run):((holme.days+1)*run)+d0])), s)
+    e = np.append(np.array(list(holme.em[((holme.days+1)*run):((holme.days+1)*run)+d0])), e)
+    i = np.append(np.array(list(holme.im[((holme.days+1)*run):((holme.days+1)*run)+d0])), i)
+    r = np.append(np.array(list(holme.rm[((holme.days+1)*run):((holme.days+1)*run)+d0])), r)
 
     # resampling through t (variable spacing decided by the ODE solver)
     member.s = np.interp(t, np.arange(0, len(s)), s)
@@ -290,31 +298,32 @@ while run < lock.runs:
     member.r = np.interp(t, np.arange(0, len(r)), r)
     member.t = lock.t
     member.pos = np.array((member.e + member.i) * lock.N)
+    
+    try:
+        member.x, member.xi, member.yi, \
+            member.KFit, member.Ki, member.tsFit, member.parsFit, \
+            member.Rt, member.Rti, \
+            member.TdFit, member.Tdi = \
+            pn.contagion_metrics(s=member.s, e=member.e, i=member.i,
+                                r=member.r, t=lock.t,
+                                K0=lock.K0, ts0=lock.ts0,
+                                pars0=lock.pars0,
+                                D=lock.D, R0=lock.R0,
+                                tau_i=lock.tau_i,
+                                tau_r=lock.tau_r, N=lock.N)
+        run += 1
 
-    # try:
-    member.x, member.xi, member.yi, \
-        member.KFit, member.Ki, member.tsFit, member.parsFit, \
-        member.Rt, member.Rti, \
-        member.TdFit, member.Tdi = \
-        pn.contagion_metrics(s=member.s, e=member.e, i=member.i,
-                             r=member.r, t=lock.t,
-                             K0=lock.K0, ts0=lock.ts0,
-                             pars0=lock.pars0,
-                             D=lock.D, R0=lock.R0,
-                             tau_i=lock.tau_i,
-                             tau_r=lock.tau_r, N=lock.N)
-    run += 1
-
-    # except ValueError:
-    #     now = dt.datetime.now()
-    #     print("\nVALUE ERROR OCCURRED in contagion_metrics()")
-    #     print(now)
-    #     logname = 'pickle/error_' + \
-    #         now.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl'
-    #     with open(logname, 'wb') as f:
-    #         pickle.dump([member, run, now], f)
-    #     print("Error log saved. Repeating run " + str(run))
-    #     continue
+    except ValueError:
+        now = dt.datetime.now()
+        print("\nVALUE ERROR OCCURRED in contagion_metrics()")
+        print(now)
+        logname = 'pickle/lock_valerror_' + \
+            now.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl'
+        with open(logname, 'wb') as f:
+            pickle.dump([member, run, now], f)
+        print("Error log saved. Repeating run " + str(run+1))
+        run += 1 # altrimenti se il problema e` contenuto nell'ensemble di partenza, l'errore si ripete all'infinito. (run 63)
+        continue
 
     lock.sm = lock.sm.append(pd.Series(member.s))
     lock.em = lock.em.append(pd.Series(member.e))
