@@ -428,3 +428,4 @@ for net in network_models:
     # Growt rates from Lma (uncorrelated approx with k moments), Lm (actual bigger eigenvalue of the corrected connectivity matrix) and from the actual Fit:
     print("Kseir: " + str(np.round([net.K1a, net.K1, net.KFit], 2)))
    
+    print("Critical value: " + str(np.round([12/net.G.Lma.item(), 12/net.G.Lm], 2)))
