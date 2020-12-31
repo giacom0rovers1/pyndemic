@@ -17,10 +17,12 @@ N = 1e4
 n = N/100
 perc_inf = 0.1
 days = 120
-beta = 0.73         # infection probability
-tau_i = 3          # incubation time
-tau_r = 3          # recovery time
-R0 = beta * tau_r   # basic reproduction number
+beta = 0.061          # infection probability
+avgk = 12              # average contacts
+lmbda = beta * avgk    # infection rate
+tau_i = 3             # incubation time
+tau_r = 3             # recovery time
+R0 = lmbda * tau_r     # basic reproduction number
 
 
 # Getting back the objects:
@@ -59,11 +61,11 @@ network_models = [rando, watts, barab, holme, latti, lock]
 
 # Model parameters
 print("\nModel parameters:")
-parameters = pd.DataFrame(columns=(["N", "perc_inf", "beta",
+parameters = pd.DataFrame(columns=(["N", "perc_inf", "lambda",
                                     "gamma", "mu", 'R0', "1/R0"]))
 parameters = parameters.append({"N": N,
                                 "perc_inf": perc_inf,
-                                "beta": beta,
+                                "lambda": lmbda,
                                 "gamma": gamma,
                                 "mu": mu,
                                 "R0": R0,
@@ -81,7 +83,7 @@ if not os.path.isfile(parameters.filename):
                         escape=False,
                         header=["Total population",
                                 "$i_{start}$ $(\%)$",
-                                "$\beta $ $(d^{-1})$",
+                                "$\lambda $ $(d^{-1})$",
                                 "$\gamma $ $(d^{-1})$",
                                 "$\mu$ $(d^{-1})$",
                                 "$R_0$", "$\sfrac{1}{R0}$"],
@@ -287,7 +289,7 @@ for net in network_models:
 
     net.t_peaks = [np.nanmin(np.where(matr_p[t, :] == net.peak[t])).item()
                    for t in range(real_runs)]
-    net.t_finals = [np.nanmin(np.where(matr_p[t, :] < 8)).item()
+    net.t_finals = [np.nanmin(np.where(matr_p[t, :] < 9)).item()
                    for t in range(real_runs)]
 
     times[net.name] = np.append(net.t_peaks,
@@ -410,22 +412,29 @@ print("\n\nDBMF results:")
 for net in network_models:
     print("\n[ " + net.name + " ]") 
     
-    net.beta_n = net.beta/net.G.k_avg
-    net.G.Ka  = net.beta_n * net.G.Lma * s[0]
-    net.G.Kar = net.beta_n * net.G.Lma * s[0] - net.mu
+    # net.beta_n = net.beta/net.G.k_avg
+    # net.Ka  = net.beta_n * net.G.Lma * s[0]
+    # net.Kar = net.beta_n * net.G.Lma * s[0] - net.mu
     
-    print("Ksi:  " + str(np.round([net.G.Ka.item(), net.beta_n * net.G.Lm * net.s[0]], 2)))
-    print("Ksir: " + str(np.round([net.G.Kar.item(), net.beta_n * net.G.Lm * net.s[0] - net.mu], 2))) 
+    print("Ksi:  " + str(np.round([net.Ka_si, net.K1_si ], 2)))
+    print("Ksir: " + str(np.round([net.Ka_sir, net.K1_sir], 2))) 
     
-    A1a = np.array([[-net.gamma, net.beta_n * net.G.Lma.item() * net.s[0]], [net.gamma, -net.mu]])
-    eigval1a, eigvec1a = np.linalg.eig(A1a)
-    net.K1a = eigval1a[0]
+    # A1a = np.array([[-net.gamma, net.beta_n * net.G.Lma.item() * net.s[0]], [net.gamma, -net.mu]])
+    # eigval1a, eigvec1a = np.linalg.eig(A1a)
+    # net.K1a = eigval1a[0]
     
-    A1 = np.array([[-net.gamma, net.beta_n * net.G.Lm * net.s[0]], [net.gamma, -net.mu]])
-    eigval1, eigvec1 = np.linalg.eig(A1)
-    net.K1 = eigval1[0]
+    # A1 = np.array([[-net.gamma, net.beta_n * net.G.Lm * net.s[0]], [net.gamma, -net.mu]])
+    # eigval1, eigvec1 = np.linalg.eig(A1)
+    # net.K1 = eigval1[0]
     
     # Growt rates from Lma (uncorrelated approx with k moments), Lm (actual bigger eigenvalue of the corrected connectivity matrix) and from the actual Fit:
     print("Kseir: " + str(np.round([net.K1a, net.K1, net.KFit], 2)))
    
-    print("Critical value: " + str(np.round([12/net.G.Lma.item(), 12/net.G.Lm], 2)))
+    print("Critical value: " + str(np.round([net.G.Crita, net.G.Crit], 2)))
+
+# percolation prevalence
+print("Prevalence: DBMF/Percolation estimate vs real")
+for net in [barab, holme, lock]:
+    print("\n[ " + net.name + " ]") 
+    preval = (net.beta/net.mu - 1/net.G.Lm)**(1/(3-net.G.sf_pars[1]))
+    print(str(np.round([preval, net.final_r],4)))

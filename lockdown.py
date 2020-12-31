@@ -35,10 +35,12 @@ N = 1e4
 n = N/100
 perc_inf = 0.1
 days = 150
-beta = 0.73 * redfa   # corrected infection rate
+beta = 0.061          # infection probability
+avgk = 12 * redfa     # corrected average contacts
+lmbda = beta * avgk    # infection rate
 tau_i = 3             # incubation time
 tau_r = 3             # recovery time
-R0 = beta * tau_r     # basic reproduction number
+R0 = lmbda * tau_r     # basic reproduction number
 
 
 # %%
@@ -81,39 +83,6 @@ else:
                            attack_list(Holme.Gmini, Holme.G.BC_list, 12*redfa))
 
 G = Holme_lbc.G
-# %%
-# Holme_lcd = copy.copy(Holme)
-# Holme_lcd.nick = "immuni_CD"
-# Holme_lcd.G = attack_list(Holme_lcd.G, Holme_lcd.G.degree_list, 12*redfa)
-
-# holme_lcd = pn.pRandNeTmic(Holme_lcd, alert*perc_inf,
-#                            beta, tau_i, tau_r, days)
-# holme_lcd.run(100)
-# holme_lcd.plot()
-# holme_lcd.save()
-
-# # # %%
-# Holme_lbc = copy.copy(Holme)
-# Holme_lbc.nick = "immuni_BC"
-# Holme_lbc.name = "Holme-Kim without the highest BC nodes\nAfter 14 days"
-# Holme_lbc.G = attack_list(Holme_lbc.G, Holme_lbc.G.BC_list, 12*redfa)
-
-# # holme_lbc = pn.pRandNeTmic(Holme_lbc, alert*perc_inf,
-# #                            beta*redfa, tau_i, tau_r, days)
-# # holme_lbc.run(100)
-# # holme_lbc.plot()
-# # holme_lbc.save()
-
-# # G = Holme_lcd.G
-# G = Holme_lbc.G
-# G = pn.graph_tools(G)
-# G = pn.graph_plots(G, G.name, [1])
-
-# %%
-# Salient links
-# Lockd.G.S = sl.salience(Lockd.G)
-# for i, j in Lockd.G.edges:
-#     Lockd.G.edges[i, j]['salience'] = Lockd.G.S[i, j]
 
 
 # %%
@@ -129,7 +98,6 @@ frac_inf = perc_inf/100
 gamma = 1/tau_i
 mu = 1/tau_r
 
-# y0 = np.array([(1-frac_inf), frac_inf*(1-beta), frac_inf*beta, 0])
 p = e + i
 ds0 = np.min(np.where(p > holme.pos[d0]/holme.N))
 y0 = np.array([s[ds0], e[ds0], i[ds0], r[ds0]])
@@ -138,8 +106,8 @@ y = y0
 
 
 def dydt(t, y):
-    return np.array([-beta*y[0]*y[2],                   # ds/dt
-                     beta*y[0]*y[2] - gamma*y[1],       # de/dt
+    return np.array([-lmbda*y[0]*y[2],                   # ds/dt
+                     lmbda*y[0]*y[2] - gamma*y[1],       # de/dt
                      gamma*y[1] - mu*y[2],              # di/dt
                      mu*y[2]])                          # dr/dt
 
@@ -163,7 +131,7 @@ pos = N * p
 
 mu = 1/tau_r
 gamma = 1/tau_i
-A = np.array([[-gamma, beta*s[0]], [gamma, -mu]])
+A = np.array([[-gamma, lmbda*s[0]], [gamma, -mu]])
 eigval, eigvec = np.linalg.eig(A)
 K0 = eigval[0]
 ts0 = np.log(R0)/K0
@@ -176,7 +144,7 @@ x, xi, yi, KFit, Ki, tsFit, parsFit, \
                          D, R0, tau_i, tau_r, N)
 
 fig02, fig03, fig04 = pn.SEIR_plot(s, e, i, r, t, R0,
-                                   "SEIR deterministic model\n",
+                                   "SEIR det. with lockdown",
                                    pos, ts0, pars0, x, xi, yi,
                                    parsFit, D, KFit, TdFit, Rt, Rti)
 
@@ -192,7 +160,6 @@ with open('pickle/SEIRlockdown.pkl', 'wb') as f:
 # %%
 
 frac_inf = 0.00011  # (one infected just to avoid warnings)
-beta_n = beta/G.k_avg   # infection rate
 gamma = 1/tau_i
 mu = 1/tau_r
 
@@ -201,7 +168,7 @@ lock = pn.pRandNeTmic(Holme_lbc, holme.i[d0]*100,
 
 lock.mu = 1/tau_r
 lock.gamma = 1/tau_i
-A = np.array([[-lock.gamma, lock.beta*s[0]], [lock.gamma, -lock.mu]])
+A = np.array([[-lock.gamma, lock.lmbda*s[0]], [lock.gamma, -lock.mu]])
 eigval, eigvec = np.linalg.eig(A)
 lock.K0 = eigval[0]
 lock.ts0 = np.log(lock.R0)/lock.K0
@@ -234,7 +201,7 @@ model = ep.SEIRModel(G)
 
 config = mc.Configuration()
 config.add_model_parameter('alpha', gamma)
-config.add_model_parameter('beta',  beta_n)
+config.add_model_parameter('beta',  beta)
 config.add_model_parameter('gamma', mu)
 config.add_model_parameter("percentage_infected", 0.00011)
 

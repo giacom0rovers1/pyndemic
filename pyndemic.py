@@ -97,12 +97,11 @@ def graph_tools(G):
     
     # Prima correzione per non avere matrice singolare
     G.kx = np.array(range(len(G.k_histD)), ndmin=2) + 1e-10
-    G.kfm = np.dot(G.kx, G.k_histD)
-    G.ksm = np.dot(G.kx**2, G.k_histD)
+    G.kfm = np.dot(G.kx, G.k_histD).item()
+    G.ksm = np.dot(G.kx**2, G.k_histD).item()
     G.Lma = G.ksm/G.kfm - 1
     
-    # G.Ka  = beta_n * G.Lma
-    # G.Kar = ((beta_n * G.ksm) - (beta_n + mu)*G.kfm)/G.kfm
+    G.Crita = G.k_avg/G.Lma
     
     G.ktilde = np.transpose((G.kx - 1)/G.kx)
     
@@ -113,9 +112,8 @@ def graph_tools(G):
     G.Ckk = G.kx[:, G.k_min:] * G.P * G.ktilde[G.k_min:, :]
     G.w, G.v = np.linalg.eig(G.Ckk)
     G.Lm = np.real(np.nanmax(G.w))
-    print("Lm:   " + str(np.round([G.Lma.item(), G.Lm], 2)))
-    # print("Ksi:  " + str(np.round([G.Ka.item(), beta_n * G.Lm], 2)))
-    # print("Ksir: " + str(np.round([G.Kar.item(), net.KFit], 2)))
+    G.Crit = G.k_avg/G.Lm
+    print("    Lm:   " + str(np.round([G.Lma, G.Lm], 2)))
     
     print("    Connectivity degree histogram completed.")
 
@@ -329,14 +327,14 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
         # Spectrum (eigenvalues histogram)
         G.fig4.add_subplot(222)
         plt.hist(G.eig_list, density=True, alpha=0.75)
-        plt.xlabel(r"Eigenvalue $\lambda$")
+        plt.xlabel(r"Eigenvalue $\Lambda$")
         plt.ylabel("Density")
         plt.title("Adjacency spectrum")
 
         # Eigenvector functions
         G.fig4.add_subplot(212)
         for i in range(G.eig_val.size):
-            lab = r'$\lambda =$' + str(np.round(G.eig_val.real, 2)[i])
+            lab = r'$\Lambda =$' + str(np.round(G.eig_val.real, 2)[i])
             plt.plot(G.eig_vec[:, i], alpha=0.5,
                      label=lab)
         plt.legend(loc='best')
@@ -350,7 +348,7 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
 # EPIDEMIC PROCESSES
 
 
-def SEIR_odet(perc_inf, beta, tau_i, tau_r, days):
+def SEIR_odet(perc_inf, lmbda, tau_i, tau_r, days):
     '''
     SEIR Epidemic Model
 
@@ -358,7 +356,7 @@ def SEIR_odet(perc_inf, beta, tau_i, tau_r, days):
     ----------
     perc_inf : float
         Initially infected percentage of the population [0, 100].
-    beta : float
+    lmbda : float
         Probability of transmission in one day [0, 1].
     tau_i : int
         average incubation time [days].
@@ -380,14 +378,14 @@ def SEIR_odet(perc_inf, beta, tau_i, tau_r, days):
     gamma = 1/tau_i
     mu = 1/tau_r
 
-    # y0 = np.array([(1-frac_inf), frac_inf*(1-beta), frac_inf*beta, 0])
+    # y0 = np.array([(1-frac_inf), frac_inf*(1-lmbda), frac_inf*lmbda, 0])
     y0 = np.array([(1-frac_inf), 0, frac_inf, 0])
 
     y = y0
 
     def dydt(t, y):
-        return np.array([-beta*y[0]*y[2],                   # ds/dt
-                         beta*y[0]*y[2] - gamma*y[1],       # de/dt
+        return np.array([-lmbda*y[0]*y[2],                   # ds/dt
+                         lmbda*y[0]*y[2] - gamma*y[1],       # de/dt
                          gamma*y[1] - mu*y[2],              # di/dt
                          mu*y[2]])                          # dr/dt
 
@@ -467,7 +465,7 @@ def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     return fig02, fig03, fig04
 
 
-def SIR_odet(perc_inf, beta, tau_r, days):
+def SIR_odet(perc_inf, lmbda, tau_r, days):
     '''
     SIR Epidemic Model
 
@@ -475,7 +473,7 @@ def SIR_odet(perc_inf, beta, tau_r, days):
     ----------
     perc_inf : float
         Initially infected percentage of the population [0, 100].
-    beta : float
+    lmbda : float
         Probability of transmission in one day [0, 1].
     tau_r : int
         average recovery time [days].
@@ -498,8 +496,8 @@ def SIR_odet(perc_inf, beta, tau_r, days):
     y = y0
 
     def dydt(t, y):
-        return np.array([-beta*y[0]*y[1],                   # ds/dt
-                         beta*y[0]*y[1] - mu*y[1],          # di/dt
+        return np.array([-lmbda*y[0]*y[1],                   # ds/dt
+                         lmbda*y[0]*y[1] - mu*y[1],          # di/dt
                          mu*y[1]])                          # dr/dt
 
     y = sp.integrate.solve_ivp(fun=dydt,
@@ -583,11 +581,15 @@ def growth_fit(pos, t, ts0, pars0, D, R0):
     f = 0.16
     end = start + 1
 
-    while (end - start) < 5:
+    while (end - start) < 14:   # before: 5
+        
+        if f > 0.333:
+            break
+        
         a = np.where(pos > f * np.nanmax(pos))
-
+        
         if len(a) == 0:
-            end = start + 6
+            end = start + 15    # before: 6
         else:
             end = np.nanmin(a)
             f += 0.001
@@ -699,7 +701,6 @@ def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
 
     # EPIDEMIC MODEL
     frac_inf = perc_inf/100
-    beta_n = beta/G.k_avg  # infection rate
     gamma = 1/tau_i
     mu = 1/tau_r
 
@@ -711,7 +712,7 @@ def SEIR_network(G, N, perc_inf, beta, tau_i, tau_r, days, t):
 
     config = mc.Configuration()
     config.add_model_parameter('alpha', gamma)
-    config.add_model_parameter('beta',  beta_n)
+    config.add_model_parameter('beta',  beta)
     config.add_model_parameter('gamma', mu)
     config.add_model_parameter("percentage_infected", frac_inf)
 
@@ -780,8 +781,8 @@ class pRandNeTmic(randnet):
         self.Gmini = parent.Gmini
         self.fig00 = parent.Gmini.fig0
         self.fig01 = parent.G.fig1
-
-        self.R0 = beta*tau_r
+        self.lmbda = beta*self.G.k_avg
+        self.R0 = self.lmbda*tau_r
         self.days = days
         self.perc_inf = perc_inf
         self.beta = beta
@@ -789,22 +790,34 @@ class pRandNeTmic(randnet):
         self.tau_r = tau_r
 
         # run deterministic reference
-        s, e, i, r, t = SEIR_odet(perc_inf, beta, tau_i, tau_r, days)
+        s, e, i, r, t = SEIR_odet(self.perc_inf, self.lmbda, self.tau_i, self.tau_r, self.days)
         self.t = t
         p = e + i
         self.mu = 1/tau_r
         self.gamma = 1/tau_i
-        A = np.array([[-self.gamma, self.beta*s[0]], [self.gamma, -self.mu]])
-        eigval, eigvec = np.linalg.eig(A)
-        self.K0 = eigval[0]
+        self.A0 = np.array([[-self.gamma, self.lmbda*s[0]], [self.gamma, -self.mu]])
+        self.eigvalA0, self.eigvecA0 = np.linalg.eig(self.A0)
+        self.K0 = self.eigvalA0[0]
         self.ts0 = np.log(self.R0)/self.K0
         self.pars0 = [self.K0, p[0]*self.N]
         self.D = int(self.ts0)
         
         # DBMF
-        self.beta_n = self.beta/self.G.k_avg
-        self.G.Ka  = self.beta_n * self.G.Lma * s[0]
-        self.G.Kar = self.beta_n * self.G.Lma * s[0] - self.mu
+        self.Ka_si  = self.beta * self.G.Lma * s[0]
+        self.K1_si = self.beta * self.G.Lm * s[0]
+        
+        self.Ka_sir = self.beta * self.G.Lma * s[0] - self.mu
+        self.K1_sir = self.beta * self.G.Lm * s[0] - self.mu
+        
+        self.A1a = np.array([[-self.gamma, self.beta * self.G.Lma * s[0]], [self.gamma, -self.mu]])
+        self.eigvalA1a, self.eigvecA1a = np.linalg.eig(self.A1a)
+        self.K1a = self.eigvalA1a[0]
+
+        self.A1 = np.array([[-self.gamma, self.beta * self.G.Lm * s[0]], [self.gamma, -self.mu]])
+        self.eigvalA1, self.eigvecA1 = np.linalg.eig(self.A1)
+        self.K1 = self.eigvalA1[0]
+        
+        self.pars1 = [self.K1a, p[0]*self.N]
         
 
     def run(self, runs):
@@ -934,12 +947,6 @@ class pRandNeTmic(randnet):
                                    for i in self.t])
             self.Rti95 = np.array([self.Rtim[i].quantile(0.95)
                                    for i in self.t])
-            
-            #print("Ksi:  " + str(np.round([self.G.Ka.item(),    # manca il termine s0
-                                           #self.beta_n * self.G.Lm], 2)))
-            #print("Ksir: " + str(np.round([self.G.Kar.item(), self.KFit], 2)))  # cambiare KFit con (self.beta_n * self.G.Lm - self.mu)
-            
-            #print("Ksir: " + str(np.round([self.K1, self.KFit], 2)))
              
 
     def plot(self):
@@ -966,6 +973,10 @@ class pRandNeTmic(randnet):
                 plt.plot(self.x, exponential(self.x, *self.pars0),
                          'r--', alpha=0.4,
                          label="Deterministic exp. growth")
+                
+                plt.plot(self.x, exponential(self.x, *self.pars1),
+                         'b--', alpha=0.4,
+                         label="DBMF unc. exp. growth")
 
             plt.plot(self.xi, self.yi, label="Initial growth", linewidth=2)
             plt.plot(self.x, exponential(self.x, *self.parsFit), 'k--',
@@ -988,7 +999,10 @@ class pRandNeTmic(randnet):
             plt.plot(np.arange(np.min(self.t)-50, np.max(self.t)+50),
                      [1 for i in np.arange(1, len(self.t)+100)],
                      'r--', linewidth=2, alpha=0.4)
-
+            plt.plot(np.arange(np.min(self.t)-50, np.max(self.t)+50),
+                     [self.G.Crita for i in np.arange(1, len(self.t)+100)],
+                     'b--', linewidth=2, alpha=0.4)
+            
             plt.plot(self.t, self.Rt, alpha=0.8,
                      label='R(t) as R0 times s(t)')
 
@@ -1041,6 +1055,10 @@ class pRandNeTmic(randnet):
                 plt.plot(self.x, exponential(self.x, *self.pars0),
                          'r--', alpha=0.8,
                          label="Deterministic exp. growth")
+                
+                plt.plot(self.x, exponential(self.x, *self.pars1),
+                         'b--', alpha=0.4,
+                         label="DBMF unc. exp. growth")
 
             plt.plot(self.xi, self.yi, label="Initial growth", linewidth=2)
 
@@ -1069,6 +1087,9 @@ class pRandNeTmic(randnet):
             plt.plot(np.arange(np.min(self.t)-50, np.max(self.t)+50),
                      [1 for i in np.arange(1, len(self.t)+100)],
                      'r--', linewidth=2, alpha=0.4)
+            plt.plot(np.arange(np.min(self.t)-50, np.max(self.t)+50),
+                     [self.G.Crita for i in np.arange(1, len(self.t)+100)],
+                     'b--', linewidth=2, alpha=0.4)
 
             plt.fill_between(self.t, self.Rt05, self.Rt95, alpha=0.3)
             plt.plot(self.t, self.Rt, alpha=0.8,
