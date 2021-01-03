@@ -255,7 +255,7 @@ if not os.path.isfile(results.filename):
                      header=["Network model", "$K_0^{Fit}$ $(d^{-1})$",
                              "$T_d^{Fit}$ $(d)$", "$i_{end}$",
                              "$r_{end}$", "End day $(\#)$",
-                             "Peak $\%$", "Peak day $(\#)$", 
+                             "Peak $\%$", "Peak day $(\#)$",
                              "$s_{peak}$"],
                      float_format="%.2f")
 
@@ -275,14 +275,14 @@ for net in network_models:
     #     print(net.name + " - Warning: different number of runs than expected.")
     #     print("Real runs: " + str(real_runs))
     #     print("expected:  " + str(net.runs))
-        
+
     # matr_p = np.array(net.pm).reshape(net.runs, (net.days+1))
     try:
         matr_p = np.array(net.pm).reshape(net.runs, len(net.s))
     except ValueError:
         print(net.name + str(net.runs) + str(len.net.s))
         continue
-    
+
     net.peak = np.max(matr_p, axis=1)
     peaks[net.name] = np.append(net.peak,
                                 np.ones(np.abs(real_runs-net.runs))*np.nan)
@@ -290,7 +290,7 @@ for net in network_models:
     net.t_peaks = [np.nanmin(np.where(matr_p[t, :] == net.peak[t])).item()
                    for t in range(real_runs)]
     net.t_finals = [np.nanmin(np.where(matr_p[t, :] < 9)).item()
-                   for t in range(real_runs)]
+                    for t in range(real_runs)]
 
     times[net.name] = np.append(net.t_peaks,
                                 np.ones(np.abs(real_runs-net.runs))*np.nan)
@@ -368,7 +368,7 @@ fig06.savefig('immagini/analysis_Peak.png')
 x = np.array([])
 y = np.array([])
 fig07 = plt.figure(figsize=(6.4, 4.8), dpi=300)
-for net in [rando, watts]: #, latti]:
+for net in [rando, watts]: # , latti]:
     xi = np.ones(len(net.t_finals))*net.G.C_avg
     # yi = np.array(net.t_finals)
     yi = np.array(net.finals)
@@ -382,7 +382,7 @@ plt.plot(sorted(x), poly1d_fn(sorted(x)), '--', color="grey", alpha=0.5)
 
 x = np.array([])
 y = np.array([])
-for net in [barab, holme]:  #, lock]:
+for net in [barab, holme]:  # , lock]:
     xi = np.ones(len(net.t_finals))*net.G.C_avg
     # yi = np.array(net.t_finals)
     yi = np.array(net.finals)
@@ -392,7 +392,7 @@ for net in [barab, holme]:  #, lock]:
     plt.scatter(xi, yi, alpha=0.5, label=net.name)
 coef = np.polyfit(x, y, 1)
 poly1d_fn = np.poly1d(coef)
-plt.plot(sorted(x), poly1d_fn(sorted(x)), '--', 
+plt.plot(sorted(x), poly1d_fn(sorted(x)), '--',
          color="purple", alpha=0.5)
 
 plt.legend()
@@ -405,36 +405,35 @@ fig07.savefig('immagini/analysis_Size.png')
 # fine
 
 
-
 # %% DBMF
 print("\n\nDBMF results:")
 
 for net in network_models:
-    print("\n[ " + net.name + " ]") 
-    
+    print("\n[ " + net.name + " ]")
+
     # net.beta_n = net.beta/net.G.k_avg
     # net.Ka  = net.beta_n * net.G.Lma * s[0]
     # net.Kar = net.beta_n * net.G.Lma * s[0] - net.mu
-    
-    print("Ksi:  " + str(np.round([net.Ka_si, net.K1_si ], 2)))
-    print("Ksir: " + str(np.round([net.Ka_sir, net.K1_sir], 2))) 
-    
+
+    print("Ksi:  " + str(np.round([net.Ka_si, net.K1_si], 2)))
+    print("Ksir: " + str(np.round([net.Ka_sir, net.K1_sir], 2)))
+
     # A1a = np.array([[-net.gamma, net.beta_n * net.G.Lma.item() * net.s[0]], [net.gamma, -net.mu]])
     # eigval1a, eigvec1a = np.linalg.eig(A1a)
     # net.K1a = eigval1a[0]
-    
+
     # A1 = np.array([[-net.gamma, net.beta_n * net.G.Lm * net.s[0]], [net.gamma, -net.mu]])
     # eigval1, eigvec1 = np.linalg.eig(A1)
     # net.K1 = eigval1[0]
-    
+
     # Growt rates from Lma (uncorrelated approx with k moments), Lm (actual bigger eigenvalue of the corrected connectivity matrix) and from the actual Fit:
     print("Kseir: " + str(np.round([net.K1a, net.K1, net.KFit], 2)))
-   
+
     print("Critical value: " + str(np.round([net.G.Crita, net.G.Crit], 2)))
 
 # percolation prevalence
-print("Prevalence: DBMF/Percolation estimate vs real")
+print("\n\nPrevalence: DBMF/Percolation estimate vs real")
 for net in [barab, holme, lock]:
-    print("\n[ " + net.name + " ]") 
+    print("\n[ " + net.name + " ]")
     preval = (net.beta/net.mu - 1/net.G.Lm)**(1/(3-net.G.sf_pars[1]))
-    print(str(np.round([preval, net.final_r],4)))
+    print(str(np.round([preval, net.final_r], 4)))

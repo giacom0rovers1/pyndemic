@@ -1,16 +1,16 @@
 \begin{table}[h]
 \centering
-\caption{Network properties: $\langle k \rangle$, $\langle C \rangle$ and $\langle l \rangle$ are the average node connectivity degree, the average clustering coefficient and the average shortest path length respectively. }
+\caption{Network properties: $\langle k \rangle$, $\langle C \rangle$ and $\langle l \rangle$ are the average node connectivity degree, the average clustering coefficient and the average shortest path length respectively. $K_0$ and the critical value are presented in $eigenval/unc.approx$ pairs.}
 \label{tab:networks}
-\begin{tabular}{lccccc}
+\begin{tabular}{lccccccc}
 \toprule
-         Network model &  Edges &  Nodes & $\langle k \rangle$ & $\langle C \rangle$ & $\langle l \rangle$ \\ 
+         Network model &  Edges &  Nodes & $\langle k \rangle$ & $\langle C \rangle$ & $\langle l \rangle$ & $K_0^{DBMF}$ $(d^{-1})$ & Crit. value \\ 
 \midrule
-     Erdos-Renyi &  60000 &  10000 & 12.00 &  0.00 &    3.98 \\
-    Ring Lattice &  60000 &  10000 & 12.00 &  0.68 &  417.13 \\
-  Watts-Strogatz &  60000 &  10000 & 12.00 &  0.50 &    5.53 \\
- Barabasi-Albert &  59964 &  10000 & 11.99 &  0.01 &    3.50 \\
-       Holme-Kim &  59963 &  10000 & 11.99 &  0.38 &    3.98 \\
+     Erdos-Renyi &  60000 &  10000 & 12.00 &  0.00 &    3.98 & 	  0.15 / 0.15 &   1.04 / 1.04 \\
+    Ring Lattice &  60000 &  10000 & 12.00 &  0.68 &  417.13 &    0.14 / 0.14 &   1.09 / 1.09 \\
+  Watts-Strogatz &  60000 &  10000 & 12.00 &  0.50 &    5.53 &    0.14 / 0.14 &   1.08 / 1.08 \\
+ Barabasi-Albert &  59964 &  10000 & 11.99 &  0.01 &    3.50 &    1.50 / 0.44 &   0.07 / 0.40\\
+       Holme-Kim &  59963 &  10000 & 11.99 &  0.38 &    3.98 &    3.10 / 0.58 &   0.02 / 0.29\\
 \bottomrule
 \end{tabular}
 \end{table}
