@@ -372,3 +372,29 @@ lock.save()
 
 # lock.G = pn.graph_plots(lock.G, lock.name, [1])
 # lock.fig01 = lock.G.fig1
+
+
+# %% Late hosptalization scenario
+
+with open('pickle/all_networks.pkl', 'rb') as f:
+    Watts, Rando, Latti, Barab, Holme = pickle.load(f)
+N = 1e4
+n = N/100
+perc_inf = 0.1
+days = 150  # 100 too short for Rando
+daysl = days*2
+daysll = days*3
+avgk = 12
+beta = 0.061        # infection probability
+lmbda = beta * avgk  # infection rate
+tau_i = 3           # incubation time
+tau_r = 7
+R0 = lmbda * tau_r   # basic reproduction number
+
+nawarHK = pn.pRandNeTmic(Holme, perc_inf, beta, tau_i, tau_r, days)
+nawarHK.name = "HK late hospit. scenario"
+nawarHK.nick = "HK_hiTau"
+
+nawarHK.run(100)
+nawarHK.plot()
+nawarHK.save()

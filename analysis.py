@@ -45,6 +45,8 @@ with open('pickle/SIR.pkl', 'rb') as f:
 with open('pickle/simulations_lockHiBC_connected.pkl', 'rb') as f:
     lock = pickle.load(f)
 
+with open('pickle/simulations_HK_hiTau.pkl', 'rb') as f:
+    nawar = pickle.load(f)
 
 # Add missing information
 p = e + i
@@ -56,7 +58,7 @@ TTd0 = np.log(2)/KK0
 TdFit = np.log(2)/KFit
 TTdFit = np.log(2)/KKFit
 
-network_models = [rando, watts, barab, holme, latti, lock]
+network_models = [rando, watts, barab, holme, latti, lock, nawar]
 # %%%
 
 # Model parameters

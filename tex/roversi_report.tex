@@ -271,11 +271,12 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
 	
   The model is therefore initialized with three days removal period (population in "awareness mode") and three days incubation period. 
   The respective transition rates are both equal to $0.33 \ d^{-1}$ as shown in Tab. \ref{tab:params}. 
-  The "non-awareness mode" with a removal period of seven days is treated without numerical simulations in Section \ref{sec:immuni}, just to highlight the importance of the early hospitalization of patients. 
+  The "non-awareness mode" with a removal period of seven days is addressed in Section \ref{sec:miti}, to stress the importance of the early hospitalization of patients. 
   \input{params.tex}
  
   % TODO verificare che fili dopo la modifica con beta k
-  $\bar{k} = 12$ is chosen as a fair approximation of the average daily physical contacts which one individual probably experiences in real life, while the probability $\beta$ is fixed at $6.1 \%$. In this way, on average, the infection rate $\beta \bar{k}$ parameter is equal to $0.73 \ d^{-1}$ and the basic reproduction number $R_0$ is 2.2. The literature indicates values of $R_0$ between $2$ and $3.5$ for respiratory diseases transmitted over breath droplets like influenza, common cold or COVID-19 \citep{Hilton2020, Sanche2020, Firth2020}.
+  $\bar{k} = 12$ is chosen as a fair approximation of the average daily physical contacts which one individual probably experiences in real life, while the probability $\beta$ is fixed at $6.1 \%$. In this way, on average, the infection rate $\beta \bar{k}$ parameter is equal to $0.73 \ d^{-1}$ and the basic reproduction number $R_0$ is 2.20. The literature indicates values of $R_0$ between $2$ and $3.5$ for respiratory diseases transmitted over breath droplets like influenza, common cold or COVID-19 \citep{Hilton2020, Sanche2020, Firth2020}. 
+  The number: $1 - \sfrac{1}{R_0} = 0.54 $ is the expected immune fraction needed to reach the "herd immunity" through vaccinations.
   
   The expected values of $K_0$, $T_d$ and $\tau_s$ are calculated directly with Eq. \ref{eq:seir_K0}, Eq. \ref{eq:doubling} and Eq. \ref{eq:serial} respectively and are presented in Tab. \ref{tab:props}. The SEIR initial doubling time is longer than the SIR one because of the delay added by the incubation phase, but both are very short. Given the reproduction number of $2.2$, the serial interval $\tau_s$ for the SEIR model results $4.90 \ d$ from Eq. \ref{eq:serial}. This value will be kept as reference serial interval for the rest of the work.
   
@@ -343,7 +344,7 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
  
   There are many models that try to extend BA toward a higher clustering and realistic growing dynamics, \textbf{HK} is chosen among them because it provides tunable clustering (here set at the maximum possible value of $1$) and because it is already integrated in the NetworkX library. The presence of clustering in HK is obtained by building a triangle after each step of preferential attachment of the BA algorithm \citep{Holme}.
   HK is presented in Fig. \ref{fig:networks1}, central panel. Writing the scale-free distribution as: $P(k) \approx k^{- \gamma}$, BA and HK have respectively $\gamma = 2.68$ and $\gamma = 2.70$.
-  The right panel of Fig. \ref{fig:networks1} refers instead to a HK copy where the highest BC nodes have been removed (HKL) and it is addressed in Sec. \ref{sec:immuni}.
+  The right panel of Fig. \ref{fig:networks1} refers instead to a HK copy where the highest BC nodes have been removed (HKL) and it is addressed in Sec. \ref{sec:miti}.
   
   
   \subsection{The DBMF approach} 
@@ -539,63 +540,49 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
 		%  	\includegraphics[width=0.7\linewidth]{SIR_02.png}
 		\includegraphics[width=0.49\linewidth]{analysis_Peak.png}
 		\includegraphics[width=0.49\linewidth]{analysis_Size.png}
-		\caption{\textbf{Left}: Peak size against peak day for all considered networks.
+		\caption{\textbf{Left}: Peak size against peak day. % for all considered networks.
 			\textbf{Right}: Outbreak size against average node clustering coefficient (RL and HKL are omitted here) with pairwise linear fit.}
 		\label{fig:analysis}
 	\end{figure}
   
 
-	\section{Mitigation strategies} %Immunization and 
-	\label{sec:immuni}
-	% from Haslemere contact tracing paper
-	
-	Rescaling of beta, rescaling of s(t)
-	
-	Sim? 
-	- non awareness mode
-	- immunization before init
-	. random
-	. targeted
-	
+	\section{Mitigation effort}
+	\label{sec:miti}
+	%%	
+	%%	Rescaling of beta, rescaling of s(t)
+	%%	
+	%%	Sim? 
+	%%	- non awareness mode
+	%%	- immunization before init
+	%%	. random
+	%%	. targeted
+	%%	
+	%
+	%	
+	%	A delay in the hospitalization affects $R_0$ directly and with great potential: $R_0$ is proportional to the delay $\tau_{r}$ between the onset of the contagiousness and the beginning of the isolation measurements (Eq. \ref{eq:R0}). Changing $\tau_{r}$ from $3$ to $7 \ d$, as assumed for the "non-awareness mode" in the initial phase of the COVID-19 outbreak, results in $R_0$ greater than $5$.
+	%	% numbers? fare simulazioni?
+	%	
+	%	\subsection{Vaccines}
+	%	Complete removal of the susceptible individuals is not needed to stop an epidemic. Herd immunity triggers by definition as $R(t)$ reaches $1$. This could be obtained naturally during the epidemic evolution or by vaccination of part of the susceptible population.
+	%	
+	%	The number $g = 1 - \sfrac{1}{R_0} $ identifies the fraction of susceptible population which needs to be vaccinated in order to reach herd immunity.
+	%	The remaining susceptible population is given by $1 - g = \sfrac{1}{R_0} = 0.46$.
+	%	% come scalare col critcal value?
+	%	
+	%	This value could be compared with the value of $s_peak$ (Tab. \ref{tab:results}), which is the actual fraction of individuals still susceptible the day the positives reach the peak. The farther the two numbers are, the more the network influences the immunity dynamics. ER is not surprisingly the closer to the deterministic well-mixed picture. RL is the one that departs the most. BA and HK probably have the super-spreading hubs already infected by the day of the peak, so probably $1 - s_peak$ is not a good estimate for the herd immunity in a network like that (it should be much higher, with $s_peak$ smaller). 
 
-	\subsection{Early hospitalization}
-	A delay in the hospitalization affects $R_0$ directly, with great consequences.
-	... which results in an $R_0$ greater than 5 for the "non-awareness mode" in the initial phase of the outbreak. These numbers are
-	%   It was already evident in Section \ref{sec:numerical} how much the delay between symptoms recognition and isolation measurements affects the overall strength of the epidemic.
-	\citep{Firth2020} 
+	Waiting for a vaccine, mitigation measures should be taken from governments and authorities to slow down the disease spreading in order to keep the positives peak under the level of maximum capacity of the national health care systems. 
+	In heterogeneous disassortative networks, early hospitalization and targeted lock-downs seem to be the most effective strategies, especially when combined. I will not address contact tracing here, since the topology of the contacts network is assumed known. 
 	
-	\subsection{Vaccines}
-	R0 and final outbreak size
+	\subsection{Targeted lockdown}
+	Lockdowns could be random (everybody stays at home) or targeted (places and events with the greatest risk of contagion are closed). I simulated a targeted lockdown scenario by attacking the network's nodes ranked by a centrality metric. This was chosen to be the betweenness centrality (BC), in order to hit the superspreading role of the high BC hubs explored in the previous Section.
 	
-	Herd immunity triggers theoretically as $R(t)$ reaches $1$. The relative population that could still be susceptible even in a population with herd immunity is given by $\frac{1}{R_0} = 0.46$. It is to be compared with the value of $s_peak$ (Tab. \ref{tab:results}), which is the actual fraction of individuals still susceptible the day the positives reach the peak. The farther the two numbers, the more the network influences the immunity dynamics. ER is not surprisingly the closer to the deterministic well-mixed picture. RL is the one that departs the most. BA and HK probably have the super-spreading hubs already infected by the day of the peak, so probably $1 - s_peak$ is not a good estimate for the herd immunity in a network like that (it should be much higher, with $s_peak$ smaller).
+	After reaching the threshold level of 400 positives ($p(t) = 0.04$) over an unmodified HK network, nodes with high BC are recursively removed until a the resulting average connectivity degree is reduced by $ 40 \%$. These values are an arbitrary choice that balances the value of the resulting $R_0$ ($1.32$), the network size and the mitigation effectiveness.
+	In this way, only a small fraction of the nodes is completely isolated ($6 \%$), but half of the connections is inhibited. Clustering remains reasonably high and the average connectivity around $7$ means that most personal relations are still allowed. The network is still connected.
 	
-	Hence here targeting the hubs should be a preferable strategy.  
+	From day 14 the epidemic model is run on this variant of the HK network (HKL). Relative populations are rescaled to the new total number of nodes, so there is a small gap in the curves of Fig. \ref{fig:outcomes1}, top right.
 	
-	Network breakdown:
-	\subsubsection{Random (failure)}
-	\subsubsection{Targeted (attack)}
-
- 
-  
-	\subsection{Lockdown and quarantine}
-	High BC removal scenario (targeted), still damage done even with drastic action.
-	%descrivere il come, apputni cartacei
-	
-	The spread between the members at the end of the simulation (Fig. \ref{fig:outcomes1}, top right) is greatly increased. This is probably due to technical reasons and it is not a direct consequence of the network modification: going from the unmodified HK to the one without high BC nodes the epidemic model is unfortunately reinitialized. Each new member of the ensemble inherits the relative populations of the compartments but the information about the single nodes is lost (this is equivalent to a node-edges reshuffle). Therefore a new source of variability is introduced and its role is dominant. Tackling this issue was beyond the reach of this work (some intervention inside the NDlib code would have been needed) and nevertheless some reshuffling of the social interactions following a change in the daily routines (caused by the partial lockdown) is also reasonable.
-	
-	Apart from the increased spread, the effect of the "lockdown" is clearly visible in Fig. \ref{fig:outcomes1}, middle right, in terms of the sudden drop in the positives curve's steepness (day $14$). The peak follows closely (day $25$), but after that, given that the susceptible compartment remains highly populated, the epidemic keeps spreading for a long time still.
- 	
- 	
- 	\begin{figure}[h]
-		\centering
-		%  	\includegraphics[width=0.7\linewidth]{SIR_02.png}
-		\includegraphics[width=0.49\linewidth]{SEIR_02lockdown2.png}
-		\includegraphics[width=0.49\linewidth]{SEIR_03lockdown2.png}
-		\caption{\textbf{Left}: Evolution of a SEIR model with simulated lockdown. \textbf{Right}: Initial growth }
-		\label{fig:SEIRlock}
-	\end{figure}
-	
-	\begin{table}[h!]
+	\begin{table}[h]
 		\centering
 		\caption{Networks properties. $\langle k \rangle$ and $\langle C \rangle$ are the average node connectivity degree and the average clustering coefficient respectively. }
 		\label{tab:lock_networks}
@@ -603,15 +590,32 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
 			\toprule
 			Network &  Edges &  Nodes & $\langle k \rangle$ & $\langle C \rangle$ & $\langle l \rangle$ & $K_0^{DBMF}$ $(d^{-1})$ & Crit. value \\
 			\midrule
-			Holme-Kim 		&  59963 &  10000 & 11.99 &  0.38 &  3.98 &  0.58 / 3.10 &   0.29 / 0.02 \\
-			BC Truncated 	&  33717 &   9363 &  7.20 &  0.28 &  7.36 &  0.08 / 0.07 &   0.86 / 0.87 \\
+			Holme-Kim 		&  59963 &  10000 & 11.99 &  0.38 &  3.98 &  0.58 / 3.10 &   0.29 / 0.02 \\ 
+			High BC lock.	&  33717 &   9363 &  7.20 &  0.28 &  7.36 &  0.08 / 0.07 &   0.86 / 0.87 \\
 			
 			\bottomrule
 		\end{tabular}
 	\end{table}
-
-
-	\begin{table}[h!]
+	
+	Looking at the plot, the first thing that catches the eye is the  greatly increased spread between the members of the simulation (Fig. \ref{fig:outcomes1}, top right). This is probably due to technical reasons and it is not a direct consequence of the network modification: going from the unmodified HK to HKL, the epidemic model is unfortunately reinitialized from scratch. Each new member of the ensemble inherits the correct relative population of the compartments, but the information about the single node belonging which compartment is lost (this is equivalent to a node-edges reshuffle). Therefore a new source of variability is introduced and its role appears dominant. Tackling this issue was beyond the reach of this work (some intervention inside the NDlib code would have been needed) and nevertheless some reshuffling of the social interactions following a change in the daily routines (caused by the partial lockdown) is also reasonable.
+	
+	Apart from the increased spread, the effects of the "lockdown" are clearly visible in terms of the sudden drop in the positives curve's steepness (from day $14$), hence in the speed of the spreading. The peak day follows closely (day $25$) and is much lower than without the lockdown ($- 70 \%$). But after that, since the susceptible compartment remains highly populated, the epidemic still takes a long time before dying out ($+ 32 \ d$ with respect to HK).\\
+	
+	- Variability in both peak day and peak intensity (Fig \ref{fig:analysis})
+	
+  - inverse correlation between peak day and size	 
+  
+ 	- final prevalence is also halved
+ 	
+% 	\begin{figure}[h]
+%		\centering
+%		%  	\includegraphics[width=0.7\linewidth]{SIR_02.png}
+%		\includegraphics[width=0.49\linewidth]{SEIR_02lockdown2.png}
+%		\includegraphics[width=0.49\linewidth]{SEIR_03lockdown2.png}
+%		\caption{\textbf{Left}: Evolution of a SEIR model with simulated lockdown. \textbf{Right}: Initial growth }
+%		\label{fig:SEIRlock}
+%	\end{figure}
+	\begin{table}[h]
 		\centering
 		\caption{Summary of the numerical simulations over networks. The indicated values represent the median from 100 simulations.}
 		\label{tab:lock_results}
@@ -620,13 +624,18 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
 			%   Model & $K_0^{Fit}$ $(d^{-1})$ & $T_d^{Fit}$ $(d)$ & $i_{end}$ & $r_{end}$ & End day $(\#)$ & Peak $(\%)$ & Peak day $(\#)$ \\
 			Network model & $K_0^{Fit}$ $(d^{-1})$ & $T_d^{Fit}$ $(d)$ & $i_{end}$ & $r_{end}$ & End day & Peak  & Peak day & $s_{peak}$\\
 			\midrule
-		 	Holme-Kim 		&    0.28 &   2.51 &  0.00 &  0.70 &  	 86 &  0.17 &   27 &	0.59 \\
-			BC Truncated	&    0.28 &   2.44 &  0.00 &  0.35 & 		132 &  0.05 &   25 &	0.78 \\
+			Holme-Kim 		&    0.28 &   2.51 &  0.00 &  0.70 &  	 86 &  0.17 &   27 &	0.59 \\
+			High BC lock.	&    0.28 &   2.44 &  0.00 &  0.35 & 		132 &  0.05 &   25 &	0.78 \\
+			Late hospit.  & 	 0.32 &   2.18 &  0.00 &  0.94 &     97 &  0.40 &   26 &  0.31 \\
 			
 			\bottomrule
 		\end{tabular}
 	\end{table}
 	
+	
+	\subsection{Early vs late hospitalization}
+	The simulations of Sec. \ref{sec:network} already adopted the best-case scenario for the removal/recovery time ($\tau_{r} = 3 \ d$), assuming a fast diagnosis and isolation of the infected cases. 
+	Otherwise, a delay in the hospitalization would affect $R_0$ directly and with great potential (see Eq. \ref{eq:R0}). Changing $\tau_{r}$ from $3$ to $7 \ d$, as assumed for the "non-awareness mode" in the initial phase of the COVID-19 outbreak, results in $R_0$ greater than $5$. Even if the initial growth over HK develops at almost the same speed ($K^{Fit}_0 = 0.32$, peak day: $26$), the long-lasting contagiousness effects show up in the middle phase and make the peak rise to $40 \%$ (4000 individuals), leading to a shocking final prevalence of $94 \%$ (see Tab. \ref{tab:lock_results}). 
 	
 	
 	\section{Conclusions}
@@ -638,8 +647,10 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
  
 %	\section*{Appendix}
 %		
-%  \small
-  \footnotesize
+%  \scriptsize 
+%  \footnotesize
+	\clearpage
+	\small
 	\bibliographystyle{plainnat} %  % apalike
 	% Apalike non mostra i DOI, plainnat o abbrvnat mettono i nomi prima dei cognomi
 	\bibliography{networks}
