@@ -56,7 +56,7 @@
 	{\small \href{mailto:giacomo.roversi2@studio.unibo.it}{giacomo.roversi2@studio.unibo.it} }\\
 	\vskip0.15in
 	% Date
-	{\large November 16, 2020}
+	{\large January 5, 2021}
 \end{flushright}
 
 \begin{flushleft}
@@ -68,7 +68,7 @@
 
 	\vskip0.2in
 	% Title
-	{\huge\textbf{Numerical simulations of epidemic processes in complex networks}} 
+	{\huge\textbf{Numerical simulation of epidemic processes over different complex networks}} 
 	\vskip0.33in
 	
 \end{flushleft}
@@ -76,19 +76,19 @@
 	
 	\section*{Introduction}
 	\label{sec:intro}
-	This work studies and compares a series of idealized contagion scenarios, simulated over different unweighted undirected static random networks resembling human-to-human interactions. It is inspired by the current worldwide effort in containing the COVID-19 pandemic and follows mainly \citet{PastorSatorras} and \citep{Firth2020}.
+	This work studies a series of idealized contagion scenarios, simulated over different un- weighted un-directed static random networks to model human-to-human interactions. It is inspired by the current worldwide effort in containing the COVID-19 pandemic and follows mainly \citet{PastorSatorras} and \citet{Firth2020}.
 	
- 	In the first section I will present the fundamental differential equations and the deterministic numerical solutions of the SIR and SEIR models. I will then compare the deterministic predictions with the results of discrete-time simulations over various random networks. The networks share the same size and average connectivity, but differ in clustering and degree distribution, allowing a progression from simple models to more realistic and complex ones, to show different aspects of the contagion dynamics. The simulations are carried out in Python 3, exploiting the \textit{NetworkX} and \textit{NDlib} libraries, which are integrated in a specific framework crafted for the occasion. % \citep{pyndemic}. 
+ 	In the first section I will present the fundamental differential equations and the deterministic numerical solutions of the SIR and SEIR models. I will then compare their predictions with the results of time-discrete simulations over various random networks. The networks share the same size and average connectivity, but differ in clustering and degree distribution. This allows a progression from simple models to more realistic and complex ones, in order to show different aspects of the contagion dynamics. The simulations are carried out in Python 3, exploiting the \textit{NetworkX} and \textit{NDlib} libraries, which I have integrated in a specific framework crafted for the occasion (\href{https://github.com/giacom0rovers1/pyndemic}{https://github.com/giacom0rovers1/pyndemic}). %\citep{pyndemic}. 
  	Finally, I will implement and discuss some mitigation strategies.
   
   \section{Epidemic models}
   \label{sec:theory}
-	The mathematical modelling of epidemic spreading in a specific population generally assumes that the population could be divided into different classes or compartments depending on the stage of the disease.
-	Stochastic reaction-diffusion processes control the transitions among these compartments. 
-	The spreading of the contagion follows the mass-action law, i.e. the force of the infection is proportional to the fraction of infected individual in the population.
+	The mathematical modelling of the spreading of an infection in a specific population generally assumes that the population could be divided into different classes or compartments depending on the stage of the disease.
+	Stochastic reaction-diffusion processes control the transitions between these compartments. 
+	Contagion follows the mass-action law, that is the force of the infection is proportional to the fraction of infected individuals in the population.
 	
-  The homogeneous mixing hypothesis assumes that individuals in a population are well mixed, indistinguishable, and interact with members of the other compartments completely at random.
-  Under this assumption, likewise under a mean-field approximation from statistical physics, full information about the state of the epidemic is encoded in the relative populations of the different compartments and a deterministic approach with differential equations is possible. Two models, SIR and SEIR, which differ in the number of compartments, are presented below.
+  The homogeneous mixing hypothesis assumes that the members of a population are well mixed, indistinguishable and interact completely at random.
+  Likewise a mean-field approximation from statistical physics, full information about the state of the epidemic is encoded in the relative populations of the different compartments. Under this assumption, a deterministic approach with differential equations is possible. Two models, SIR and SEIR, which differ in the number of compartments, are presented below.
    
   \subsection{The SIR epidemic model}
   
@@ -99,8 +99,8 @@
   	\label{fig:SIRtot}
   \end{figure}
 
-  The SIR model divides the population into three compartments: susceptible ($S$), infected or - more appropriately - "infecting" ($I$) and removed ($R$), the latter meaning either recovered (and immune), hospitalized, self quarantined, deceased or any other situation where the contagion chain develops no further. Its basic implementation assumes no demographic effects (closed population, no births or deaths in the $S$ compartment) and homogeneous mixing. Under this assumptions the transitions between compartments are regulated by a set of deterministic differential equations. % following the mass-action law.
-  Calling $N$ the total population, the relative population fractions of the 3 compartments are:
+  The SIR model divides the population into three compartments: susceptible ($S$), infected or - more appropriately - "infectious" ($I$) and removed ($R$), the latter meaning either recovered (and immune), hospitalized, self quarantined, deceased or any other situation where the contagion chain develops no further. Its basic implementation assumes no demographic effects (closed population, without births or deaths in the $S$ compartment) and homogeneous mixing. Under this assumptions the transitions between compartments are regulated by a set of deterministic differential equations. % following the mass-action law.
+  Calling $N$ the total population, the relative population fractions of the three compartments are:
   \begin{align}
 			s = \frac{S}{N}  \quad;  \qquad 	 i = \frac{I}{N}  \quad;  \qquad 	 r = \frac{R}{N}
   \end{align}
@@ -111,16 +111,16 @@
   	\label{eq:sir}
   \end{align}
 
-  The total population $N$ is conserved (it's a closed system with no births nor deaths):  
+  The total population $N$ is conserved (it's a closed system):  
   \begin{align}
   	s + i + r = 1 \quad ; \qquad \diff{s}{t} + \diff{i}{t} + \diff{r}{t} = 0  \quad ; \qquad  \diff{N}{t}= 0
   	\label{eq:sir_sum}
   \end{align}
 
-	The coefficients $\lambda$ and $\mu$ are the transition rates of two Poisson processes, i.e. with independent, exponentially distributed events. The ratio between them is called the basic reproduction number $R_0$, which is the expected total number of secondary infections generated by one infected individual, given a totally susceptible population ($s=1$). 
+	The coefficients $\lambda$ and $\mu$ are the transition rates of two Poisson processes, i.e. with independent, exponentially distributed events. The ratio between them is called the basic reproduction number $R_0$, which is the expected total number of secondary infections generated by a single infected individual, given a completely susceptible population ($s=1$). 
 	
-	The transition rate $\lambda$ is the product of the average probability of transmission during a single contact ($\beta$) and the average number of expected contacts per individual ($\bar{k}$)\footnote{The definition for $\lambda$ departs from the \citet{PastorSatorras} notation. Here $\lambda = \beta \bar{k}$, not $\lambda = \sfrac{\beta}{\mu}$.}.
-  The average time during which an individual can spread the contagion is $\tau_{r} = \sfrac{1}{\mu}$, thus $R_0$ is also the product of the infection probability and the duration of the contagious state. 
+	The transition rate $\lambda$ is the product of the average probability of transmission during a single contact ($\beta$) and the average number of expected contacts per individual ($\bar{k}$)\footnote{The definition for $\lambda$ departs from the notation adopted in \citet{PastorSatorras}. Here $\lambda = \beta \bar{k}$, there $\lambda = \sfrac{\beta}{\mu}$.}.
+  The average time during which an individual can spread the contagion is $\tau_{r} = \sfrac{1}{\mu}$, thus $R_0$ is also the product of infection probability and duration of the contagious state. 
   \begin{align}
 			R_0 = \frac{\lambda}{\mu} \ \equiv \ \frac{\beta \bar{k}}{\mu} \ \equiv \ \beta \bar{k} \tau_{r}
 			\label{eq:R0}
@@ -137,7 +137,7 @@
   	\label{eq:sir_growthReq}
   \end{align}
   
-  Thus, for a completely susceptible population ($s \approx 1$), the contagion is going to spread if $R_0$ is greater than one. In the initial phase, $s( t \! = \! 0)$ could be approximated to the constant $s_0$.
+  Thus, for a completely susceptible population ($s \approx 1$), the contagion is going to spread if $R_0$ is greater than one. In the initial phase, $s( t \! = \! 0)$ could be approximated by the constant $s_0$.
   Under this assumption the evolution of the infected population $i(t)$ becomes purely exponential:
   \begin{align}
   	\diff*{i}{t}{t=0} \approx \quad (\lambda s_0 - \mu) \cdot i 
@@ -148,7 +148,7 @@
   	\label{eq:sir_growthK0}
   \end{align}
   
- where $K_0$ is the initial growth rate:
+ Where $K_0$ is the initial growth rate:
  \begin{align} % \qquad  \mathrm{with} \qquad 
  	K_0 = (\lambda s_0 - \mu)
  	\label{eq:sir_K0}
@@ -156,7 +156,7 @@
  
  The exponential growth could also be described in terms of the doubling time (which is the constant time interval after which the population has doubled):
 	\begin{align}
-		T_{d} = \frac{\ln 2}{K_0}
+		T_{d} = \frac{\ln 2}{K_0} %\quad ; \qquad 	i(t) \ \approx \ i(0) \cdot 2^{\sfrac{t}{T_{d}}}
 		\label{eq:doubling} 
 	\end{align}
 	\begin{align}
@@ -170,17 +170,17 @@
 		\label{eq:sir_growthR0}
 	\end{align}
 
-	The serial interval $\tau_s$ is defined from \citet{Du2020} as the average time duration between a primary case-patient having symptom onset and a secondary case-patient having symptom onset following the infection received by the first one (i.e. the time between two generation of infected individuals) and it is here estimated from $R_0$ and $K_0$, since no real clinical data was analysed: 
+	The serial interval $\tau_s$ is defined following \citet{Du2020} as the average time duration between a primary case-patient having symptom onset and a secondary case-patient having symptom onset following the infection received by the first one (i.e. the time between two generation of infected individuals) and it is here estimated from $R_0$ and $K_0$, since no real clinical data have been analysed: 
 	\begin{align}
 		\tau_s = \frac{\ln(R_0)}{K_0}
 		\label{eq:serial}
 	\end{align}
 
-	I will consider both the basic reproduction number and the serial interval as general parameters of the simulated infectious phenomenon and I will not change them through the epidemic. Real-life, pandemic-scale events are clearly more heterogeneous (different immune responses, symptoms, healthcare systems, pathogen strains after mutations, and so on) and those parameters should be estimated from statistical analyses on real clinical data.  
+	I will consider both the basic reproduction number and the serial interval as general parameters of the simulated infectious phenomenon and I will not change them throughout the epidemic. Real-life, pandemic-scale events are clearly more heterogeneous (different immune responses, different symptoms, different healthcare systems, mutated pathogen strains, etc.) and those parameters should be estimated from statistical analyses on real clinical data.  
 
   \subsubsection{The evolution of the epidemic}
-  As the epidemic grows, the depletion of susceptible individuals is no longer negligible and the reduction of the number of available candidates slows the contagion down.
-  The effective reproduction number $R(t)$ follows the evolution of the susceptible population fraction $s(t)$ and represents the remaining strength of the contagion:
+  As the epidemic grows, the depletion of susceptible individuals is no longer negligible. The reduction of the number of available candidates slows the contagion down.
+  The effective reproduction number $R(t)$ follows the evolution of the fraction of susceptible population $s(t)$ and represents the remaining strength of the contagion after a time $t$:
   \begin{align}
 		R(t) = R_0 \cdot s(t) 
 		\label{eq:Rt}
@@ -188,24 +188,23 @@
 
   When the value of $R(t)$ reaches $1$, the number of simultaneously infected individuals $i(t)$ is at its peak. From there on, it becomes exponentially smaller as the force of the infection lowers with both $i$ and $s$ and eventually dies out: the epidemic has ended.
   
-  The instantaneous growth rate $K(t)$ follows the curve of the positive population:
+  The instantaneous growth rate $K(t)$ follows the variation in the positive population:
   \begin{align}
   	K(t) =  \diff{}{t} \ln(i(t)) = \frac{1}{i(t)} \diff{}{t} i(t)
   	\label{eq:Kt}
   \end{align}
 
-	Knowing the instantaneous growth rate and having defined a constant serial interval $\tau_s$ from the initial phase, it is possible to obtain a direct estimate of the daily value of $R(t)$ combining Eq. \ref{eq:sir_growthK0} and Eq. \ref{eq:sir_growthR0}. This estimate will be independent from Eq. \ref{eq:Rt} and will follow the actual evolution of the spreading:
+	Knowing the instantaneous growth rate and having defined a constant serial interval $\tau_s$ from the initial phase, it is possible to obtain a direct estimate of the daily value of $R(t)$ combining Eq. \ref{eq:sir_growthK0} and Eq. \ref{eq:sir_growthR0}. This estimate is independent from Eq. \ref{eq:Rt} ($R(t)$) and will follow the actual evolution of the spreading:
 
   \begin{align}
   	R_K(t) = e^{K(t) \cdot \tau_s}
   	\label{eq:RKt}
   \end{align}
 
-	But, since they virtually measure the same quantity, $R(t)$ and $R_K(t)$ should be comparable. If they are not, the assumptions on which $R_0$ is based are called into question.
-  % TODO quali sono?????
+	But, since $R(t)$ and $R_K(t)$ virtually measure the same quantity, they should be comparable. Otherwise, the assumptions on which $R_0$ is based are called into question.
   
   \subsection{The SEIR epidemic model}
-  The SEIR model adds the exposed (E) compartment to the picture. Compartment E includes individuals who have already been infected but are not yet contagious (hence the more appropriateness of calling "infecting" the I compartment). The presence of the incubation phase makes this model more suitable for modelling the spread of an influenza-like disease like COVID-19. 
+  The SEIR model adds the exposed compartment (E) to the picture. Compartment E includes individuals who have been infected already but are not yet contagious (hence why calling the I compartment "infectious" is more appropriate). The presence of the incubation phase makes this model more suitable for an influenza-like disease like COVID-19. 
   
   Calling $e = \sfrac{E}{N}$ the new compartment's relative population, the differential equations of the model now read:
   
@@ -216,8 +215,8 @@
 
   where $\gamma$ is the poissonian transition rate between the exposed and the infective compartments. The total population is again conserved: $ s + e + i + r = 1$.
   
-  While the SIR model was governed by one single differential equation fot $i(t)$ (Eq. \ref{eq:sir_approxi}), the SEIR one needs a system of two equations for $e(t)$ and $i$.
-  The system can be written in the form of a matrix operator applied to a vector. Determining the temporal evolution of the model is here an eigenvalue problem. Specifically, the initial growth problem with the $s(0) = s_0$ approximation reads as follows: 
+  While the SIR model was governed by one single differential equation fot $i(t)$ (Eq. \ref{eq:sir_approxi}), the SEIR one needs a system of two equations for $e(t)$ and $i(t)$.
+  The system can be written in the form of a matrix operator applied to the vector $ \left( \begin{smallmatrix} e \\	i \end{smallmatrix} \right)$. Determining the temporal evolution of the model is hence an eigenvalue problem. Specifically, the initial growth problem with the $s(0) = s_0$ approximation reads as follows: 
   
   \begin{align}
   	\diff{}{t}
@@ -242,7 +241,7 @@
 		\label{eq:seir_approxi}
 	\end{align}
 
-The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue of the operator and it is obtained solving the equation: 
+The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue of the evolution operator and it is obtained solving the equation: 
 
 	\begin{align}
 		\det 
@@ -254,40 +253,38 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
 	\end{align}
  
  The initial evolution of the total positive population $p(t)$ still follows an exponential law identical to Eq. \ref{eq:sir_growthK0}.
-%  given by: % $p(t) = e(t) + i(t)$ 
  \begin{align}
 		p(t) = \ e(t) + i(t) \ \approx \  p(0) \cdot e^{K_0 t}
  \end{align}
-
-%  But due to the incubation delay that is added to the dynamics of the infection, the other parameters being equal, the initial growth will be slower than in the SIR model.
  
 	\section{Numerical integration}
 	\label{sec:numerical}
 	
   \subsection{Model configuration}
-	The SIR and SEIR model are initialized with the same input parameters (obviously except $\gamma$). Among the initial population of 10 000 people, there are initially 10 infected and already contagious individuals ($i(t \! = \! 0) = 0.1 \%$).
+	The SIR and SEIR model are initialized with the same input parameters (obviously except $\gamma$, which exists only in the latter). Among the initial population of 10 000 people, there are initially 10 infected and already contagious individuals ($i(t \! = \! 0) = 0.1 \%$).
 	
-	Epidemiological studies have identified that, for the SARS-CoV-2 infection, the incubation period is approximately $4$ to $5$ days \citep{Gandhi2020}, specifically $4.2 \ d$ according to \citet{Sanche2020}. The same study shows that, before awareness of the COVID-19 danger, the time from symptom onset to hospitalization was $5.5$ days, whereas after reports of potential human-to-human transmission, the duration shortened significantly to $1.5 \ d$. We can assume similar time scales for the self-quarantine measures. Since patients may be infectious $1$ to $3$ days before symptom onset \citep{Gandhi2020}, the actual model parameters should be shifted of that interval, being the model not about symptoms but infections. 
+	Epidemiological studies have identified that, for the SARS-CoV-2 infection, the incubation period is approximately $4$ to $5$ days \citep{Gandhi2020}, or specifically $4.2 \ d$ according to \citet{Sanche2020}. The same study shows that, before awareness of the COVID-19 danger, the time from symptom onset to hospitalization was $5.5 \ d$, whereas after reports of potential human-to-human transmission, the duration shortened significantly to $1.5 \ d$. We can assume similar time scales for the self-quarantine measures. Since patients may be infectious $1$ to $3$ days before symptom onset \citep{Gandhi2020}, the actual model parameters should be shifted of that interval, since the model divides the population by compartments following the infectiousness and not the symptoms\footnote{Asymptomatic patients are not considered.}.
+		%should have longer removal rates because they are harder to detect, but they are not included in this work since NDlib does not allow multiple removal rates}. 
 	
-  The model is therefore initialized with three days removal period (population in "awareness mode") and three days incubation period. 
+  The model is therefore initialized with three days removal period (population already in the "awareness mode") and three days incubation period. 
   The respective transition rates are both equal to $0.33 \ d^{-1}$ as shown in Tab. \ref{tab:params}. 
   The "non-awareness mode" with a removal period of seven days is addressed in Section \ref{sec:miti}, to stress the importance of the early hospitalization of patients. 
   \input{params.tex}
  
   % TODO verificare che fili dopo la modifica con beta k
-  $\bar{k} = 12$ is chosen as a fair approximation of the average daily physical contacts which one individual probably experiences in real life, while the probability $\beta$ is fixed at $6.1 \%$. In this way, on average, the infection rate $\beta \bar{k}$ parameter is equal to $0.73 \ d^{-1}$ and the basic reproduction number $R_0$ is 2.20. The literature indicates values of $R_0$ between $2$ and $3.5$ for respiratory diseases transmitted over breath droplets like influenza, common cold or COVID-19 \citep{Hilton2020, Sanche2020, Firth2020}. 
-  The number: $1 - \sfrac{1}{R_0} = 0.54 $ is the expected immune fraction needed to reach the "herd immunity" through vaccinations.
+  Here, $\bar{k} = 12$ is chosen as a fair approximation of the average physical contacts which one individual probably experiences in real life on a daily basis. The contagion probability for every contact $\beta$ is fixed at $6.1 \%$. In this way, on average, the infection rate $\beta \bar{k}$ is equal to $0.73 \ d^{-1}$ and the basic reproduction number $R_0$ is 2.20. This is consistent with the literature, which indicates values of $R_0$ between $2$ and $3.5$ for respiratory diseases transmitted over breath droplets like influenza, common cold or COVID-19 \citep{Hilton2020, Sanche2020, Firth2020}. 
+  The number: $1 - \sfrac{1}{R_0} = 0.54 $ is the expected immune fraction needed in order to reach the "herd immunity" through vaccinations.
   
-  The expected values of $K_0$, $T_d$ and $\tau_s$ are calculated directly with Eq. \ref{eq:seir_K0}, Eq. \ref{eq:doubling} and Eq. \ref{eq:serial} respectively and are presented in Tab. \ref{tab:props}. The SEIR initial doubling time is longer than the SIR one because of the delay added by the incubation phase, but both are very short. Given the reproduction number of $2.2$, the serial interval $\tau_s$ for the SEIR model results $4.90 \ d$ from Eq. \ref{eq:serial}. This value will be kept as reference serial interval for the rest of the work.
+  The expected values of $K_0$, $T_d$ and $\tau_s$ are calculated directly with Eq. \ref{eq:seir_K0}, \ref{eq:doubling} and \ref{eq:serial} respectively and are presented in Tab. \ref{tab:props}. The SEIR initial doubling time is longer than the SIR one because of the delay added by the incubation phase. Given the reproduction number of $2.2$, the serial interval $\tau_s$ for the SEIR model results $4.90 \ d$ from Eq. \ref{eq:serial}. This value is adopted as reference for the rest of the work.
   
-  Clinical studies of the early spreading of COVID-19 in the Wuhan region estimate a serial interval between $4$ days \citep{Du2020} and $6$ days \citep{Firth2020}, and a growth rate between $0.1 \ d^{-1}$ \citep{Du2020} and $0.3 \ d^{-1}$ \citep{Sanche2020}. The time and growth scales obtained here are therefore consistent.
+  The time and growth scales obtained here are again consistent with the epidemiological literature: clinical studies about the early spreading of COVID-19 in the Wuhan region estimate a serial interval between $4$ days \citep{Du2020} and $6$ days \citep{Firth2020}, and a growth rate between $0.1 \ d^{-1}$ \citep{Du2020} and $0.3 \ d^{-1}$ \citep{Sanche2020}.
   \input{props.tex}  
   
   \subsection{Numerical solutions}
-	The time-continuous evolutions of both deterministic models are calculated integrating the differential equations with an ODE solver of the \textit{SciPy} python library (I uploaded all the code at \citet{pyndemic}). 	% TODO Inserire codice in appendice? Release GitHub?
-	The complete evolution of the SIR model is shown in Fig. \ref{fig:SIRtot}. It displays all the features discussed analytically in Section \ref{sec:theory}. After a fast initial growth, the number of individuals which simultaneously have the disease reaches a peak of $1900$ ($18.8 \%$ of the total population) on day 18. After $60 \ d$ the total outbreak size $r_{final}$ has reached $85 \%$ and the infected population $i_{final}$ is zero.
+	The time-continuous evolutions of both SIR and SEIR deterministic models are calculated integrating the differential equations with an ODE solver of the \textit{SciPy} python library (I uploaded all the code at \citet{pyndemic}). 	% TODO Inserire codice in appendice? Release GitHub?
+	The complete evolution of the SIR model is shown in Fig. \ref{fig:SIRtot}. It displays all the features discussed qualitatively in Section \ref{sec:theory}: after a fast initial growth, the number of individuals which simultaneously have the disease reaches a peak of $1900$ ($18.8 \%$ of the total population) on day 18. After $60 \ d$ the total outbreak size $r_{final}$ has reached $85 \%$ and the infected population $i_{final}$ is zero.
 	
-	The SEIR model instead reaches the peak only on day 41 and the epidemic remains active until day 100. Nevertheless, the peak size and the total outbreak size remain the same. The incubation time has no effect on the magnitude of the epidemic, only on the time scales (at least at this analytical level). These informations are summarized in Tab. \ref{tab:models}. 
+	The SEIR model instead reaches the peak on day 41 and the epidemic remains active until day 100. Nevertheless, both the peak size and the total outbreak size remain the same. The incubation time has no effect on the magnitude of the epidemic, only on the time scales (at least at this analytical level). Main informations are summarized in Tab. \ref{tab:models}, along with the values of the initial growth rates $K_0^{Fit}$ and doubling times $T_d^{Fit}$. 
 	\begin{figure}[h!]
 		\centering
 		\includegraphics[width=0.49\linewidth]{SIR_03.png}
@@ -296,26 +293,26 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
 		\label{fig:BothExp}
 	\end{figure}
 
-	The values of the initial growth rates $K_0^{Fit}$ and doubling times $T_d^{Fit}$ are also indicated there. These are not the ones from Tab. \ref{tab:props} predicted analytically, but are estimated by exponentially fitting the incidence time series limited to the initial phase of the outbreak \citep{Bauch2005}, as shown in Fig. \ref{fig:BothExp}.
+	These are not the ones from Tab. \ref{tab:props} (predicted analytically), but are instead obtained fitting the initial two weeks of the positives incidence with an exponential function \citep{Bauch2005}, as shown in Fig. \ref{fig:BothExp}.
 	 
-	The initial part is arbitrarily selected to terminate at $0.16$ of the curve's maximum (epidemic peak) or to include at least 5 readings (from day 0 to day 4). 
-	$K_0^{Fit}$ results $0.38 \ d^{-1}$ for the SIR model and  $0.15 \ d^{-1}$ for the SEIR one, in good agreement with the expected values. I will always plot both exponential fits over the positives curve when analysing the initial phase of an outbreak (the predicted in red, the extrapolated in black). 
+	The initial part is arbitrarily selected to terminate at $0.16$ of the curve's maximum (epidemic peak) or to include at least 14 readings (from day 0 to day 13). 
+	$K_0^{Fit}$ results $0.37 \ d^{-1}$ for the SIR model and  $0.15 \ d^{-1}$ for the SEIR one, in good agreement with the expected values. I will always plot both functions (the predicted in red, the fitted in black) when analysing the initial phase of an outbreak. 
 	\input{models.tex}
 	
-	The complete evolution of the relative populations of the four compartments of the SEIR model is pictured in Fig. \ref{fig:SEIRboth}, left panel. The delay between the exposed peak and the infected peak is clearly visible. Since the two transition rates $\gamma$ and $\mu$ are equal, the two curves are identical and just shifted in time (otherwise the smaller the rate out, the bigger the relative population).
+	The complete evolution of the relative populations of the four compartments of the SEIR model is pictured in Fig. \ref{fig:SEIRboth}, left panel. The delay between the exposed peak and the infected peak is clearly visible (green vs yellow). Since the two transition rates $\gamma$ and $\mu$ are equal, the two curves are identical and just shifted in time (otherwise the smaller the rate out from the compartment, the bigger the relative population).
 	\begin{figure}[h]
 		\centering
 		%  	\includegraphics[width=0.7\linewidth]{SIR_02.png}
 		\includegraphics[width=0.49\linewidth]{SEIR_02.png}
 		\includegraphics[width=0.49\linewidth]{SEIR_04.png}
-		\caption{\textbf{Left}: Typical evolution of a SEIR model. \textbf{Right}: Instantaneous reproduction number }
+		\caption{\textbf{Left}: Typical evolution of a SEIR model. \textbf{Right}: Instantaneous reproduction number. }
 		\label{fig:SEIRboth}
 	\end{figure}
 
-	In the right panel, the same evolution is described by means of the instantaneous reproduction number. The blue line represents the estimate obtained from Eq. \ref{eq:Rt}; the orange line shows instead the result of Eq. \ref{eq:RKt} involving the serial interval and the instantaneous growth rate.  The value of $\tau_s = 4.9 \ d$ is the one calculated analytically for the SEIR model (see Tab. \ref{tab:props}) and will be the same for all the following SEIR simulations.
+	In the right panel, the same evolution is described by means of the instantaneous reproduction number. The blue line represents the estimate obtained from Eq. \ref{eq:Rt} ($R(t)$); the orange line shows instead the result of Eq. \ref{eq:RKt} ($R_K(t)$) involving the serial interval and the instantaneous growth rate.  The value of $\tau_s = 4.9 \ d$ is the one calculated analytically for the SEIR model (see Tab. \ref{tab:props}) and will be the same for all the following SEIR simulations.
 	The value of $K(t)$ instead is calculated every time step from Eq. \ref{eq:Kt}, where the derivative is performed with second order accurate central differences. The $R = 1$ red dashed line is plotted for reference.
 
-	The initialization of the SEIR model with $i(0) = 0.001$ means that the simulation starts without any incubation delay, thus the instantaneously estimated $R_K(t)$ overshoots the expected value $R(t)$ at the beginning of the simulation. After few days the two estimates are in perfect agreement: the decaying slope is the same and so is the day when $R = 1$ is reached. Later on some discrepancy arises, $R_K(t)$ halting at $0.5$ while $R(t)$ dives a little lower.
+	The initialization of the SEIR model with $i(0) = 0.001$ means that the simulation starts without any incubation delay, this is why the instantaneously estimated $R_K(t)$ overshoots the expected value $R(t)$ at the beginning of the simulation. After few days the two estimates are in perfect agreement: the decaying slope is the same and same is the day when $R = 1$ is crossed. Later on some discrepancy arises: $R_K(t)$ halts at $0.5$ while $R(t)$ dives a little lower.
  
 	%This is the reference framework to which the following simulations are compared.
   
@@ -324,36 +321,35 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
   
   \section{Epidemic modelling on complex networks}
   \label{sec:network}
-  Homogeneous mixing hypothesis is certainly inadequate when modelling real systems. Human social networks show in fact a structural heterogeneity spanning various scales. Implementing the SEIR model as a diffusion process over a complex network should give more insight in the dynamics characterizing the epidemic spreading in a real environment. Here I will adopt the simplest network representation of the social contacts, i.e. with the nodes representing the individuals and the edges (links) the interactions between them. All edges are here considered equally effective in transmitting the contagion (unweighted network) with probability $\beta$. All nodes share the same incubation and recovery Poisson rates $\gamma$ and $\mu$. 
-  
-  The epidemic model will be discrete both regarding time (at the $1 d$ scale) and number of cases (at the single individual scale). Edges will be bi-directional (undirected network) because there is no hierarchical or ordering process in influenza-like diseases spreading, apart from a node being already infected or not (but this is the model responsibility, not the network). The network is static in time, meaning that all contacts are supposed to be active for all the time at the daily scale and that neither births nor deaths are considered, as it was for the deterministic continuous models too. 
+  Homogeneous mixing hypothesis is certainly inadequate when modelling real systems. Human social networks show in fact a structural heterogeneity spanning various scales. Implementing the SEIR model as a diffusion process over a complex network should give more insight in the dynamics characterizing the epidemic outbreak in a real environment. Here I will adopt the simplest network representation for the social contacts, that is with the nodes representing the individuals and the edges (links) representing the interactions between them. All edges are here considered equally effective in transmitting the contagion (unweighted network) with probability $\beta$. All nodes share the same incubation and recovery Poisson rates $\gamma$ and $\mu$. 
+  The epidemic model is discrete both regarding time (at the $1 d$ scale) and number of cases (at the single individual scale). Edges will be bi-directional (undirected network) because there is no hierarchical or ordering process in influenza-like diseases spreading, apart from a node being already infected or not (but this is the model responsibility, not the network). The network is static in time, meaning that all contacts are supposed to be active for all the time at the daily scale and that neither births nor deaths are considered, as it was for the deterministic continuous models already. 
   
   \subsection{Network models}
-  Real-world networks show a small diameter (compared to the number of nodes) but also a high clustering coefficient (high number of 3 vertex cliques) and a connectivity degree distribution spanning several orders of magnitude.
-  To move from the homogeneous mixing hypothesis to the similarity to the real world, I will use five different random complex networks models: a perfectly random Erdos-Renyi (ER) network, a ring lattice (RL), a small-world Watts-Strogatz network (WS), a Barabasi-Albert (BA) scale-free network and finally a derivation of BA with increased clustering developed by \citet{Holme} (HK). All the network models except HK are defined and referenced in \citet{PastorSatorras}.
-  Fig. \ref{fig:networks0} and Fig. \ref{fig:networks1} show a summary of the network's main features: a representation of the network layout (from a scale model with 1:100 nodes and same average degree), the connectivity histogram ($P(k)$ vs $k$), fitted by a gaussian (red) and a negative power law (blue) distribution.   
-  Scatterplots of betweenness centrality against degree ($BC$ vs $k$) are shown to characterize nodes ranking.  Main properties are also reported in the first columns of Tab. \ref{tab:networks}. All networks are connected and share the same number of nodes ($10000$), roughly the same number of edges ($60000$) and the same average connectivity ($\langle k \rangle = 12 = \bar{k}$).
+  Real-world networks show a small diameter (compared to the number of nodes) but also a high clustering coefficient (high number of 3-cliques) and a connectivity degree distribution spanning several orders of magnitude.
+  The analysis will move from the homogeneous mixing hypothesis to the more realistic scenario in five steps implementing five different models of random complex networks: a perfectly random Erdos-Renyi (ER) network, a ring lattice (RL), a small-world Watts-Strogatz network (WS), a Barabasi-Albert (BA) scale-free network and finally a derivation of BA with increased clustering, developed by \citet{Holme} (HK). All the network models except HK are defined and referenced in \citet{PastorSatorras}.
+  Fig. \ref{fig:networks0} and Fig. \ref{fig:networks1} show a summary of the network's main features: a representation of the network layout (from a scale model with 1:100 nodes and same average degree) and the connectivity histogram ($P(k)$ vs $k$), fitted by a gaussian (red) and a negative power law (blue) distributions.   
+  Scatterplots of betweenness centrality against degree ($BC$ vs $k$) are shown to characterize nodes ranking.  Main properties are also reported in the first columns of Tab. \ref{tab:networks}. All networks are completely connected and share the same number of nodes ($10000$), roughly the same number of edges ($60000$) and the same average connectivity ($\langle k \rangle = 12 = \bar{k}$).
   
-  The \textbf{ER} network (Fig. \ref{fig:networks0}, left panel) serves as a null-model for the homogeneous mixing hypothesis. The random long-range connections lead to a low average path length (or small diameter, or high traversability). The node connectivity degree is normally distributed around the mean value (Gaussian red fit). 
-  Its more radical counterpart is the \textbf{RL} (Fig. \ref{fig:networks0}, right panel) which describes only small-range (local) interactions. Higher clustering dramatically increases the network diameter. All the node share the same $k$, $C$ and $BC$. 
+  The \textbf{ER} network (Fig. \ref{fig:networks0}, left panel) serves as a null-model for the homogeneous mixing hypothesis. The random long-range connections lead to a low average path length (or small diameter, or high traversability). The node connectivity degree is distributed normally around the mean value (red fit). 
+  Its more radical counterpart is the \textbf{RL} (Fig. \ref{fig:networks0}, right panel) which describes only small-range (local) interactions. Its high clustering dramatically increases the network diameter. All the nodes of RL share the same $k$, $C$ and $BC$. 
   
-  \textbf{WS} (central panel) is introduced to combine the two pictures together: random "shortcuts" allow a high traversability also in presence of high clustering. All three of them are created through the same Watts-Strogatz algorithm but with different probabilities for the edge random rewiring: $1$ for ER, $0$ for RL and $0.1$ for WS.
+  \textbf{WS} (central panel) is introduced to combine the two pictures together: random "shortcuts" allow high traversability also in presence of lattice-like high clustering. All these first three models are created through the same Watts-Strogatz algorithm but with different probabilities for the random rewiring of the edges: $1$ for ER, $0$ for RL and $0.1$ for WS.
   
   
-  Up to here, the average connectivity degree $\langle k \rangle$ still defines a precise scale for all the network properties. \textbf{BA} instead (Fig. \ref{fig:networks1}, left) introduces a connectivity distribution which extends over multiple orders of magnitude (scale-free in the limit of a continuously incrementing size), following a negative power law. But BA lacks again in clustering. 
- 
-  There are many models that try to extend BA toward a higher clustering and realistic growing dynamics, \textbf{HK} is chosen among them because it provides tunable clustering (here set at the maximum possible value of $1$) and because it is already integrated in the NetworkX library. The presence of clustering in HK is obtained by building a triangle after each step of preferential attachment of the BA algorithm \citep{Holme}.
+  Up to here, the average connectivity degree $\langle k \rangle$ still defines a precise scale. \textbf{BA} instead (Fig. \ref{fig:networks1}, left) introduces a connectivity distribution which extends over multiple orders of magnitude (scale-free in the limit of a continuously incrementing size, with vanishing moments), following a negative power law.
+  
+  But BA lacks again in clustering. There are many models that try to extend BA toward a higher clustering and realistic growing dynamics. \textbf{HK} is chosen among them because it provides tunable clustering (here set at the maximum possible value of $0.38$) and because it is already integrated in the NetworkX library. The presence of clustering in HK is obtained by building a triangle after each step of preferential attachment of the BA algorithm \citep{Holme}.
   HK is presented in Fig. \ref{fig:networks1}, central panel. Writing the scale-free distribution as: $P(k) \approx k^{- \gamma}$, BA and HK have respectively $\gamma = 2.68$ and $\gamma = 2.70$.
   The right panel of Fig. \ref{fig:networks1} refers instead to a HK copy where the highest BC nodes have been removed (HKL) and it is addressed in Sec. \ref{sec:miti}.
   
   
   \subsection{The DBMF approach} 
-  The predictions of Sec. \ref{sec:theory} are obtained replacing $\bar{k}$ with $\langle k \rangle$ (homogeneous mixing hypothesis). But the deterministic epidemic equations could be adapted to the network representation also substituting the average number of contacts $\bar{k}$ with each node's connectivity degree $k$. Nodes with different connectivity are now treated differently by the model's equations.
+  The predictions of Sec. \ref{sec:theory} are obtained replacing $\bar{k}$ with $\langle k \rangle$ (homogeneous mixing hypothesis). But the deterministic epidemic equations could be adapted to the network representation also substituting the average number of contacts $\bar{k}$ with each node's connectivity degree $k$. Nodes with different connectivity are now treated differently by the equations.
   
-  Assuming that all the nodes with the same $k$ could be considered statistically equivalent and share the same probability $P(k'|k)$ to be connected to any node of degree $k'$, a possible solution is to re-write the set of deterministic differential equations (Eq. \ref{eq:seir}) for each degree class separately.
+  Assuming that all the nodes with the same $k$ could be considered statistically equivalent and share the same probability $P(k'|k)$ to be connected to any node of degree $k'$, the deterministic differential equations (Eq. \ref{eq:seir}) could be written for each degree class separately.
   In this way, the homogeneous hypothesis is moved from the total population to the single k classes (k-stratification): the actual topology of the network is not yet taken into account, but at least the degree distribution is. 
   
-  The deterministic differential equations are stratified for each degree and the evolution of the overall compartments is given by the sum of all the k-specific compartments. The $i$ and $r$ equations remain identical at the $k$ level, since the incubation and removal processes evolve for each node independently from the others. The contagion process instead is based on the encounter between two populations without any constraint on degree, therefore it needs a proper degree-mixing term $\Gamma_k$ to be added to the equations. It controls the $s_k \cdot i_k'$ product in the $s(t)$ and $e(t)$ equations and grants that each $k$ susceptible class encounters every $k'$ infected class with the $P(k'|k)$ probability:
+  The $i$ and $r$ equations remain identical to the original ones, since the incubation and removal processes evolve for each node independently. The contagion process instead is based on the encounter between two populations without any constraint on respective degrees, therefore a proper degree-mixing term $\Gamma_k$ is needed. It controls the $s_k \cdot i_k'$ product in the $s(t)$ and $e(t)$ equations and grants that each $k$ susceptible class encounters every infected $k'$ class with the $P(k'|k)$ probability:
   \begin{align}
   	\diff{s_{k}}{t} = - \beta k s_{k} \Gamma_{k} \quad;  \qquad 	\diff{e_{k}}{t} =  \gamma e_{k} \ - \ \beta k s_{k} \Gamma_{k} \quad; \qquad	\Gamma_{k} = \sum_{k'} \ P(k'|k) \ i_{k'}  \ \frac{k' - 1}{k}
   	%  	\quad; \qquad \diff{i_{k}}{t} = \gamma e_{k} - \mu i_{k} \quad; \qquad \diff{r_{k}}{t} = \mu i_{k}
@@ -364,16 +360,15 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
 %  	\label{eq:mixing}
 %  \end{align}
 %  
-  The coefficient $\frac{k' - 1}{k'}$ takes into account the fact that, in a static network, a node could not propagate the disease to the neighbour who originally infected it, because the latter is necessarily not susceptible. This node has to be ignored when calculating the actual probability of finding one susceptible neighbour among the $k'$ connected ones.
-  
+  The coefficient $\frac{k' - 1}{k'}$ takes into account the fact that, in a static network, a node could not propagate the disease to the neighbour who originally infected it, because the latter is necessarily not susceptible. %This node has to be ignored when calculating the actual probability of finding one susceptible neighbour among the $k'$ connected ones.
   The coefficient corrects also the connectivity matrix $\tilde{C}$, whose elements are:  
   \begin{align}
 		\tilde{C}_{kk'} = k \ P(k'|k) \ \frac{k' - 1}{k'} + \epsilon
   \end{align}
 
-	where $\epsilon$ is a very small quantity ($10^{-10}$) introduced to complete the k-spectrum in case of missing values of $k$. The effect on the results is negligible at the considered precision (since one individual is $ \sfrac{1}{N} = 10^{-4} \ , \ 0.1 \%$) but it allows the inversion of the matrix without singularities.
+	Here $\epsilon$ is a very small quantity ($10^{-10}$) introduced to complete the k-spectrum in case of missing values of $k$. Its effect on the results is negligible at the considered precision (one individual is $ \sfrac{1}{N} = 10^{-4} \ , \ 0.1 \%$) but it allows the inversion of the matrix without creating any singularity.
 
-  The inverse of the largest eigenvalue $\Lambda_M$ of the matrix $\tilde{C}$ defines the epidemic threshold for the spreading rate $\sfrac{\beta}{\mu}$ over the network. Both the epidemic threshold and the spreading rate are here multiplied by the average connectivity $\bar{k} = 12$, so that the control parameter becomes $\sfrac{\lambda}{\mu}$ at the start and $R(t)$ as the epidemic evolves. The critical value for this is $1$ in the deterministic solution, as seen in Eq. \ref{eq:sir_growthReq}, and it is $\sfrac{\langle k \rangle}{\Lambda_M}$ in the DBMF approximation over the network. This means that if the critical value is larger (resp. smaller) than one, the network topology itself is inhibiting (resp. favouring) the spreading of the disease compared to the deterministic case. $R_K(t)$ instead, being calculated on actual increments of the number of positive (infected) individuals, still has $1$ as fixed critical value.
+  The inverse of the largest eigenvalue $\Lambda_M$ of the matrix $\tilde{C}$ defines the epidemic threshold for the spreading rate $\sfrac{\beta}{\mu}$ over the network. Both the epidemic threshold and the spreading rate are here multiplied by the average connectivity $\bar{k} = 12$, so that the control parameter becomes $\sfrac{\lambda}{\mu}$ at the start and $R(t)$ as the epidemic evolves. The critical value for this parameter is $1$ in the deterministic solution, as seen in Eq. \ref{eq:sir_growthReq}, and it is $\sfrac{\langle k \rangle}{\Lambda_M}$ in the DBMF approximation over the network. This means that if the critical value is larger (resp. smaller) than one, the network topology itself is inhibiting (resp. favouring) the diffusion compared to the deterministic case. $R_K(t)$ instead, being calculated on actual increments of the number of positive individuals, will always have $1$ as critical value.
   \begin{align}
 		 R(t) \equiv \frac{\beta \langle k \rangle }{\mu} \cdot s(t) \ > \ \frac{\langle k \rangle}{\Lambda_M}
   \end{align}
@@ -407,8 +402,8 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
   	\Lambda_M^{uncorr.} \approx \frac{\langle k^2 \rangle}{\langle k \rangle} - 1
   \end{align}
 
-  where $\langle k^2 \rangle = \sum_k k^2 P(k)$ is the un-normalized second moment of the degree distribution and $- 1$ derives from the $\frac{k-1}{k}$ correction.
-  The predicted values of $K_0$ and the critical threshold are presented in pairs in the last two columns of Tab. \ref{tab:networks}, firstly the one obtained from $\Lambda_M$, then the approximated value for uncorrelated networks. Only for disassortative networks like BA and HK there are differences between the two estimates. 
+  where $\langle k^2 \rangle = \sum_k k^2 P(k)$ is the un-normalized second moment of the degree distribution and the term $- 1$ derives from the $\frac{k-1}{k}$ correction.
+  The predicted values for $K_0$ and for the critical threshold are presented in pairs in the last two columns of Tab. \ref{tab:networks}, firstly the one obtained from $\Lambda_M$, then the approximation for uncorrelated networks. Only for disassortative networks like BA and HK there are differences between the two estimates. 
  	\input{networks.tex}
   
 
@@ -447,38 +442,36 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
 
   
   \subsection{Simulations over networks}
-  Simulations are run in batches of $100$ per network type, to create an ensemble of random initial statuses and random infection patterns, while the network structures are maintained fixed (setting a seed in the random network generator functions). The evolution of the relative population of the four compartments is presented in the top row of Fig. \ref{fig:outcomes0} and \ref{fig:outcomes1}, following the same column arrangement of Fig. \ref{fig:networks0} and Fig. \ref{fig:networks1}. In the middle row a detail of the initial phase is shown (the axes are rescaled consistently). The evolution of the effective reproduction number is represented in the bottom row for the whole duration. The daily median of the considered variables (relative population of the compartments, K(t), R(t)) is extracted from the ensembles and reported in Tab. \ref{tab:results} and plotted as a solid line. Soft coloured areas display the total spread within the ensembles.
+  Simulations are run in batches of $100$ per network type, to create an ensemble of random initial statuses and random infection patterns, while the network structures are maintained fixed (setting a seed in the random network generator functions). The evolution of the relative population of the four compartments is presented in the top row of Fig. \ref{fig:outcomes0} and \ref{fig:outcomes1}, following the same column arrangement of Fig. \ref{fig:networks0} and Fig. \ref{fig:networks1}. In the middle row a detail of the initial phase is shown (the axes are rescaled consistently). The evolution of the effective reproduction number is represented in the bottom row for the whole duration. The daily median of the considered variables (relative population of the compartments, K(t), R(t)) is extracted from the ensembles, reported in Tab. \ref{tab:results} and plotted as a solid line. Soft coloured areas display the total spread within the ensembles.
   \input{results.tex}
   
   \subsection{Results and discussion}
 %  \subsubsection{ER} %subsub
-  The epidemic simulation over the random network null model \textbf{ER} (Fig. \ref{fig:outcomes0}, top left) is in very good agreement with the deterministic result: most of the population ($80 \%$) is reached by the epidemic in around $100 \ d$, with the peak in the number of positives reaching $14 \%$ and happening around day $50$. The coupling of the randomness in the connectivity patterns, in the choice of the initially infected nodes and in the Markov chain of the contagion process produce some variance. Its effects are limited to the middle phase and are of limited magnitude. All the members of the ensemble converge pretty firmly to the same value of prevalence (0.70) and have similar transmission speeds (i.e. steepness of the blue (s) and red (r) curves). Most of the variability seems to originate from the initial phase.
+  The epidemic simulation over the random network null model \textbf{ER} (Fig. \ref{fig:outcomes0}, top left) is in very good agreement with the deterministic result: most of the population ($80 \%$) is reached by the epidemic in around $100 \ d$, with the peak in the number of positives reaching $14 \%$ and happening around day $50$. The coupling of the randomness in the connectivity patterns, in the choice of the initially infected nodes and in the Markov chain of the contagion process produce some variance, but its effects are limited to the middle phase and are of limited magnitude. All the members of the ensemble converge pretty firmly to the same value of prevalence (0.70) and have similar transmission speeds (i.e. steepness of the blue (s) and red (r) curves). Most of the variability seems to originate from the initial phase.
   
-  Initial growth is slightly slower than both deterministic and DBMF predictions, with the former serving almost as an upper bound for the growth rate of the random ensemble (the red dashed line of Fig. \ref{fig:outcomes0}, middle left, is in fact at the edge of the grey area, which is the range of growth rates fitted on the members). Consistently, the actual $R_K(t)$ (orange solid line of Fig. \ref{fig:outcomes0}, bottom left) remains under the $R(t)$ predicted from the availability of susceptible individuals (blue solid line). $R(t)$ analysis confirms the agreement between expectations and simulation in the middle and final phases: both lines cross the critical value (one) at the same time (peak day) and die out almost the same way.
+  Initial growth is slightly slower than both deterministic and DBMF predictions, with the former serving almost as an upper bound for the growth rate of the random ensemble (the red dashed line of Fig. \ref{fig:outcomes0}, middle left, is in fact at the edge of the grey area, which is the range of growth rates fitted on the members). Consistently, $R_K(t)$ (orange solid line of Fig. \ref{fig:outcomes0}, bottom left) remains initially under $R(t)$ (blue solid line). In the middle and final phases also the reproduction number confirms the agreement between expectations and simulation: both lines cross the critical value ($1$) at the same time (peak day: $48$) and die out almost the same way.
   
-  The $R_K(t)$ estimate becomes noisy at the start and at the end of the epidemic because $K(t)$ is normalized with the number of positives.
-  The small density of the first and last cases increase the relative weight of the random fluctuations and of the numerical noise. From here arises also the uncertainty in the $R(t)$ determination at the start of an outbreak in real life.\\
+  The $R_K(t)$ estimate is noisy at the start and at the end of the epidemic because $K(t)$ is normalized with the number of positives.
+  The small density associated with the first and the last cases increases the relative weight of the random fluctuations and the numerical noise. From this issue comes also part of the uncertainty in the $R(t)$ determination in real life at the start of an outbreak.\\
   
   %  \subsubsection{WS}
   Looking at the epidemic over \textbf{WS} (Fig. \ref{fig:outcomes0}, central column), the initial growth is slower ($- 58 \%$) and the peak of positives (exposed + infected) is $65 \%$ smaller and happens $45$ days later ($+ 94 \%$). DBMF estimates for WS and ER are nearly identical: DBMF clearly does not spot the presence of higher clustering, since the connectivity matrix carries no information about that, but the dynamic of the spreading appears to be highly influenced by that.
   
   %  \subsubsection{RL}
-  In the \textbf{RL} the phenomenon is even more evident and dominates the spreading dynamic completely after just a week and $20$ cases. The contagion is strongly inhibited by the fast depletion of nearby susceptible nodes. The drop in the number of total susceptible individuals (s) is barely noticeable (Fig. \ref{fig:outcomes0}, bottom right), still R(t) rapidly drops around $1$. The local picture overcomes the global one, the epidemic dies out even if there is plenty of nodes still susceptible. For the other network models $\langle l \rangle$ is of the same order of magnitude of $\tau_r = 3 \ d$, for RL is more than 100 times smaller (contagion speed along the paths is $\leq \ \gamma = 0.33 \ \sfrac{edges}{day}$).
-  The contagion probably spreads like a progressing front (like fire on a sheet of paper), as $R_K(t)$ near one suggests, without increasing the population of positives over just 34 individuals. It stops when random fluctuations deplete the number of positives.\\
+  In the \textbf{RL} the phenomenon is even more evident and dominates the spreading dynamic completely after just a week and $20$ cases. The contagion is strongly inhibited by the fast depletion of nearby susceptible nodes: the drop in the number of total susceptible individuals (s) is barely noticeable (Fig. \ref{fig:outcomes0}, bottom right), still R(t) rapidly drops around $1$. The local picture overcomes the global one, the epidemic dies out even if there is plenty of nodes still susceptible, because they are too far to be reached. Contagion moves at a speed around $\gamma = 0.33 \ \sfrac{edges}{day}$ along a single path. While for all the other network models $\langle l \rangle $ is approximately of the same order of magnitude of $\gamma \cdot \tau_r \approx 1 $, for RL the average path length is more than a hundred times bigger.
+  $R_K(t)$ near one suggests that the contagion in RL probably moves as a progressing front (like fire on a sheet of paper). The population reached by the disease is around 200 people, but no more than 34 nodes are ever infected at the same time. The progression stops when the random fluctuations of the Poisson processes progressively deplete the number of positives.\\
   
-  Scale free networks \textbf{BA} and \textbf{HK} (Fig. \ref{fig:outcomes1}, first and second column) show a much faster spreading of the infection ($K_0$ $+ 140 \%$, peak $- 50 \%$ with respect to ER). Apart from HK reaching a slightly lower peak ($- 20 \%$ with respect to BA), the two share the same development of the epidemic.
-  I have no direct insight of the node-by-node evolution of the spreading, but it is much reasonable to expect that the first phase of the outbreak involves the hubs of the network. They are always pretty close to any node chosen at random (as the initial infected seed is) due to their high BC, so they are likely to be infected in the early stages, and they have a high connectivity degree, which gives them a great infecting potential. Hub nodes could be related to the super-spreaders individuals detected in real-life scenarios \citep{Kissler2018}, even though in the clinical studies the direct relation between high connectivity and the super-spreading role does not always occur and more variables come into play. % Ref. Haslemere for time scale of super-spreading events
+  Scale free networks \textbf{BA} and \textbf{HK} (Fig. \ref{fig:outcomes1}, first and second column) show a much faster spreading of the infection with respect to ER ($K_0$ $+ 140 \%$, peak $- 50 \%$). Apart from HK reaching a slightly lower peak ($- 20 \%$ with respect to BA), the two share the same epidemic development.
+  I have no direct insight of the node-by-node evolution of the spreading, but it is much reasonable to expect that the first phase of the outbreak involves the hubs of the network. They are always pretty close to any randomly chosen node due to their high BC, so they are likely to be infected in the early stages, and they have a high connectivity degree, which gives them a great infecting potential. The role of the hubs matches the one of the super-spreaders detected in real-life scenarios \citep{Kissler2018}, even though in the clinical studies the direct relation between high connectivity and the super-spreading role does not always occur and more variables come into play. % Ref. Haslemere for time scale of super-spreading events
+  Such spreading events happen mostly in the early stages of the outbreak and carry much of the infection strength.
   
-  In the second phase, all major hubs have probably been reached by the infection already and they recovered, hindering the diffusion between the remaining low-degree still-susceptible nodes. Thus, despite the explosive outbreak, the final prevalence is slightly smaller than the uncorrelated networks' ($- 11 \%$).
+  In the second phase, all major hubs have probably been reached by the infection and they recovered already, hindering the diffusion among the remaining low-degree still-susceptible nodes. Thus, despite the explosive outbreak, the final prevalence is slightly smaller than the uncorrelated networks' one ($- 11 \%$).
   
-  Here, the DBMF estimate of the growth rate (the one estimated through the moments of the degree distribution) and the deterministic one (form Eq. \ref{eq:seir_K0}) are respectively the upper and lower boundary for the spread of the ensemble's growth rates (for ER instead, the deterministic was the upper boundary). DBMF prediction derived from $\Lambda_M$ is even bigger and it is not plotted. 
+  Here, the DBMF estimate of the growth rate through the moments of the degree distribution and the deterministic one form Eq. \ref{eq:seir_K0} are respectively the upper and the lower boundary for the spread of the ensemble's growth rates (for ER instead, the deterministic was the upper boundary). DBMF prediction derived from $\Lambda_M$ is even bigger and it is not plotted. 
   
    % vanishing thresholds
-  Theory predicts a vanishing epidemic threshold for scale-free networks with a negative exponent between $-2$ and $-3$ (as BA and HK) in the limit of $N \rightarrow \infty$ \citep{PastorSatorras}. Here, $N=10000$ put the simulation quite far from that limit, but still the DBMF prediction of the critical value for $R(t)$ drops under $0.5$. The value is probably underestimated since $R(t)$ plateaued higher than that level. Nevertheless, it is an opposite behaviour to what was seen for ER, where instead the network structure slightly opposed the spreading.
+  Theory predicts a vanishing epidemic threshold for scale-free networks with a negative exponent between $-2$ and $-3$ (as BA and HK have) in the limit of $N \rightarrow \infty$ \citep{PastorSatorras}. Here, $N=10000$ put the simulation quite far from that limit, but still the DBMF prediction of the critical value for $R(t)$ drops under $0.5$. The value is probably underestimated since $R(t)$ plateaued higher than that level. Nevertheless, it is an opposite behaviour to what was seen for ER, where instead the network structure slightly opposed the spreading.
   
-
-  
-  % TODO commento e intro a HK Lockdown.
   
   \clearpage
   
@@ -529,7 +522,7 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
  
   
   % Discussion on clustering
-  Peak data (day vs size) for all the runs of the models is summarized in the scatterplot of Fig. \ref{fig:analysis}, left panel. Looking at the ER-WS and BA-HK data points, the increased clustering clearly limits the peak size, more evidently for the uncorrelated ER-WS pair but detectable also for BA-HK. Peak day instead is heavily delayed in WS, unchanged in HK: disassortativity seem to control the timing of the spreading much more than clustering. Clustering instead, when not coupled with disassortativity, remarkably emphasizes the randomness in the peak's timing (WS and RL), while its magnitude has much lower variance.
+  Peak data (day vs size) for all the runs of the models is summarized in the scatterplot of Fig. \ref{fig:analysis}, left panel. Looking at the ER-WS and BA-HK data points, the increased clustering clearly limits the peak size, more evidently for the uncorrelated ER-WS pair but detectable also for BA-HK. Peak day instead is heavily delayed in WS, unchanged in HK: disassortativity seem to control the timing of the spreading much more predominantly than clustering. Clustering instead, when not coupled with disassortativity, remarkably enhances the randomness in the peak's day of occurrence (see WS and RL), while the peak's magnitude has much lower variance.
   
   According to the literature, the clustering should also limit the outbreak size \citep{PastorSatorras}: this is found to be true for RL and WS, but seems to become less evident when clustering is coupled with scale-freeness in HK (see Fig. \ref{fig:analysis}, right panel: correlated fit (pink) vs uncorrelated (grey)). 
   Clustering could also intuitively give an initial boost to the outbreak speed at the very local scale, but no confirmation of that emerges from the data.
@@ -548,43 +541,36 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
 
 	\section{Mitigation effort}
 	\label{sec:miti}
-	%%	
 	%%	Rescaling of beta, rescaling of s(t)
-	%%	
 	%%	Sim? 
 	%%	- non awareness mode
 	%%	- immunization before init
 	%%	. random
 	%%	. targeted
-	%%	
-	%
-	%	
-	%	A delay in the hospitalization affects $R_0$ directly and with great potential: $R_0$ is proportional to the delay $\tau_{r}$ between the onset of the contagiousness and the beginning of the isolation measurements (Eq. \ref{eq:R0}). Changing $\tau_{r}$ from $3$ to $7 \ d$, as assumed for the "non-awareness mode" in the initial phase of the COVID-19 outbreak, results in $R_0$ greater than $5$.
-	%	% numbers? fare simulazioni?
-	%	
+	
 	%	\subsection{Vaccines}
 	%	Complete removal of the susceptible individuals is not needed to stop an epidemic. Herd immunity triggers by definition as $R(t)$ reaches $1$. This could be obtained naturally during the epidemic evolution or by vaccination of part of the susceptible population.
-	%	
 	%	The number $g = 1 - \sfrac{1}{R_0} $ identifies the fraction of susceptible population which needs to be vaccinated in order to reach herd immunity.
 	%	The remaining susceptible population is given by $1 - g = \sfrac{1}{R_0} = 0.46$.
 	%	% come scalare col critcal value?
-	%	
 	%	This value could be compared with the value of $s_peak$ (Tab. \ref{tab:results}), which is the actual fraction of individuals still susceptible the day the positives reach the peak. The farther the two numbers are, the more the network influences the immunity dynamics. ER is not surprisingly the closer to the deterministic well-mixed picture. RL is the one that departs the most. BA and HK probably have the super-spreading hubs already infected by the day of the peak, so probably $1 - s_peak$ is not a good estimate for the herd immunity in a network like that (it should be much higher, with $s_peak$ smaller). 
 
-	Waiting for a vaccine, mitigation measures should be taken from governments and authorities to slow down the disease spreading in order to keep the positives peak under the level of maximum capacity of the national health care systems. 
-	In heterogeneous disassortative networks, early hospitalization and targeted lock-downs seem to be the most effective strategies, especially when combined. I will not address contact tracing here, since the topology of the contacts network is assumed known. 
+	Waiting for a vaccine, mitigation measures should be taken from governments and authorities to slow down the disease spreading in order to keep the positives peak under the level of maximum capacity of the national health care systems, specifically of the intensive care units (ICUs). 
+	In heterogeneous disassortative networks, early hospitalization and targeted lock-downs seem to be the most effective strategies, especially when combined. I will not address contact tracing here, since the topology of the contacts network is assumed already known. 
 	
 	\subsection{Targeted lockdown}
-	Lockdowns could be random (everybody stays at home) or targeted (places and events with the greatest risk of contagion are closed). I simulated a targeted lockdown scenario by attacking the network's nodes ranked by a centrality metric. This was chosen to be the betweenness centrality (BC), in order to hit the superspreading role of the high BC hubs explored in the previous Section.
+	Lockdowns could be random (everybody stays at home) or targeted (places and events with the greatest risk of contagion are closed). I simulated a targeted lockdown scenario by attacking the network's nodes ranked by a centrality metric. As metric I chose the betweenness centrality (BC), in order to hold off the superspreading role of the high BC hubs explored in the previous Section.
 	
-	After reaching the threshold level of 400 positives ($p(t) = 0.04$) over an unmodified HK network, nodes with high BC are recursively removed until a the resulting average connectivity degree is reduced by $ 40 \%$. These values are an arbitrary choice that balances the value of the resulting $R_0$ ($1.32$), the network size and the mitigation effectiveness.
-	In this way, only a small fraction of the nodes is completely isolated ($6 \%$), but half of the connections is inhibited. Clustering remains reasonably high and the average connectivity around $7$ means that most personal relations are still allowed. The network is still connected.
+	The attack is arbitrarily optimized to maximize the size of the final network (minimum intervention), but also the effectiveness of the mitigation (maximum result), while keeping realistically $R_0$ still above one immediately after the application of the countermeasures.
+	Specifically, after reaching a threshold level of 400 positives ($p(t) = 0.04$) over the unmodified HK network, nodes with high BC are recursively removed until the average connectivity degree of the resulting graph is reduced by $ 40 \%$. 
+	In this way, only a small fraction of the nodes remains completely isolated ($6 \%$), but half of the connections is inhibited. Clustering remains reasonably high and the average connectivity around $7$ means that most personal relations are still allowed. The network is still completely connected, the new $R_0$ is $1.32$. Other parameters are presented in Tab.\ref{tab:lock_networks}. 
 	
 	From day 14 the epidemic model is run on this variant of the HK network (HKL). Relative populations are rescaled to the new total number of nodes, so there is a small gap in the curves of Fig. \ref{fig:outcomes1}, top right.
+	Results are summarized in Tab. \ref{tab:lock_results}.
 	
 	\begin{table}[h]
 		\centering
-		\caption{Networks properties. $\langle k \rangle$ and $\langle C \rangle$ are the average node connectivity degree and the average clustering coefficient respectively. }
+		\caption{Network properties before and after the measures. $\langle k \rangle$ and $\langle C \rangle$ are the average node connectivity degree and the average clustering coefficient respectively.}
 		\label{tab:lock_networks}
 		\begin{tabular}{lccccccc}
 			\toprule
@@ -597,15 +583,12 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
 		\end{tabular}
 	\end{table}
 	
-	Looking at the plot, the first thing that catches the eye is the  greatly increased spread between the members of the simulation (Fig. \ref{fig:outcomes1}, top right). This is probably due to technical reasons and it is not a direct consequence of the network modification: going from the unmodified HK to HKL, the epidemic model is unfortunately reinitialized from scratch. Each new member of the ensemble inherits the correct relative population of the compartments, but the information about the single node belonging which compartment is lost (this is equivalent to a node-edges reshuffle). Therefore a new source of variability is introduced and its role appears dominant. Tackling this issue was beyond the reach of this work (some intervention inside the NDlib code would have been needed) and nevertheless some reshuffling of the social interactions following a change in the daily routines (caused by the partial lockdown) is also reasonable.
+	Looking at the plot, the first thing that catches the eye is the spread between the members of the simulation, which is greatly increased (Fig. \ref{fig:outcomes1}, top right). That is probably due to technical reasons and it is not a direct consequence of the network modification: going from HK to HKL, the epidemic model is unfortunately reinitialized from scratch. Each new member of the ensemble inherits the correct relative population of the compartments, but the information about the single node status is lost (this is equivalent to a node reshuffle). Therefore a new source of variability is introduced and its role appears dominant. Tackling this issue was beyond the reach of this work (some intervention inside the NDlib code would have been needed) and nevertheless some reshuffling of the social interactions following a change in the daily routines (caused by the partial lockdown) is also reasonable.
 	
-	Apart from the increased spread, the effects of the "lockdown" are clearly visible in terms of the sudden drop in the positives curve's steepness (from day $14$), hence in the speed of the spreading. The peak day follows closely (day $25$) and is much lower than without the lockdown ($- 70 \%$). But after that, since the susceptible compartment remains highly populated, the epidemic still takes a long time before dying out ($+ 32 \ d$ with respect to HK).\\
+	Apart from the increased spread, the effects of the measures are clearly visible in terms of the sudden drop in the positives curve's steepness (from day $14$ onwards), hence in the speed of the transmission. The peak day follows closely (day $25$) and is much lower than without the lockdown ($- 70 \%$). But after that, since the susceptible compartment remains highly populated, the epidemic still takes a long time before dying out ($+ 32 \ d$ with respect to HK). Final prevalence is halved.
 	
-	- Variability in both peak day and peak intensity (Fig \ref{fig:analysis})
-	
-  - inverse correlation between peak day and size	 
-  
- 	- final prevalence is also halved
+	The simulation of the lockdown measure introduces a great variability in both peak day and peak intensity (Fig \ref{fig:analysis}), with an inverse proportionality between peak day and size	which was unprecedented before.
+	Anyhow, given the effect on both peak and prevalence, removing (isolating) the nodes with highest BC could be seen as a rather effective countermeasure.
  	
 % 	\begin{figure}[h]
 %		\centering
@@ -617,7 +600,7 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
 %	\end{figure}
 	\begin{table}[h]
 		\centering
-		\caption{Summary of the numerical simulations over networks. The indicated values represent the median from 100 simulations.}
+		\caption{Results of the numerical simulations for the mitigation/aggravation scenarios. The indicated values represent the median from 100 simulations. Unmodified HK is added for reference.}
 		\label{tab:lock_results}
 		\begin{tabular}{lcccccccc}
 			\toprule
@@ -634,14 +617,26 @@ The initial growth coefficient $K_0$ for the SEIR model is the bigger eigenvalue
 	
 	
 	\subsection{Early vs late hospitalization}
-	The simulations of Sec. \ref{sec:network} already adopted the best-case scenario for the removal/recovery time ($\tau_{r} = 3 \ d$), assuming a fast diagnosis and isolation of the infected cases. 
-	Otherwise, a delay in the hospitalization would affect $R_0$ directly and with great potential (see Eq. \ref{eq:R0}). Changing $\tau_{r}$ from $3$ to $7 \ d$, as assumed for the "non-awareness mode" in the initial phase of the COVID-19 outbreak, results in $R_0$ greater than $5$. Even if the initial growth over HK develops at almost the same speed ($K^{Fit}_0 = 0.32$, peak day: $26$), the long-lasting contagiousness effects show up in the middle phase and make the peak rise to $40 \%$ (4000 individuals), leading to a shocking final prevalence of $94 \%$ (see Tab. \ref{tab:lock_results}). 
+	The simulations of Sec. \ref{sec:network} already adopted the best-case scenario for the removal/recovery time ($\tau_{r} = 3 \ d$), assuming a fast diagnosis and a prompt isolation of the infected cases. 
+	Otherwise, a delay in the hospitalization would affect $R_0$ directly and with great potential (see Eq. \ref{eq:R0}). Changing $\tau_{r}$ from $3$ to $7 \ d$, as assumed for the "non-awareness" mode in the initial phase of the COVID-19 outbreak, results in a $R_0$ greater than $5$. In this configuration, even if the initial growth over HK develops at almost the same speed ($K^{Fit}_0 = 0.32$, peak day: $26$), the long-lasting contagiousness effects show up in the middle phase and make the peak double (it reaches $40 \%$ (4000 individuals), leading to a shocking final prevalence of $94 \%$ (see Tab. \ref{tab:lock_results}). 
 	
 	
 	\section{Conclusions}
-	The intention was to recreate the same analysis work flow of the deterministic models and see if, and under which conditions, the deterministic prediction works as mean field approximation and where instead is overcome by new results. 
-
-	More advanced approaches based on open-source real data, like the one described in \citet{Firth2020}, exploit a variable weighted and directed network topology that follows the actual interactions of a group of people during the day on a short time scale, greatly increasing the complexity and computational load of the simulations.
+	Deterministic epidemiological models give a valuable insight about how contagion works (the exponential nature, the peak, the herd immunity, etc.) but fail to reproduce some non negligible dynamics which emerge from the complex network structure of the social human interactions. Network models are key to gain understanding and foresight of complex global phenomena like the ongoing COVID-19 pandemic. Random models are an useful tool, since real data about human contacts are difficult to collect and pose privacy and ethical issues.\\
+	
+	Running an ensemble of epidemiological simulation over a network model which tries to recreate the structure of real networks \citep{Holme} it was possible to obtain a convincing estimate of the temporal and prevalence scales involved in an influenza-like epidemic among a small population (ten thousand individuals). 
+	Using various null models it was also possible to investigate the role of clustering and degree correlations in the spreading of the disease, reaching conclusions in accordance with the literature and some new interesting insights.
+	
+	Finally, it was possible to gauge the impact of the randomness inherent the nature of contagion on the outcomes and to test the effectiveness of some mitigation measures resembling the ones actually adopted all around the world in the last months.
+	
+	This works also lead to the realisation of a flexible, open-source framework
+%	 (\href{https://github.com/giacom0rovers1/pyndemic}{https://github.com/giacom0rovers1/pyndemic})
+	 \citep{pyndemic} 
+	 which could support further studies on different scenarios (e.g. vaccines) or be applied to bigger or real-data-based networks.
+	
+%	The intention was to recreate the same analysis work flow of the deterministic models and see if, and under which conditions, the deterministic prediction works as mean field approximation and where instead is overcome by new results. 
+%
+%	More advanced approaches based on open-source real data, like the one described in \citet{Firth2020}(exploiting a variable weighted and directed network topology that follows the actual interactions of a group of people during the day on a short time scale) greatly increase the complexity and computational load of the simulations.
 
 
  
