@@ -8,11 +8,11 @@ Created on Mon Dec  7 22:35:53 2020
 import scipy as sp
 import datetime as dt
 import os
-import copy
+# import copy
 import pickle
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 import random
 
@@ -52,12 +52,12 @@ def attack_list(graph, ranklist, thr):
     while graph.k_avg > thr:
         # remove node with highest rank until reaching an avg degree threshold
         graph.remove_node(nodes.pop())
-        
+
         # update average connectivity degree
         k = graph.degree()
         graph.degree_list = [d for n, d in k]
         graph.k_avg = np.mean(graph.degree_list)
-        
+
     return graph.subgraph(max(nx.connected_components(graph), key=len)).copy()
 
 
@@ -72,7 +72,7 @@ if os.path.isfile('pickle/network_lockHiBC_connected.pkl'):
 
     # Getting back the objects:
     with open('pickle/network_lockHiBC_connected.pkl', 'rb') as f:
-       Holme_lbc = pickle.load(f)
+        Holme_lbc = pickle.load(f)
 
 else:
     print("No networks found, generating...")
@@ -163,6 +163,9 @@ frac_inf = 0.00011  # (one infected just to avoid warnings)
 gamma = 1/tau_i
 mu = 1/tau_r
 
+# # debug run
+# Holme_lbc.nick = "lockHiBC_test"
+
 lock = pn.pRandNeTmic(Holme_lbc, holme.i[d0]*100,
                       beta, tau_i, tau_r, days)
 
@@ -245,18 +248,19 @@ while run < lock.runs:
 
     # Recover status variables:
     s = np.array([S for S, E, I, R in
-                [list(it['node_count'].values()) for it in iterations]])/N
+                  [list(it['node_count'].values()) for it in iterations]])/N
     e = np.array([E for S, E, I, R in
-                [list(it['node_count'].values()) for it in iterations]])/N
+                  [list(it['node_count'].values()) for it in iterations]])/N
     i = np.array([I for S, E, I, R in
-                [list(it['node_count'].values()) for it in iterations]])/N
+                  [list(it['node_count'].values()) for it in iterations]])/N
     r = np.array([R for S, E, I, R in
-                [list(it['node_count'].values()) for it in iterations]])/N
+                  [list(it['node_count'].values()) for it in iterations]])/N
 
-    s = np.append(np.array(list(holme.sm[((holme.days+1)*run):((holme.days+1)*run)+d0])), s)
-    e = np.append(np.array(list(holme.em[((holme.days+1)*run):((holme.days+1)*run)+d0])), e)
-    i = np.append(np.array(list(holme.im[((holme.days+1)*run):((holme.days+1)*run)+d0])), i)
-    r = np.append(np.array(list(holme.rm[((holme.days+1)*run):((holme.days+1)*run)+d0])), r)
+    sel = (holme.days+1)*run
+    s = np.append(np.array(list(holme.sm[sel:(sel+d0)])), s)
+    e = np.append(np.array(list(holme.em[sel:(sel+d0)])), e)
+    i = np.append(np.array(list(holme.im[sel:(sel+d0)])), i)
+    r = np.append(np.array(list(holme.rm[sel:(sel+d0)])), r)
 
     # resampling through t (variable spacing decided by the ODE solver)
     member.s = np.interp(t, np.arange(0, len(s)), s)
@@ -265,19 +269,19 @@ while run < lock.runs:
     member.r = np.interp(t, np.arange(0, len(r)), r)
     member.t = lock.t
     member.pos = np.array((member.e + member.i) * lock.N)
-    
+
     try:
         member.x, member.xi, member.yi, \
             member.KFit, member.Ki, member.tsFit, member.parsFit, \
             member.Rt, member.Rti, \
             member.TdFit, member.Tdi = \
             pn.contagion_metrics(s=member.s, e=member.e, i=member.i,
-                                r=member.r, t=lock.t,
-                                K0=lock.K0, ts0=lock.ts0,
-                                pars0=lock.pars0,
-                                D=lock.D, R0=lock.R0,
-                                tau_i=lock.tau_i,
-                                tau_r=lock.tau_r, N=lock.N)
+                                 r=member.r, t=lock.t,
+                                 K0=lock.K0, ts0=lock.ts0,
+                                 pars0=lock.pars0,
+                                 D=lock.D, R0=lock.R0,
+                                 tau_i=lock.tau_i,
+                                 tau_r=lock.tau_r, N=lock.N)
         run += 1
 
     except ValueError:
@@ -289,7 +293,9 @@ while run < lock.runs:
         with open(logname, 'wb') as f:
             pickle.dump([member, run, now], f)
         print("Error log saved. Repeating run " + str(run+1))
-        run += 1 # altrimenti se il problema e` contenuto nell'ensemble di partenza, l'errore si ripete all'infinito. (run 63)
+        run += 1
+        # altrimenti se il problema e` contenuto nell'ensemble di
+        # partenza, l'errore si ripete all'infinito. (run 63)
         continue
 
     lock.sm = lock.sm.append(pd.Series(member.s))

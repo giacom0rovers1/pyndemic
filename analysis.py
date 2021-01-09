@@ -274,7 +274,8 @@ clust = np.array([])
 for net in network_models:
     real_runs = int(len(net.pm)/len(net.s))
     # if real_runs != net.runs:
-    #     print(net.name + " - Warning: different number of runs than expected.")
+    #     print(net.name + " - Warning: different number
+    #                           of runs than expected.")
     #     print("Real runs: " + str(real_runs))
     #     print("expected:  " + str(net.runs))
 
@@ -291,7 +292,7 @@ for net in network_models:
 
     net.t_peaks = [np.nanmin(np.where(matr_p[t, :] == net.peak[t])).item()
                    for t in range(real_runs)]
-    net.t_finals = [np.nanmin(np.where(matr_p[t, :] < 9)).item()
+    net.t_finals = [np.nanmin(np.where(matr_p[t, :] < 10)).item()
                     for t in range(real_runs)]
 
     times[net.name] = np.append(net.t_peaks,
@@ -359,6 +360,9 @@ fig05.savefig('immagini/analysis_Assort.png')
 fig06 = plt.figure(figsize=(6.4, 4.8), dpi=300)
 for net in network_models:
     plt.scatter(net.t_peaks, net.peak, alpha=0.5, label=net.name)
+plt.scatter(t_peak, N*peak, label="SEIR deterministic", marker="x", color="black", s=40)
+plt.scatter(tt_peak, N*ppeak, label="SIR deterministic", marker="+", color="black", s=40)
+
 plt.legend()
 plt.ylabel("Positives peak")
 plt.xlabel("Peak day")
@@ -370,7 +374,7 @@ fig06.savefig('immagini/analysis_Peak.png')
 x = np.array([])
 y = np.array([])
 fig07 = plt.figure(figsize=(6.4, 4.8), dpi=300)
-for net in [rando, watts]: # , latti]:
+for net in [rando, watts]:  # , latti]:
     xi = np.ones(len(net.t_finals))*net.G.C_avg
     # yi = np.array(net.t_finals)
     yi = np.array(net.finals)
@@ -420,15 +424,19 @@ for net in network_models:
     print("Ksi:  " + str(np.round([net.Ka_si, net.K1_si], 2)))
     print("Ksir: " + str(np.round([net.Ka_sir, net.K1_sir], 2)))
 
-    # A1a = np.array([[-net.gamma, net.beta_n * net.G.Lma.item() * net.s[0]], [net.gamma, -net.mu]])
+    # A1a = np.array([[-net.gamma, net.beta_n * net.G.Lma.item() * net.s[0]],
+    #                [net.gamma, -net.mu]])
     # eigval1a, eigvec1a = np.linalg.eig(A1a)
     # net.K1a = eigval1a[0]
 
-    # A1 = np.array([[-net.gamma, net.beta_n * net.G.Lm * net.s[0]], [net.gamma, -net.mu]])
+    # A1 = np.array([[-net.gamma, net.beta_n * net.G.Lm * net.s[0]],
+    #               [net.gamma, -net.mu]])
     # eigval1, eigvec1 = np.linalg.eig(A1)
     # net.K1 = eigval1[0]
 
-    # Growt rates from Lma (uncorrelated approx with k moments), Lm (actual bigger eigenvalue of the corrected connectivity matrix) and from the actual Fit:
+    # Growt rates from Lma (uncorrelated approx with k moments),
+    # Lm (actual bigger eigenvalue of the corrected connectivity matrix)
+    # and from the actual Fit:
     print("Kseir: " + str(np.round([net.K1a, net.K1, net.KFit], 2)))
 
     print("Critical value: " + str(np.round([net.G.Crita, net.G.Crit], 2)))

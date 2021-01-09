@@ -81,40 +81,40 @@ def graph_tools(G):
 
     G.nn = len(list(G.nodes))
     G.nl = len(list(G.edges))
-    
+
     print("    [1/4] Calculating connectivity...")
     k = G.degree()
     G.degree_list = [d for n, d in k]
-    
+
     G.k_avg = np.mean(G.degree_list)
     G.k_std = np.std(G.degree_list)
     G.k_var = np.var(G.degree_list)
-    
+
     G.degree_sequence = sorted(G.degree_list, reverse=True)
     G.k_max = np.max(G.degree_list)  # G.degree_sequence[0]
     G.k_min = np.min(G.degree_list)  # G.degree_sequence[-1]
     G.k_histD = np.array(nx.degree_histogram(G))/G.nn
-    
+
     # Prima correzione per non avere matrice singolare
     G.kx = np.array(range(len(G.k_histD)), ndmin=2) + 1e-10
     G.kfm = np.dot(G.kx, G.k_histD).item()
     G.ksm = np.dot(G.kx**2, G.k_histD).item()
     G.Lma = G.ksm/G.kfm - 1
-    
+
     G.Crita = G.k_avg/G.Lma
-    
+
     G.ktilde = np.transpose((G.kx - 1)/G.kx)
-    
+
     # Seconda correzione per non avere matrice singolare
     G.Mix = nx.degree_mixing_matrix(G)[G.k_min:, G.k_min:] + 1e-10
-    
+
     G.P = 1/sum(G.Mix) * G.Mix
     G.Ckk = G.kx[:, G.k_min:] * G.P * G.ktilde[G.k_min:, :]
     G.w, G.v = np.linalg.eig(G.Ckk)
     G.Lm = np.real(np.nanmax(G.w))
     G.Crit = G.k_avg/G.Lm
     print("    Lm:   " + str(np.round([G.Lma, G.Lm], 2)))
-    
+
     print("    Connectivity degree histogram completed.")
 
     print("    [2/4] Calculating betweenness centrality...")
@@ -142,7 +142,7 @@ def graph_tools(G):
     print("    [4/4] Calculating shortest path lengths...")
     G.L_avg = nx.average_shortest_path_length(G)
     print("    Average shortest path lengt estimated.")
-    
+
     toc = time.perf_counter()
     print(f'--> graph_tools() completed in {toc - tic:0.0f} seconds.\n')
 
@@ -156,13 +156,13 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
 
     if 0 in plots_to_print:
         # Network visualization
-        G.fig0 = plt.figure(figsize=(7, 5.5))
+        G.fig0 = plt.figure(figsize=(4, 3.2))  # (7, 5.5))
 
         G.fig0.add_subplot(111)
         nx.draw_networkx_edges(G, pos=nx.kamada_kawai_layout(G),
-                               alpha=0.4)
+                               alpha=0.3)  # 0.4
         nx.draw_networkx_nodes(G, pos=nx.kamada_kawai_layout(G),
-                               node_size=80,
+                               node_size=30,  # 80
                                node_color=G.degree_list, cmap=colormap)
 
         sm = plt.cm.ScalarMappable(cmap=colormap,
@@ -177,7 +177,7 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
 
     if 1 in plots_to_print:
         # Degree and BC analysis
-        G.fig1 = plt.figure(figsize=(11, 5))
+        G.fig1 = plt.figure(figsize=(6.5, 3))  # (11, 5))
         # Axes
         x = np.linspace(0, G.k_max, 100)
         if net_name == "Holme-Kim":
@@ -192,8 +192,8 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
         G.poiss = poisson.pmf(xi, mu=G.k_avg)
 
         sk = 0
-        try:  #len(yi) > 0:
-            while sk<10:
+        try:  # len(yi) > 0:
+            while sk < 10:
                 G.sf_pars, G.sf_cov = curve_fit(f=scale_free,
                                                 xdata=xi[sk:],
                                                 ydata=yi[sk:],
@@ -205,28 +205,29 @@ def graph_plots(G,  net_name, plots_to_print=[0, 1], cmap=plt.cm.Blues):
                 print("Wrong power law fit")
 
         except ValueError:
-            sk +=1
-            
+            sk += 1
+
         # Degree histogram
         G.fig1.add_subplot(121)
-        plt.scatter(xi, yi, alpha=0.75)
+        plt.scatter(xi, yi, alpha=0.75, s=15)
         plt.xlabel('Node connectivity degree k')
         plt.ylabel('Degree distribution p(k)')
-        plt.title('Average connectivity degree = ' + str(np.round(G.k_avg, 1)))
+        #plt.title('Average connectivity degree = ' + str(np.round(G.k_avg, 1)))
         plt.plot(x, G.gauss, 'r--', alpha=0.5, label='Normal distr.')
         # plt.plot(xi, G.poiss, 'y--', label='Poisson')
         plt.plot(x, scale_free(x, *G.sf_pars), 'b--',
                  alpha=0.5, label='Power law')
-        plt.ylim([0, max(yi+0.1)])
+        plt.ylim([0, max(yi)+0.1])
         plt.legend(loc='best')
 
         # BC vs K
         G.fig1.add_subplot(122)
-        plt.scatter(G.degree_list, G.BC_list, alpha=0.75)
-        plt.title('Average clustering coeff. = ' + str(np.round(G.C_avg, 3)))
+        plt.scatter(G.degree_list, G.BC_list, alpha=0.75, s=15)
+        #plt.title('Average clustering coeff. = ' + str(np.round(G.C_avg, 3)))
         plt.xlabel("Node connectivity degree k")
         plt.ylabel("Node betweenness centrality BC")
         plt.xlim(0.5, G.k_max+0.5)
+        plt.ylim([0, max(G.BC_list)+0.0001])
         plt.tight_layout()
 
     if 2 in plots_to_print:
@@ -412,7 +413,7 @@ def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.ylabel('Relative population')
     plt.title(title)
     # plt.xlim([0, (len(t)-1)])
-    plt.xlim([np.min(t), np.max(t)])
+    plt.xlim([np.min(t), 0.66*np.max(t)])
     plt.ylim([0, 1])
     plt.grid(axis='y')
     plt.tight_layout()
@@ -456,7 +457,7 @@ def SEIR_plot(s, e, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.xlabel('t (days)')
     plt.ylabel('R(t)')
     plt.legend(loc='best')
-    plt.xlim([np.min(t), np.max(t)])
+    plt.xlim([np.min(t), 0.66*np.max(t)])
     plt.ylim([0, R0+2])
     plt.title(title + " - evolution of the reproduction number")
     plt.grid(axis='y')
@@ -513,7 +514,7 @@ def SIR_odet(perc_inf, lmbda, tau_r, days):
 def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
              parsFit, D, KFit, TdFit, Rt, Rti):
     y = np.array([s, i, r])
-    fig02 = plt.figure(figsize=(6.4, 4.8), dpi=300)
+    fig02 = plt.figure(figsize=(5.3, 3.8), dpi=300)  #(6.4, 4.8), dpi=300)
     plt.plot(t, y.T)
     plt.legend(["Susceptible", "Infected", "Removed"])
     plt.text(D+np.min(t), 0.5, r'$R_{0}$ ='+str(np.round(R0, 2)))
@@ -521,7 +522,7 @@ def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.ylabel('Relative population')
     plt.title(title)
     # plt.xlim([0, (len(t)-1)])
-    plt.xlim([np.min(t), np.max(t)])
+    plt.xlim([np.min(t), 0.66*np.max(t)])
     plt.ylim([0, 1])
     plt.grid(axis='y')
     plt.tight_layout()
@@ -551,7 +552,7 @@ def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.grid(axis='y')
     plt.tight_layout()
 
-    fig04 = plt.figure(figsize=(6.4, 4.8), dpi=300)
+    fig04 = plt.figure(figsize=(5.3, 4), dpi=300)  #(6.4, 4.8), dpi=300)
     plt.plot(np.arange(np.min(t)-50, np.max(t)+50),  # red line at Rt == 1
              [1 for i in np.arange(1, len(t)+100)],
              'r--', linewidth=2, alpha=0.4)
@@ -565,7 +566,7 @@ def SIR_plot(s, i, r, t, R0, title, pos, ts0, pars0, x, xi, yi,
     plt.xlabel('t (days)')
     plt.ylabel('R(t)')
     plt.legend(loc='best')
-    plt.xlim([np.min(t), np.max(t)])
+    plt.xlim([np.min(t), 0.66*np.max(t)])
     plt.ylim([0, R0+2])
     plt.title(title + " - evolution of the reproduction number")
     plt.grid(axis='y')
@@ -582,12 +583,12 @@ def growth_fit(pos, t, ts0, pars0, D, R0):
     end = start + 1
 
     while (end - start) < 14:   # before: 5
-        
+
         if f > 0.333:
             break
-        
+
         a = np.where(pos > f * np.nanmax(pos))
-        
+
         if len(a) == 0:
             end = start + 15    # before: 6
         else:
@@ -790,35 +791,38 @@ class pRandNeTmic(randnet):
         self.tau_r = tau_r
 
         # run deterministic reference
-        s, e, i, r, t = SEIR_odet(self.perc_inf, self.lmbda, self.tau_i, self.tau_r, self.days)
+        s, e, i, r, t = SEIR_odet(self.perc_inf, self.lmbda,
+                                  self.tau_i, self.tau_r, self.days)
         self.t = t
         p = e + i
         self.mu = 1/tau_r
         self.gamma = 1/tau_i
-        self.A0 = np.array([[-self.gamma, self.lmbda*s[0]], [self.gamma, -self.mu]])
+        self.A0 = np.array([[-self.gamma, self.lmbda*s[0]],
+                            [self.gamma, -self.mu]])
         self.eigvalA0, self.eigvecA0 = np.linalg.eig(self.A0)
         self.K0 = self.eigvalA0[0]
         self.ts0 = np.log(self.R0)/self.K0
         self.pars0 = [self.K0, p[0]*self.N]
         self.D = int(self.ts0)
-        
+
         # DBMF
-        self.Ka_si  = self.beta * self.G.Lma * s[0]
+        self.Ka_si = self.beta * self.G.Lma * s[0]
         self.K1_si = self.beta * self.G.Lm * s[0]
-        
+
         self.Ka_sir = self.beta * self.G.Lma * s[0] - self.mu
         self.K1_sir = self.beta * self.G.Lm * s[0] - self.mu
-        
-        self.A1a = np.array([[-self.gamma, self.beta * self.G.Lma * s[0]], [self.gamma, -self.mu]])
+
+        self.A1a = np.array([[-self.gamma, self.beta * self.G.Lma * s[0]],
+                             [self.gamma, -self.mu]])
         self.eigvalA1a, self.eigvecA1a = np.linalg.eig(self.A1a)
         self.K1a = self.eigvalA1a[0]
 
-        self.A1 = np.array([[-self.gamma, self.beta * self.G.Lm * s[0]], [self.gamma, -self.mu]])
+        self.A1 = np.array([[-self.gamma, self.beta * self.G.Lm * s[0]],
+                            [self.gamma, -self.mu]])
         self.eigvalA1, self.eigvecA1 = np.linalg.eig(self.A1)
         self.K1 = self.eigvalA1[0]
-        
+
         self.pars1 = [self.K1a, p[0]*self.N]
-        
 
     def run(self, runs):
         self.runs = runs
@@ -947,12 +951,18 @@ class pRandNeTmic(randnet):
                                    for i in self.t])
             self.Rti95 = np.array([self.Rtim[i].quantile(0.95)
                                    for i in self.t])
-             
 
     def plot(self):
+        
+        self.Gmini = graph_plots(self.Gmini, self.name, [0])
+        self.fig00 = self.Gmini.fig0
+
+        self.G = graph_plots(self.G, self.name, [1])
+        self.fig01 = self.G.fig1
+
         if self.runs == 1:
             # main plot
-            self.fig02 = plt.figure(figsize=(6.4, 4.8), dpi=300)
+            self.fig02 = plt.figure(figsize=(5.3, 4), dpi=300)  #(6.4, 4.8), dpi=300)
             plt.plot(self.t, self.y.T)
             plt.legend(["Susceptible", "Exposed", "Infected", "Removed"])
             plt.text(self.D+np.min(self.t), 0.5, r'$R_{0}$ =' +
@@ -960,20 +970,20 @@ class pRandNeTmic(randnet):
             plt.xlabel('t (days)')
             plt.ylabel('Relative population')
             plt.title(self.name + " - SEIR time evolution")
-            plt.xlim([0, self.days])
+            plt.xlim([0, 0.66*self.days])
             plt.ylim([0, 1])
             plt.grid(axis='y')
             plt.tight_layout()
 
             # initial growth
-            self.fig03 = plt.figure(figsize=(6.4, 4.8), dpi=300)
+            self.fig03 = plt.figure(figsize=(5.3, 4), dpi=300)  #(6.4, 4.8), dpi=300)
             plt.plot(self.t, self.pos, label="Positives")
 
             if self.ts0 != 0:
                 plt.plot(self.x, exponential(self.x, *self.pars0),
                          'r--', alpha=0.4,
                          label="Deterministic exp. growth")
-                
+
                 plt.plot(self.x, exponential(self.x, *self.pars1),
                          'b--', alpha=0.4,
                          label="DBMF unc. exp. growth")
@@ -995,14 +1005,14 @@ class pRandNeTmic(randnet):
             plt.tight_layout()
 
             # Rt evolution
-            self.fig04 = plt.figure(figsize=(6.4, 4.8), dpi=300)
+            self.fig04 = plt.figure(figsize=(5.3, 4), dpi=300)  #(6.4, 4.8), dpi=300)
             plt.plot(np.arange(np.min(self.t)-50, np.max(self.t)+50),
                      [1 for i in np.arange(1, len(self.t)+100)],
                      'r--', linewidth=2, alpha=0.4)
             plt.plot(np.arange(np.min(self.t)-50, np.max(self.t)+50),
                      [self.G.Crita for i in np.arange(1, len(self.t)+100)],
                      'b--', linewidth=2, alpha=0.4)
-            
+
             plt.plot(self.t, self.Rt, alpha=0.8,
                      label='R(t) as R0 times s(t)')
 
@@ -1012,7 +1022,7 @@ class pRandNeTmic(randnet):
             plt.xlabel('t (days)')
             plt.ylabel('R(t)')
             plt.legend(loc='best')
-            plt.xlim([np.min(self.t), np.max(self.t)])
+            plt.xlim([np.min(self.t), 0.66*np.max(self.t)])
             plt.ylim([0, self.R0+2])
             plt.title(self.name + " - evolution of the reproduction number")
             plt.grid(axis='y')
@@ -1020,7 +1030,7 @@ class pRandNeTmic(randnet):
 
         else:
             # main plot
-            self.fig02 = plt.figure(figsize=(6.4, 4.8), dpi=300)
+            self.fig02 = plt.figure(figsize=(5.3, 4), dpi=300)  #(6.4, 4.8), dpi=300)
 
             plt.fill_between(self.t, self.s05, self.s95, alpha=0.3)
             plt.plot(self.t, self.s, label="Susceptible")
@@ -1041,13 +1051,13 @@ class pRandNeTmic(randnet):
             plt.ylabel('Relative population')
             plt.title(self.name + " - SEIR time evolution")
             # plt.xlim([0, self.days])
-            plt.xlim([np.min(self.t), np.max(self.t)])
+            plt.xlim([np.min(self.t), 0.66*np.max(self.t)])
             plt.ylim([0, 1])
             plt.grid(axis='y')
             plt.tight_layout()
 
             # initial growth
-            self.fig03 = plt.figure(figsize=(6.4, 4.8), dpi=300)
+            self.fig03 = plt.figure(figsize=(5.3, 4), dpi=300)  #(6.4, 4.8), dpi=300)
             plt.fill_between(self.t, self.p05, self.p95, alpha=0.3)
             plt.plot(self.t, self.pos, label="Positives")
 
@@ -1055,7 +1065,7 @@ class pRandNeTmic(randnet):
                 plt.plot(self.x, exponential(self.x, *self.pars0),
                          'r--', alpha=0.8,
                          label="Deterministic exp. growth")
-                
+
                 plt.plot(self.x, exponential(self.x, *self.pars1),
                          'b--', alpha=0.4,
                          label="DBMF unc. exp. growth")
@@ -1083,7 +1093,7 @@ class pRandNeTmic(randnet):
             plt.tight_layout()
 
             # Rt evolution
-            self.fig04 = plt.figure(figsize=(6.4, 4.8), dpi=300)
+            self.fig04 = plt.figure(figsize=(5.3, 4), dpi=300)  #(6.4, 4.8), dpi=300)
             plt.plot(np.arange(np.min(self.t)-50, np.max(self.t)+50),
                      [1 for i in np.arange(1, len(self.t)+100)],
                      'r--', linewidth=2, alpha=0.4)
@@ -1103,7 +1113,7 @@ class pRandNeTmic(randnet):
             plt.xlabel('t (days)')
             plt.ylabel('R(t)')
             plt.legend(loc='best')
-            plt.xlim([np.min(self.t), np.max(self.t)])
+            plt.xlim([np.min(self.t), 0.66*np.max(self.t)])
             plt.ylim([0, self.R0+2])
             plt.title(self.name + " - evolution of the reproduction number")
             plt.grid(axis='y')

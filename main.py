@@ -138,14 +138,18 @@ else:
     print("Scale free [4/5]")
     Barab = pn.randnet('Barabasi-Albert',
                        'scalefree',
-                       nx.barabasi_albert_graph(int(N),  int(avgk/2), seed=1234),
-                       nx.barabasi_albert_graph(int(n),  int(avgk/2), seed=1234))
+                       nx.barabasi_albert_graph(int(N),
+                                                int(avgk/2), seed=1234),
+                       nx.barabasi_albert_graph(int(n),
+                                                int(avgk/2), seed=1234))
 
     print("Realistic [5/5]")
     Holme = pn.randnet('Holme-Kim',
                        'realw',
-                       nx.powerlaw_cluster_graph(int(N), int(avgk/2), 1, seed=1234),
-                       nx.powerlaw_cluster_graph(int(n), int(avgk/2), 1, seed=1234))
+                       nx.powerlaw_cluster_graph(int(N),
+                                                 int(avgk/2), 1, seed=1234),
+                       nx.powerlaw_cluster_graph(int(n),
+                                                 int(avgk/2), 1, seed=1234))
 
     # Save all networks together with pickle()
     print('Saving networks...')
