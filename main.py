@@ -18,13 +18,15 @@ Tic = time.perf_counter()
 N = 1e4
 n = N/100
 perc_inf = 0.1
-days = 100
+days = 150  # 100 too short for Rando
 daysl = days*2
 daysll = days*3
-beta = 0.73         # infection probability
+avgk = 12
+beta = 0.061        # infection probability
+lmbda = beta * avgk  # infection rate
 tau_i = 3           # incubation time
 tau_r = 3           # recovery time
-R0 = beta * tau_r   # basic reproduction number
+R0 = lmbda * tau_r   # basic reproduction number
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -34,14 +36,14 @@ R0 = beta * tau_r   # basic reproduction number
 # SEIR MODEL
 # ==========
 print("\nSEIR deterministic model:")
-s, e, i, r, t = pn.SEIR_odet(perc_inf, beta, tau_i, tau_r, days)
+s, e, i, r, t = pn.SEIR_odet(perc_inf, lmbda, tau_i, tau_r, days)
 
 p = e + i
 pos = N * p
 
 mu = 1/tau_r
 gamma = 1/tau_i
-A = np.array([[-gamma, beta*s[0]], [gamma, -mu]])
+A = np.array([[-gamma, lmbda*s[0]], [gamma, -mu]])
 eigval, eigvec = np.linalg.eig(A)
 K0 = eigval[0]
 ts0 = np.log(R0)/K0
@@ -72,9 +74,9 @@ with open('pickle/SEIR.pkl', 'wb') as f:
 # =========
 ddays = int(0.6 * days)  # int(days/2.3)
 print("\nSIR deterministic model:")
-ss, ii, rr, tt = pn.SIR_odet(perc_inf, beta, tau_r, ddays)
+ss, ii, rr, tt = pn.SIR_odet(perc_inf, lmbda, tau_r, ddays)
 
-KK0 = beta*ss[0]-mu
+KK0 = lmbda*ss[0]-mu
 tts0 = np.log(R0)/KK0
 ppars0 = [KK0, ii[0]*N]
 DD = int(2*tts0)
@@ -114,35 +116,40 @@ else:
     print("Random [1/5]")
     Rando = pn.randnet('Erdos-Renyi',
                        'random',
-                       nx.connected_watts_strogatz_graph(int(N), 12,
+                       # nx.erdos_renyi_graph(10000, 12/10000, seed=1234)
+                       nx.connected_watts_strogatz_graph(int(N), avgk,
                                                          1, seed=1234),
                        nx.connected_watts_strogatz_graph(int(n), 12,
                                                          1, seed=1234))
     print("Lattice [2/5]")
     Latti = pn.randnet('Ring lattice',
                        'lattice',
-                       nx.connected_watts_strogatz_graph(int(N), 12,
+                       nx.connected_watts_strogatz_graph(int(N), avgk,
                                                          0, seed=1234),
                        nx.connected_watts_strogatz_graph(int(n), 12,
                                                          0, seed=1234))
     print("Small world [3/5]")
     Watts = pn.randnet('Watts-Strogatz',
                        'smallw',
-                       nx.connected_watts_strogatz_graph(int(N), 12,
+                       nx.connected_watts_strogatz_graph(int(N), avgk,
                                                          0.1, seed=1234),
-                       nx.connected_watts_strogatz_graph(int(n), 12,
+                       nx.connected_watts_strogatz_graph(int(n), avgk,
                                                          0.1, seed=1234))
     print("Scale free [4/5]")
     Barab = pn.randnet('Barabasi-Albert',
                        'scalefree',
-                       nx.barabasi_albert_graph(int(N),  6, seed=1234),
-                       nx.barabasi_albert_graph(int(n),  6, seed=1234))
+                       nx.barabasi_albert_graph(int(N),
+                                                int(avgk/2), seed=1234),
+                       nx.barabasi_albert_graph(int(n),
+                                                int(avgk/2), seed=1234))
 
     print("Realistic [5/5]")
     Holme = pn.randnet('Holme-Kim',
                        'realw',
-                       nx.powerlaw_cluster_graph(int(N), 6, 0.1, seed=1234),
-                       nx.powerlaw_cluster_graph(int(n), 6, 0.1, seed=1234))
+                       nx.powerlaw_cluster_graph(int(N),
+                                                 int(avgk/2), 1, seed=1234),
+                       nx.powerlaw_cluster_graph(int(n),
+                                                 int(avgk/2), 1, seed=1234))
 
     # Save all networks together with pickle()
     print('Saving networks...')
